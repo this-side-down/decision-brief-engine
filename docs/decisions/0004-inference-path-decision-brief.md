@@ -181,11 +181,13 @@ This keeps the current product stable, preserves the FOSS-only constraint, and m
 
 ## Next implementation issue
 
-Create a follow-up implementation issue to:
+The browser inference backlog is already sequenced in GitHub. Continue with these issues in order:
 
-- add an opt-in browser WebGPU `ModelAdapter` behind the existing generation boundary;
-- evaluate FOSS-compatible in-browser model candidates for Capture Layer JSON and Decision Brief Markdown quality;
-- define fallback behavior when WebGPU or model download is unavailable;
-- document mode labeling, data-handling posture, and release-milestone expectations for the first browser inference ship.
+1. [#57](https://github.com/this-side-down/decision-brief-engine/issues/57) — Evaluate browser-feasible models against Capture Layer quality gate
+2. [#58](https://github.com/this-side-down/decision-brief-engine/issues/58) — Research WebGPU browser inference adapter feasibility
+3. [#59](https://github.com/this-side-down/decision-brief-engine/issues/59) — Design live browser inference UX
+4. [#60](https://github.com/this-side-down/decision-brief-engine/issues/60) — Implement WebGPU browser inference adapter
 
-That issue should not add hosted inference, desktop/mobile distribution, persistence, auth, billing, or backend services.
+Do not start #60 until #57, #58, and #59 are complete.
+
+These issues should stay within the hybrid staged path: opt-in browser WebGPU inference behind the existing `ModelAdapter` boundary, without adding hosted inference, desktop/mobile distribution, persistence, auth, billing, or backend services.

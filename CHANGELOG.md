@@ -4,6 +4,8 @@ All notable product milestones for Decision Brief Engine are documented here.
 
 This project uses pre-1.0 versioning (`v0.x.y`) for capability milestones rather than strict mature semver guarantees. See [docs/project/release-process.md](docs/project/release-process.md) for tagging and release guidance.
 
+Version comparison links will be added when tags are created.
+
 ## [Unreleased]
 
 ### Added
@@ -42,7 +44,3 @@ This project uses pre-1.0 versioning (`v0.x.y`) for capability milestones rather
 - Core MVP workflow: paste notes, select brief type, generate Capture Layer, generate Decision Brief, export Markdown.
 - Mocked generation path behind a provider-neutral model adapter boundary.
 - FOSS-only MVP documentation and architecture baseline.
-
-[Unreleased]: https://github.com/this-side-down/decision-brief-engine/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/this-side-down/decision-brief-engine/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/this-side-down/decision-brief-engine/releases/tag/v0.1.0
