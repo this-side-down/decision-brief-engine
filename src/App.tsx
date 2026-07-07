@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { BRIEF_TYPES } from "./data/briefTypes";
+import { generateCaptureLayerForSession } from "./services/generation/generateCaptureLayer";
 import type { BriefSession, BriefTypeId } from "./types/brief";
+import type { CaptureLayer } from "./types/captureLayer";
 
 function createInitialSession(): BriefSession {
   const now = new Date().toISOString();
@@ -37,6 +39,47 @@ function EmptyPanel({ label }: { label: string }) {
   );
 }
 
+function CaptureLayerSummary({ captureLayer }: { captureLayer: CaptureLayer }) {
+  return (
+    <div className="min-h-[32rem] border border-slate-200 bg-slate-50 p-4">
+      <div className="space-y-4 text-sm">
+        <div>
+          <h3 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+            Source Summary
+          </h3>
+          <p className="mt-2 leading-6 text-slate-700">
+            {captureLayer.source_summary}
+          </p>
+        </div>
+        <div>
+          <h3 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+            Implied Decision
+          </h3>
+          <p className="mt-2 leading-6 text-slate-700">
+            {captureLayer.implied_decision || "No implied decision captured."}
+          </p>
+        </div>
+        <div>
+          <h3 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+            Open Questions
+          </h3>
+          <ul className="mt-2 list-disc space-y-1 pl-4 text-slate-700">
+            {captureLayer.open_questions.slice(0, 2).map((question) => (
+              <li key={question}>{question}</li>
+            ))}
+          </ul>
+        </div>
+        <div className="rounded border border-slate-200 bg-white p-3 text-xs text-slate-600">
+          Confidence:{" "}
+          <span className="font-semibold text-slate-900">
+            {captureLayer.confidence}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function App() {
   const [briefSession, setBriefSession] = useState<BriefSession>(() =>
     createInitialSession(),
@@ -49,6 +92,16 @@ export function App() {
   const hasRawInput = briefSession.rawInput.text.trim().length > 0;
   const hasBriefType = briefSession.briefType !== null;
   const canGenerateCaptureLayer = hasRawInput && hasBriefType;
+  const isGeneratingCaptureLayer =
+    briefSession.status === "generating_capture";
+  const canGenerateDecisionBrief = briefSession.captureLayer !== null;
+  const captureLayerStatus = isGeneratingCaptureLayer
+    ? "Generating"
+    : briefSession.captureLayer
+      ? "Generated"
+      : briefSession.status === "error"
+        ? "Failed"
+        : "Pending";
 
   function updateRawInput(text: string) {
     setBriefSession((currentSession) => ({
@@ -59,6 +112,47 @@ export function App() {
       },
       updatedAt: new Date().toISOString(),
     }));
+  }
+
+  async function handleGenerateCaptureLayer() {
+    if (!briefSession.briefType || !canGenerateCaptureLayer) {
+      return;
+    }
+
+    setBriefSession((currentSession) => ({
+      ...currentSession,
+      status: "generating_capture",
+      errors: [],
+      updatedAt: new Date().toISOString(),
+    }));
+
+    try {
+      const captureLayer = await generateCaptureLayerForSession({
+        rawInputText: briefSession.rawInput.text,
+        briefType: briefSession.briefType,
+        sourceLabel: briefSession.rawInput.sourceLabel,
+      });
+
+      setBriefSession((currentSession) => ({
+        ...currentSession,
+        captureLayer,
+        decisionBrief: null,
+        status: "capture_ready",
+        errors: [],
+        updatedAt: new Date().toISOString(),
+      }));
+    } catch (error) {
+      setBriefSession((currentSession) => ({
+        ...currentSession,
+        status: "error",
+        errors: [
+          error instanceof Error
+            ? error.message
+            : "Unable to generate Capture Layer.",
+        ],
+        updatedAt: new Date().toISOString(),
+      }));
+    }
   }
 
   function updateBriefType(briefTypeId: BriefTypeId) {
@@ -164,9 +258,30 @@ export function App() {
               >
                 Capture Layer
               </h2>
-              <StatusBadge label="Pending" />
             </div>
-            <EmptyPanel label="Capture Layer will appear here" />
+            <div className="mb-4 flex items-center justify-between">
+              <span className="text-xs text-slate-500">
+                Mocked Capture Layer JSON stays separate from the Decision
+                Brief.
+              </span>
+              <StatusBadge label={captureLayerStatus} />
+            </div>
+            {briefSession.captureLayer ? (
+              <CaptureLayerSummary captureLayer={briefSession.captureLayer} />
+            ) : (
+              <EmptyPanel
+                label={
+                  isGeneratingCaptureLayer
+                    ? "Generating mocked Capture Layer..."
+                    : "Capture Layer will appear here"
+                }
+              />
+            )}
+            {briefSession.errors.length > 0 ? (
+              <p className="mt-3 text-xs text-red-700">
+                {briefSession.errors[0]}
+              </p>
+            ) : null}
           </section>
 
           <section
@@ -194,7 +309,8 @@ export function App() {
                   ? "border-neutral-950 bg-neutral-950 text-white"
                   : "border-slate-200 bg-slate-100 text-slate-400"
               }`}
-              disabled={!canGenerateCaptureLayer}
+              disabled={!canGenerateCaptureLayer || isGeneratingCaptureLayer}
+              onClick={handleGenerateCaptureLayer}
               title={
                 canGenerateCaptureLayer
                   ? "Ready for the future Capture Layer generation step."
@@ -202,11 +318,22 @@ export function App() {
               }
               type="button"
             >
-              Generate Capture Layer
+              {isGeneratingCaptureLayer
+                ? "Generating..."
+                : "Generate Capture Layer"}
             </button>
             <button
-              className="rounded border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
-              disabled
+              className={`rounded border px-4 py-2 text-sm font-semibold ${
+                canGenerateDecisionBrief
+                  ? "border-slate-300 bg-white text-slate-700"
+                  : "border-slate-200 bg-slate-100 text-slate-400"
+              }`}
+              disabled={!canGenerateDecisionBrief}
+              title={
+                canGenerateDecisionBrief
+                  ? "Decision Brief generation is not implemented yet."
+                  : "Generate a Capture Layer first."
+              }
               type="button"
             >
               Generate Decision Brief
