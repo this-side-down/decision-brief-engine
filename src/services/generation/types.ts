@@ -43,3 +43,13 @@ export const CAPTURE_LAYER_FIELDS = [
   "missing_context",
   "suggested_next_steps",
 ] as const;
+
+export const DECISION_BRIEF_MARKDOWN_STRUCTURE = [
+  "Summary",
+  "Decision Context",
+  "Options Considered",
+  "Recommendation",
+  "Risks and Constraints",
+  "Open Questions",
+  "Suggested Next Steps",
+] as const;

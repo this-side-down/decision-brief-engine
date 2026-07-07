@@ -62,6 +62,53 @@ function buildMockCaptureLayer(
   };
 }
 
+function formatList(items: string[]) {
+  if (items.length === 0) {
+    return "- Not captured yet.";
+  }
+
+  return items.map((item) => `- ${item}`).join("\n");
+}
+
+function buildMockDecisionBrief(input: GenerateDecisionBriefInput) {
+  const { captureLayer } = input;
+  const recommendation =
+    captureLayer.recommendation_candidate ||
+    "No final recommendation is supportable yet. Use the next steps to close missing context before deciding.";
+
+  return [
+    "# Decision Brief",
+    "",
+    "## Summary",
+    captureLayer.source_summary || "No source summary captured yet.",
+    "",
+    "## Decision Context",
+    captureLayer.decision_context || "Decision context is not captured yet.",
+    "",
+    "## Options Considered",
+    formatList(captureLayer.options_considered),
+    "",
+    "## Recommendation",
+    recommendation,
+    "",
+    "## Risks and Constraints",
+    "### Risks",
+    formatList(captureLayer.risks),
+    "",
+    "### Constraints",
+    formatList(captureLayer.constraints),
+    "",
+    "## Open Questions",
+    formatList(captureLayer.open_questions),
+    "",
+    "## Suggested Next Steps",
+    formatList(captureLayer.suggested_next_steps),
+    "",
+    "## Confidence",
+    `Confidence: ${captureLayer.confidence}`,
+  ].join("\n");
+}
+
 export const mockModelAdapter: ModelAdapter = {
   async generateCaptureLayer(input) {
     if (!input.rawInputText.trim()) {
@@ -70,7 +117,13 @@ export const mockModelAdapter: ModelAdapter = {
 
     return buildMockCaptureLayer(input);
   },
-  async generateDecisionBrief(_input: GenerateDecisionBriefInput) {
-    throw new Error("Decision Brief generation is not implemented yet.");
+  async generateDecisionBrief(input: GenerateDecisionBriefInput) {
+    const markdown = buildMockDecisionBrief(input);
+
+    if (!markdown.trim()) {
+      throw new Error("Mock Decision Brief generation returned empty Markdown.");
+    }
+
+    return markdown;
   },
 };
