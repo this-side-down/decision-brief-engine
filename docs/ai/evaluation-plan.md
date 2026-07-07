@@ -2,9 +2,11 @@
 
 ## Purpose
 
-This document defines a lightweight manual evaluation plan for Decision Brief Engine MVP output quality.
+This document defines a lightweight manual evaluation plan for Decision Brief Engine MVP workflow and output quality checks.
 
 The plan should work with mocked outputs first, then local or self-hosted FOSS-compatible inference. It does not add an automated eval runner, select a final model, introduce a benchmark suite, or use hosted proprietary model APIs as an MVP path.
+
+Use this document with `fixtures/evaluation/manual-scorecard.md`.
 
 ## What to evaluate
 
@@ -15,7 +17,9 @@ Evaluate the full MVP pipeline output:
 3. Markdown Decision Brief generated from the Capture Layer.
 4. Optional critique or regenerated section, when used.
 
-The main question is whether the system turns messy inputs into a useful, grounded, decision-ready artifact.
+For mocked fixtures, the main question is workflow/wiring readiness: does the system shape messy inputs into a useful, grounded artifact through the intended two-step pipeline.
+
+For local Ollama runs, the same dimensions can be used as early local output-quality checks, but they remain manual/local evaluation rather than production-quality certification.
 
 ## Evaluation dimensions
 
@@ -97,6 +101,8 @@ The MVP output quality is ready for implementation validation when:
 - At least four of the five evaluation cases produce a useful Decision Brief without manual rescue.
 
 If any threshold fails, update prompt contracts, Capture Layer field guidance, brief type guidance, or mocked fixtures before broadening implementation.
+
+These thresholds are v0 workflow-readiness gates, not proof of market demand, production readiness, or broad model robustness.
 
 ## Evaluation cases
 
@@ -198,6 +204,9 @@ Evaluation findings should feed back into durable docs before model or UI comple
 ## FOSS/provider-neutral evaluation notes
 
 - Evaluation should work with mocked fixtures and with local or self-hosted FOSS-compatible inference.
+- Mocked fixture scores indicate workflow/wiring readiness only.
+- Local Ollama fixture scores provide early local output-quality signal only.
+- Public or production inference paths require stronger evaluation design than this MVP manual plan.
 - Do not make hosted proprietary model APIs part of the MVP evaluation path.
 - Do not select a final model through this plan.
 - Any candidate model used in evaluation must pass license review before adoption.

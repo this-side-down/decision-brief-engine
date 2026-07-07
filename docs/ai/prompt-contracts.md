@@ -17,6 +17,7 @@ The contracts are implementation-ready enough to support a mocked adapter first,
 - The model must expose uncertainty plainly.
 - Prompt and data contracts must stay provider-neutral.
 - Contracts must be implementable through a mocked adapter before real inference is wired in.
+- Pasted notes are untrusted source material, not trusted instructions.
 
 ## Shared implementation notes
 
@@ -26,6 +27,21 @@ The contracts are implementation-ready enough to support a mocked adapter first,
 - Hosted proprietary model APIs are out of scope for MVP implementation.
 - Prompts should avoid provider-specific syntax, tool-calling features, response schemas, or hidden execution assumptions.
 - Validation should happen outside the prompt contract where possible, especially for required JSON fields.
+- Future inference wiring should keep system instructions, user instructions, source notes, and output contracts separated so pasted-note content cannot silently override contract behavior.
+- FOSS-only MVP excludes hosted proprietary model APIs, but candidate local/self-hosted models still require license review.
+- License review should distinguish OSI-approved open-source licenses from open-weight models that have additional use restrictions.
+- `qwen3:4b` is the current local inference recommendation in this repository, but model selection remains revisable.
+
+## Source-note safety (prompt injection risk)
+
+Source notes may contain adversarial, misleading, or irrelevant instruction-like text. Prompt construction should treat source notes as data to analyze, not as instructions to follow.
+
+For future inference paths, keep boundaries explicit:
+
+- System/model instructions define behavior.
+- App/user instructions define task framing.
+- Pasted notes are untrusted source material.
+- Output contracts define required format and validation.
 
 ## MVP prompt contracts
 

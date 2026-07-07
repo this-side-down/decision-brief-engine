@@ -8,13 +8,13 @@ It turns messy inputs into durable decision artifacts. Instead of only summarizi
 
 ## Target users
 
-Primary users are product managers, strategy operators, founders, chiefs of staff, and enterprise team leads who need to convert ambiguous discussion into a decision-ready brief.
+Primary users are a target user hypothesis: product managers, strategy operators, founders, chiefs of staff, and team leads who may need to convert ambiguous discussion into a decision-ready brief.
 
 They commonly start with messy notes from meetings, Slack threads, workshops, customer conversations, planning sessions, strategy discussions, or operating reviews.
 
-## Enterprise buyer
+## Buyer hypothesis
 
-Primary enterprise buyers are product, strategy, operations, transformation, and PMO leaders who need better decision hygiene across teams.
+A target buyer hypothesis for later validation is product, strategy, operations, transformation, and PMO leaders who need better decision hygiene across teams.
 
 They care about reducing decision drift, making tradeoffs explicit, improving executive communication, and creating durable artifacts that can be reviewed after the discussion ends.
 
@@ -64,7 +64,7 @@ Turn messy context into a structured decision brief that makes the decision, tra
 - Users can turn ambiguous notes into a decision-ready brief without manually inventing the structure.
 - The Capture Layer clearly separates facts, inferences, assumptions, risks, open questions, and missing context.
 - The final Decision Brief is concise, readable, and useful for product, strategy, operations, or leadership review.
-- The MVP demonstrates commercial value as a decision-support workflow, not a generic summarizer.
+- The MVP validates workflow shape and product architecture for a decision-support workflow, not market demand.
 - The output is durable enough to share as Markdown in existing team workflows.
 
 ## Implementation acceptance criteria
@@ -81,19 +81,23 @@ Turn messy context into a structured decision brief that makes the decision, tra
 ## Commercial assumptions
 
 - Teams already have enough messy decision context in meetings, notes, and async discussions to justify a dedicated decision-support workflow.
-- Buyers value improved decision hygiene because unclear decisions create rework, misalignment, and slow execution.
+- Buyers may value improved decision hygiene because unclear decisions create rework, misalignment, and slow execution.
 - A focused MVP can prove value through artifact quality before adding collaboration, integrations, persistence, or enterprise controls.
 - Markdown export is sufficient for early use because teams can move the artifact into their existing docs, wikis, or planning tools.
 - The product differentiates by structuring intent and decision logic, not by summarizing transcripts.
 - A FOSS-only runtime stack supports inspectable, locally reproducible, and enterprise-compatible MVP evaluation.
 - Provider-neutral prompt and data contracts will keep the product from depending on one proprietary hosted AI API.
 
+These are product hypotheses and implementation assumptions for v0, not validated market evidence.
+
 ## MVP risks
 
 - Users may expect the product to make decisions for them instead of clarifying the decision artifact.
 - Messy inputs may lack enough context to produce a reliable brief without clearly surfacing assumptions and open questions.
+- Pasted notes are untrusted source material and may include misleading or adversarial instructions.
 - If the Capture Layer is too verbose, users may skip review and lose trust in the final brief.
 - If the final brief reads like a generic summary, the product will not demonstrate decision-support value.
 - Without persistence or integrations, early usage depends on the Markdown export being immediately useful.
 - FOSS model quality, latency, and hardware requirements may constrain early output quality or local evaluation.
+- Long transcripts may exceed local model context limits or degrade output quality; future approaches may need chunking, compression, staged Capture Layer generation, or retrieval.
 - License compatibility must be treated as a product and architecture requirement, not a cleanup task after model selection.

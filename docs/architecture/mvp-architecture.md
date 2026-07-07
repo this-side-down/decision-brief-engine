@@ -42,6 +42,8 @@ Acceptable MVP options:
 
 Hosted proprietary model APIs are out of scope for MVP implementation. Any candidate model must pass license review before adoption. Prompt and data contracts should remain provider-neutral so model selection can change without rewriting the product workflow.
 
+Long pasted notes can exceed local model context limits or degrade output quality. Handling strategies such as chunking, compression, staged Capture Layer generation, or retrieval are future risks to address after core MVP workflow validation.
+
 Do not add a broader backend platform, database, job system, queue, workflow engine, enterprise auth layer, integration service, or production deployment architecture for the MVP.
 
 ### State and persistence
@@ -146,14 +148,8 @@ The Capture Layer and final Decision Brief should not be collapsed into one gene
 
 ## Explicit non-goals
 
-- Authentication.
-- Database persistence beyond trivial local/session state.
-- Third-party integrations.
-- Multi-user collaboration.
-- Billing.
-- Enterprise administration.
-- Production deployment architecture.
-- Hosted proprietary model APIs for MVP implementation.
-- Selecting a final model before license review.
-- Queues, background agents, or complex workflow orchestration.
-- Database-specific schema.
+Use `docs/product/mvp-spec.md` as the source of truth for the detailed non-goal list. Architecture-specific non-goals for this document are:
+
+- No production deployment architecture.
+- No hosted proprietary model APIs in MVP.
+- No queues, background agents, or complex workflow orchestration.
