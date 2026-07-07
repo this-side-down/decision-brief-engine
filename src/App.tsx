@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { BRIEF_TYPES } from "./data/briefTypes";
-import type { BriefSession } from "./types/brief";
+import type { BriefSession, BriefTypeId } from "./types/brief";
 
 function createInitialSession(): BriefSession {
   const now = new Date().toISOString();
@@ -38,12 +38,39 @@ function EmptyPanel({ label }: { label: string }) {
 }
 
 export function App() {
-  const [briefSession] = useState<BriefSession>(() => createInitialSession());
+  const [briefSession, setBriefSession] = useState<BriefSession>(() =>
+    createInitialSession(),
+  );
 
   const selectedBriefTypeId = useMemo(
     () => briefSession.briefType?.id ?? "",
     [briefSession.briefType],
   );
+  const hasRawInput = briefSession.rawInput.text.trim().length > 0;
+  const hasBriefType = briefSession.briefType !== null;
+  const canGenerateCaptureLayer = hasRawInput && hasBriefType;
+
+  function updateRawInput(text: string) {
+    setBriefSession((currentSession) => ({
+      ...currentSession,
+      rawInput: {
+        ...currentSession.rawInput,
+        text,
+      },
+      updatedAt: new Date().toISOString(),
+    }));
+  }
+
+  function updateBriefType(briefTypeId: BriefTypeId) {
+    const nextBriefType =
+      BRIEF_TYPES.find((briefType) => briefType.id === briefTypeId) ?? null;
+
+    setBriefSession((currentSession) => ({
+      ...currentSession,
+      briefType: nextBriefType,
+      updatedAt: new Date().toISOString(),
+    }));
+  }
 
   return (
     <main className="min-h-screen bg-neutral-950 p-4 text-slate-900">
@@ -74,9 +101,23 @@ export function App() {
               >
                 Input Workspace
               </h2>
-              <div className="mt-4 min-h-72 border border-slate-200 bg-white p-4 text-sm text-slate-400">
-                Paste meeting notes or brainstorms...
-              </div>
+              <textarea
+                aria-describedby="raw-input-help"
+                className="mt-4 min-h-72 w-full resize-none border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
+                onChange={(event) => updateRawInput(event.target.value)}
+                placeholder="Paste meeting notes or brainstorms..."
+                value={briefSession.rawInput.text}
+              />
+              <p
+                className={`mt-2 text-xs ${
+                  hasRawInput ? "text-slate-500" : "text-amber-700"
+                }`}
+                id="raw-input-help"
+              >
+                {hasRawInput
+                  ? "Raw notes are stored locally for this session."
+                  : "Paste messy notes before generating a Capture Layer."}
+              </p>
             </div>
 
             <fieldset>
@@ -92,15 +133,23 @@ export function App() {
                     <input
                       checked={selectedBriefTypeId === briefType.id}
                       className="h-4 w-4 border-slate-300 text-neutral-950"
-                      disabled
                       name="brief-type"
-                      readOnly
+                      onChange={() => updateBriefType(briefType.id)}
                       type="radio"
                     />
                     {briefType.name}
                   </label>
                 ))}
               </div>
+              <p
+                className={`mt-3 text-xs ${
+                  hasBriefType ? "text-slate-500" : "text-amber-700"
+                }`}
+              >
+                {hasBriefType
+                  ? `${briefSession.briefType?.name} selected.`
+                  : "Select an MVP brief type before generation."}
+              </p>
             </fieldset>
           </section>
 
@@ -140,8 +189,17 @@ export function App() {
         <footer className="flex items-center justify-between border-t border-slate-200 bg-white px-5 py-3">
           <div className="flex gap-3">
             <button
-              className="rounded border border-slate-200 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400"
-              disabled
+              className={`rounded border px-4 py-2 text-sm font-semibold transition ${
+                canGenerateCaptureLayer
+                  ? "border-neutral-950 bg-neutral-950 text-white"
+                  : "border-slate-200 bg-slate-100 text-slate-400"
+              }`}
+              disabled={!canGenerateCaptureLayer}
+              title={
+                canGenerateCaptureLayer
+                  ? "Ready for the future Capture Layer generation step."
+                  : "Add raw notes and select a brief type first."
+              }
               type="button"
             >
               Generate Capture Layer
