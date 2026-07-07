@@ -4,7 +4,7 @@ Decision Brief Engine helps product and operations teams turn messy conversation
 
 Instead of simply summarizing text, it captures the underlying intent, decisions, risks, constraints, and unresolved questions before generating executive-ready output.
 
-## Why?
+## Why
 
 Most AI note takers answer:
 
@@ -21,6 +21,26 @@ Decision Brief Engine answers:
 - Generate a structured Capture Layer
 - Produce a Decision Brief
 - Export Markdown
+
+## Key constraints
+
+- The Capture Layer is generated before the final Decision Brief.
+- The final Decision Brief exports as Markdown.
+- The MVP runtime stack is FOSS-only.
+- Generation can start mocked before local or self-hosted FOSS-compatible inference is wired in.
+
+## Documentation
+
+- [MVP product specification](docs/product/mvp-spec.md)
+- [Capture Layer contract](docs/product/capture-layer.md)
+- [MVP brief types](docs/product/brief-types.md)
+- [MVP architecture](docs/architecture/mvp-architecture.md)
+- [Conceptual data model](docs/architecture/data-model.md)
+- [AI prompt contracts](docs/ai/prompt-contracts.md)
+- [Evaluation plan](docs/ai/evaluation-plan.md)
+- [Implementation build plan](docs/implementation/build-plan.md)
+- [MVP implementation checklist](docs/implementation/mvp-checklist.md)
+- [ADR 0002: FOSS-only MVP runtime stack](docs/decisions/0002-foss-only-mvp-stack.md)
 
 ## Product Lab
 
