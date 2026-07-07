@@ -129,17 +129,33 @@ Capture Layer generation and Decision Brief generation must remain separate even
 
 Use a provider-neutral model adapter interface so the UI and prompt pipeline do not depend on one engine, model runner, inference engine, model, or provider API.
 
+The model adapter should receive domain-level generation inputs that match the prompt contracts. UI components can call a higher-level generation function that fills stable constants from `briefTypes`, `captureLayerFields`, and the Markdown structure before invoking the adapter.
+
 Suggested interface shape:
 
 ```ts
+type BriefTypeGuidance = {
+  whenToUse: string;
+  commonInputs: string[];
+  typicalDecisionShape: string;
+  outputEmphasis: string[];
+  exampleDecisionQuestions: string[];
+};
+
 type GenerateCaptureLayerInput = {
   rawInputText: string;
   briefType: BriefType;
+  briefTypeGuidance: BriefTypeGuidance;
+  captureLayerFields: string[];
+  sourceLabel?: string;
 };
 
 type GenerateDecisionBriefInput = {
   captureLayer: CaptureLayer;
   briefType: BriefType;
+  briefTypeGuidance: BriefTypeGuidance;
+  markdownStructure: string[];
+  toneGuidance?: string;
 };
 
 type ModelAdapter = {
@@ -148,7 +164,7 @@ type ModelAdapter = {
 };
 ```
 
-The first adapter should be mocked. A local or self-hosted FOSS-compatible inference adapter can replace it later without changing UI state shape or component contracts.
+The first adapter should be mocked. A local or self-hosted FOSS-compatible inference adapter can replace it later without changing UI state shape, prompt contracts, or component contracts.
 
 ## 8. Mocked generation approach
 
