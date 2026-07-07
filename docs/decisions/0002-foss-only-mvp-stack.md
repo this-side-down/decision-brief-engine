@@ -31,6 +31,7 @@ Hosted proprietary model APIs are out of scope for MVP implementation. The MVP m
 ## Implementation guidance
 
 - Prefer local or self-hosted inference for the MVP.
+- Use [ADR 0003](0003-foss-inference-topology.md) as the decision target for the first real FOSS-compatible inference adapter after mocked generation.
 - Use a model adapter boundary so the UI and prompt pipeline are not tightly coupled to one engine, model runner, inference engine, or model.
 - Keep prompt and data contracts provider-neutral.
 - Treat license compatibility as a product and architecture requirement, not a cleanup task.
