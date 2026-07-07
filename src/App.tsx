@@ -1,9 +1,40 @@
 import { useMemo, useState } from "react";
-import { BRIEF_TYPES } from "./data/briefTypes";
+import { BRIEF_TYPES, PRODUCT_DECISION_BRIEF } from "./data/briefTypes";
 import { generateCaptureLayerForSession } from "./services/generation/generateCaptureLayer";
 import { generateDecisionBriefForSession } from "./services/generation/generateDecisionBrief";
 import type { BriefSession, BriefTypeId } from "./types/brief";
 import type { CaptureLayer } from "./types/captureLayer";
+
+const EXAMPLE_NOTES = `Notes from product planning sync
+
+We need to decide whether to ship the new team workspace feature in August or hold it for the larger Q4 account-management release.
+
+Sales wants it sooner because two expansion deals are asking for shared workspace visibility. CS says current admins are confused by the difference between projects, workspaces, and accounts. Engineering says the workspace feature is mostly done, but permissions inheritance is still brittle and will need another sprint.
+
+Options:
+1. Ship workspace visibility in August with limited permissions and clear beta labeling.
+2. Hold all workspace work until Q4 and launch it with account management.
+3. Ship only internal workspace admin tools now and keep customer-facing workspace visibility hidden.
+
+Goals:
+- Support expansion deals this quarter.
+- Avoid creating another confusing admin concept.
+- Avoid rework when account management ships.
+- Give CS a clearer story for existing customers.
+
+Risks:
+- Early release could increase support volume.
+- Waiting until Q4 may hurt two expansion opportunities.
+- Permissions bugs would damage trust.
+- Beta labeling might make the product feel unfinished.
+
+Open questions:
+- Which customers actually need workspace visibility before Q4?
+- Can Sales commit the August release as beta only?
+- How much permissions work remains?
+- Would limited admin-only visibility satisfy the expansion deals?
+
+My leaning: ship a narrow beta in August only for named design partners, but make permissions limitations explicit.`;
 
 function createInitialSession(): BriefSession {
   const now = new Date().toISOString();
@@ -40,43 +71,76 @@ function EmptyPanel({ label }: { label: string }) {
   );
 }
 
+function TextSection({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <section className="rounded border border-slate-200 bg-white p-3">
+      <h3 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+        {label}
+      </h3>
+      <p className="mt-2 text-sm leading-6 text-slate-700">
+        {value || "Not captured yet."}
+      </p>
+    </section>
+  );
+}
+
+function ListSection({
+  items,
+  label,
+}: {
+  items: string[];
+  label: string;
+}) {
+  return (
+    <section className="rounded border border-slate-200 bg-white p-3">
+      <h3 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+        {label}
+      </h3>
+      {items.length > 0 ? (
+        <ul className="mt-2 list-disc space-y-1 pl-4 text-sm leading-6 text-slate-700">
+          {items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2 text-sm text-slate-400">Not captured yet.</p>
+      )}
+    </section>
+  );
+}
+
 function CaptureLayerSummary({ captureLayer }: { captureLayer: CaptureLayer }) {
   return (
-    <div className="min-h-[32rem] border border-slate-200 bg-slate-50 p-4">
-      <div className="space-y-4 text-sm">
-        <div>
-          <h3 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-            Source Summary
-          </h3>
-          <p className="mt-2 leading-6 text-slate-700">
-            {captureLayer.source_summary}
-          </p>
-        </div>
-        <div>
-          <h3 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-            Implied Decision
-          </h3>
-          <p className="mt-2 leading-6 text-slate-700">
-            {captureLayer.implied_decision || "No implied decision captured."}
-          </p>
-        </div>
-        <div>
-          <h3 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-            Open Questions
-          </h3>
-          <ul className="mt-2 list-disc space-y-1 pl-4 text-slate-700">
-            {captureLayer.open_questions.slice(0, 2).map((question) => (
-              <li key={question}>{question}</li>
-            ))}
-          </ul>
-        </div>
-        <div className="rounded border border-slate-200 bg-white p-3 text-xs text-slate-600">
-          Confidence:{" "}
-          <span className="font-semibold text-slate-900">
-            {captureLayer.confidence}
-          </span>
-        </div>
+    <div className="min-h-[32rem] space-y-3 overflow-y-auto border border-slate-200 bg-slate-50 p-4">
+      <div className="flex items-center justify-between rounded border border-slate-200 bg-white p-3 text-xs text-slate-600">
+        <span className="font-bold uppercase tracking-wide text-slate-500">
+          Confidence
+        </span>
+        <span className="font-semibold text-slate-900">
+          {captureLayer.confidence}
+        </span>
       </div>
+      <TextSection label="Stated Decision" value={captureLayer.stated_decision} />
+      <TextSection label="Implied Decision" value={captureLayer.implied_decision} />
+      <TextSection
+        label="Recommendation Candidate"
+        value={captureLayer.recommendation_candidate}
+      />
+      <ListSection label="Missing Context" items={captureLayer.missing_context} />
+      <ListSection label="Open Questions" items={captureLayer.open_questions} />
+      <ListSection label="Assumptions" items={captureLayer.assumptions} />
+      <ListSection label="Risks" items={captureLayer.risks} />
+      <ListSection label="Constraints" items={captureLayer.constraints} />
+      <ListSection
+        label="Suggested Next Steps"
+        items={captureLayer.suggested_next_steps}
+      />
     </div>
   );
 }
@@ -134,13 +198,38 @@ export function App() {
         : "Waiting";
 
   function updateRawInput(text: string) {
+    setExportMessage("");
     setBriefSession((currentSession) => ({
       ...currentSession,
       rawInput: {
         ...currentSession.rawInput,
         text,
       },
+      captureLayer: null,
+      decisionBrief: null,
+      status: "draft",
+      errors: [],
       updatedAt: new Date().toISOString(),
+    }));
+  }
+
+  function handleLoadExampleNotes() {
+    const now = new Date().toISOString();
+
+    setExportMessage("");
+    setBriefSession((currentSession) => ({
+      ...currentSession,
+      rawInput: {
+        text: EXAMPLE_NOTES,
+        sourceLabel: "Product planning sync example",
+        createdAt: now,
+      },
+      briefType: PRODUCT_DECISION_BRIEF,
+      captureLayer: null,
+      decisionBrief: null,
+      status: "draft",
+      errors: [],
+      updatedAt: now,
     }));
   }
 
@@ -306,6 +395,10 @@ export function App() {
     setBriefSession((currentSession) => ({
       ...currentSession,
       briefType: nextBriefType,
+      captureLayer: null,
+      decisionBrief: null,
+      status: "draft",
+      errors: [],
       updatedAt: new Date().toISOString(),
     }));
   }
@@ -322,9 +415,14 @@ export function App() {
               Raw notes → structured decisions
             </p>
           </div>
-          <span className="rounded-full bg-neutral-800 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-neutral-200">
-            Demo
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-neutral-400">
+              Mocked local generation for workflow validation
+            </span>
+            <span className="rounded-full bg-neutral-800 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-neutral-200">
+              Demo
+            </span>
+          </div>
         </header>
 
         <div className="grid flex-1 grid-cols-[minmax(16rem,1fr)_minmax(16rem,0.95fr)_minmax(24rem,2fr)] divide-x divide-slate-200">
@@ -339,9 +437,21 @@ export function App() {
               >
                 Input Workspace
               </h2>
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <p className="text-xs text-slate-500">
+                  Paste notes or load a product planning example.
+                </p>
+                <button
+                  className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-neutral-950 hover:text-neutral-950"
+                  onClick={handleLoadExampleNotes}
+                  type="button"
+                >
+                  Load example notes
+                </button>
+              </div>
               <textarea
                 aria-describedby="raw-input-help"
-                className="mt-4 min-h-72 w-full resize-none border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
+                className="mt-3 min-h-72 w-full resize-none border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
                 onChange={(event) => updateRawInput(event.target.value)}
                 placeholder="Paste meeting notes or brainstorms..."
                 value={briefSession.rawInput.text}
@@ -405,8 +515,8 @@ export function App() {
             </div>
             <div className="mb-4 flex items-center justify-between">
               <span className="text-xs text-slate-500">
-                Mocked Capture Layer JSON stays separate from the Decision
-                Brief.
+                Intermediate capture artifact: review ambiguity before brief
+                generation.
               </span>
               <StatusBadge label={captureLayerStatus} />
             </div>
@@ -522,6 +632,10 @@ export function App() {
             </button>
           </div>
         </footer>
+        <div className="border-t border-slate-200 bg-slate-50 px-5 py-2 text-xs text-slate-600">
+          Mocked local generation only. No model calls, persistence, or external
+          integrations are used in this demo.
+        </div>
         {exportMessage ? (
           <div className="border-t border-slate-200 bg-slate-50 px-5 py-2 text-xs text-slate-600">
             {exportMessage}
