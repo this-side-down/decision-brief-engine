@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { BRIEF_TYPES } from "./data/briefTypes";
 import { generateCaptureLayerForSession } from "./services/generation/generateCaptureLayer";
+import { generateDecisionBriefForSession } from "./services/generation/generateDecisionBrief";
 import type { BriefSession, BriefTypeId } from "./types/brief";
 import type { CaptureLayer } from "./types/captureLayer";
 
@@ -80,6 +81,14 @@ function CaptureLayerSummary({ captureLayer }: { captureLayer: CaptureLayer }) {
   );
 }
 
+function DecisionBriefPreview({ markdown }: { markdown: string }) {
+  return (
+    <pre className="min-h-[32rem] whitespace-pre-wrap border border-slate-200 bg-slate-50 p-4 font-mono text-sm leading-6 text-slate-800">
+      {markdown}
+    </pre>
+  );
+}
+
 export function App() {
   const [briefSession, setBriefSession] = useState<BriefSession>(() =>
     createInitialSession(),
@@ -95,6 +104,8 @@ export function App() {
   const isGeneratingCaptureLayer =
     briefSession.status === "generating_capture";
   const canGenerateDecisionBrief = briefSession.captureLayer !== null;
+  const isGeneratingDecisionBrief =
+    briefSession.status === "generating_brief";
   const captureLayerStatus = isGeneratingCaptureLayer
     ? "Generating"
     : briefSession.captureLayer
@@ -102,6 +113,13 @@ export function App() {
       : briefSession.status === "error"
         ? "Failed"
         : "Pending";
+  const decisionBriefStatus = isGeneratingDecisionBrief
+    ? "Generating"
+    : briefSession.decisionBrief
+      ? "Ready"
+      : briefSession.status === "error"
+        ? "Waiting"
+        : "Waiting";
 
   function updateRawInput(text: string) {
     setBriefSession((currentSession) => ({
@@ -149,6 +167,64 @@ export function App() {
           error instanceof Error
             ? error.message
             : "Unable to generate Capture Layer.",
+        ],
+        updatedAt: new Date().toISOString(),
+      }));
+    }
+  }
+
+  async function handleGenerateDecisionBrief() {
+    if (
+      !briefSession.captureLayer ||
+      !briefSession.briefType ||
+      !canGenerateDecisionBrief
+    ) {
+      return;
+    }
+
+    const selectedBriefType = briefSession.briefType;
+
+    setBriefSession((currentSession) => ({
+      ...currentSession,
+      status: "generating_brief",
+      errors: [],
+      updatedAt: new Date().toISOString(),
+    }));
+
+    try {
+      const markdown = await generateDecisionBriefForSession({
+        captureLayer: briefSession.captureLayer,
+        briefType: selectedBriefType,
+      });
+
+      if (!markdown.trim()) {
+        throw new Error("Mock Decision Brief generation returned empty Markdown.");
+      }
+
+      const now = new Date().toISOString();
+
+      setBriefSession((currentSession) => ({
+        ...currentSession,
+        decisionBrief: {
+          markdown,
+          generatedFromCaptureLayer: currentSession.id,
+          briefType: selectedBriefType,
+          editedByUser: false,
+          createdAt: now,
+          updatedAt: now,
+        },
+        status: "brief_ready",
+        errors: [],
+        updatedAt: now,
+      }));
+    } catch (error) {
+      setBriefSession((currentSession) => ({
+        ...currentSession,
+        status: "error",
+        errors: [
+          error instanceof Error
+            ? error.message
+            : "Unable to generate Decision Brief.",
         ],
         updatedAt: new Date().toISOString(),
       }));
@@ -295,9 +371,19 @@ export function App() {
               >
                 Decision Brief
               </h2>
-              <StatusBadge label="Waiting" />
+              <StatusBadge label={decisionBriefStatus} />
             </div>
-            <EmptyPanel label="Decision Brief will appear here" />
+            {briefSession.decisionBrief ? (
+              <DecisionBriefPreview markdown={briefSession.decisionBrief.markdown} />
+            ) : (
+              <EmptyPanel
+                label={
+                  isGeneratingDecisionBrief
+                    ? "Generating mocked Decision Brief..."
+                    : "Decision Brief will appear here"
+                }
+              />
+            )}
           </section>
         </div>
 
@@ -328,15 +414,18 @@ export function App() {
                   ? "border-slate-300 bg-white text-slate-700"
                   : "border-slate-200 bg-slate-100 text-slate-400"
               }`}
-              disabled={!canGenerateDecisionBrief}
+              disabled={!canGenerateDecisionBrief || isGeneratingDecisionBrief}
+              onClick={handleGenerateDecisionBrief}
               title={
                 canGenerateDecisionBrief
-                  ? "Decision Brief generation is not implemented yet."
+                  ? "Generate mocked Decision Brief Markdown."
                   : "Generate a Capture Layer first."
               }
               type="button"
             >
-              Generate Decision Brief
+              {isGeneratingDecisionBrief
+                ? "Generating..."
+                : "Generate Decision Brief"}
             </button>
           </div>
           <div className="flex gap-3">
