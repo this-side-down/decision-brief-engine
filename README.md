@@ -47,6 +47,7 @@ The app is currently deployed on Vercel as a static frontend preview/demo host o
 - [Implementation build plan](docs/implementation/build-plan.md)
 - [MVP implementation checklist](docs/implementation/mvp-checklist.md)
 - [ADR 0002: FOSS-only MVP runtime stack](docs/decisions/0002-foss-only-mvp-stack.md)
+- [Repository maintenance](docs/repo-maintenance.md)
 
 ## Development
 
