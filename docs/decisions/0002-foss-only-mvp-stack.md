@@ -25,6 +25,7 @@ Hosted proprietary model APIs are out of scope for MVP implementation. The MVP m
 - Model quality may be lower than best hosted proprietary APIs.
 - Latency and hardware requirements may matter sooner.
 - Model selection requires license review.
+- "Locally runnable" or "open-weight" is not automatically equivalent to an OSI-approved open-source license.
 - Prompt contracts must remain provider-neutral.
 - MVP implementation should support mocked generation before FOSS inference is wired in.
 
@@ -35,4 +36,5 @@ Hosted proprietary model APIs are out of scope for MVP implementation. The MVP m
 - Use a model adapter boundary so the UI and prompt pipeline are not tightly coupled to one engine, model runner, inference engine, or model.
 - Keep prompt and data contracts provider-neutral.
 - Treat license compatibility as a product and architecture requirement, not a cleanup task.
+- Distinguish OSI-approved open-source licenses from open-weight licenses that may include additional use restrictions.
 - Avoid production deployment architecture and enterprise infrastructure while implementing the MVP constraint.
