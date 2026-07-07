@@ -77,25 +77,40 @@ Notes:
 
 Represents the structured intermediate decision record generated from raw notes and brief type.
 
-Conceptual fields:
+`docs/architecture/data-model.md` is the source of truth for `CaptureLayer` typing. Implementation types, prompt output validation, mocked fixtures, and evaluation fixtures should reference this schema instead of redefining field types elsewhere.
 
-- `source_summary`
-- `decision_context`
-- `stated_decision`
-- `implied_decision`
-- `goals`
-- `stakeholders`
-- `options_considered`
-- `constraints`
-- `risks`
-- `assumptions`
-- `evidence`
-- `open_questions`
-- `tensions`
-- `recommendation_candidate`
-- `confidence`
-- `missing_context`
-- `suggested_next_steps`
+Canonical TypeScript-friendly schema:
+
+```ts
+type Confidence = "High" | "Medium" | "Low";
+
+type CaptureLayer = {
+  source_summary: string;
+  decision_context: string;
+  stated_decision: string;
+  implied_decision: string;
+  goals: string[];
+  stakeholders: string[];
+  options_considered: string[];
+  constraints: string[];
+  risks: string[];
+  assumptions: string[];
+  evidence: string[];
+  open_questions: string[];
+  tensions: string[];
+  recommendation_candidate: string;
+  confidence: Confidence;
+  missing_context: string[];
+  suggested_next_steps: string[];
+};
+```
+
+Absence convention:
+
+- Use empty strings for absent narrative fields such as `stated_decision`, `implied_decision`, and `recommendation_candidate`.
+- Use empty arrays for absent list fields.
+- Use `confidence: "Low"` when source material is sparse or ambiguous.
+- Do not introduce `null` values for MVP fixtures unless there is a specific implementation reason and the reason is documented. Simplicity is preferred.
 
 Notes:
 

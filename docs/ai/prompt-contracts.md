@@ -27,7 +27,14 @@ The contracts are implementation-ready enough to support a mocked adapter first,
 - Prompts should avoid provider-specific syntax, tool-calling features, response schemas, or hidden execution assumptions.
 - Validation should happen outside the prompt contract where possible, especially for required JSON fields.
 
-## Contract 1: Generate Capture Layer
+## MVP prompt contracts
+
+The MVP implementation should build only these prompt contracts:
+
+1. Generate Capture Layer.
+2. Generate Decision Brief.
+
+## MVP Contract 1: Generate Capture Layer
 
 ### Purpose
 
@@ -51,7 +58,9 @@ You are a decision capture analyst. Your job is to convert messy source material
 
 ### Output format
 
-Return only valid JSON with these required top-level fields:
+Return only valid JSON matching the canonical `CaptureLayer` type in `docs/architecture/data-model.md`. That data model document is the source of truth for field names, field types, confidence values, and absence conventions.
+
+Required top-level fields:
 
 - `source_summary`
 - `decision_context`
@@ -71,7 +80,7 @@ Return only valid JSON with these required top-level fields:
 - `missing_context`
 - `suggested_next_steps`
 
-Use strings for concise narrative fields, arrays for multi-item fields, and a qualitative confidence value of `High`, `Medium`, or `Low`.
+Use the field types defined in `docs/architecture/data-model.md`.
 
 ### Failure behavior
 
@@ -102,7 +111,7 @@ Use strings for concise narrative fields, arrays for multi-item fields, and a qu
 - The real adapter should validate parseable JSON before passing the Capture Layer to brief generation.
 - Do not rely on proprietary response-format features; the contract should work with any FOSS-compatible inference path that can produce text.
 
-## Contract 2: Generate Decision Brief
+## MVP Contract 2: Generate Decision Brief
 
 ### Purpose
 
@@ -118,7 +127,7 @@ You are a decision brief writer. Your job is to turn a structured Capture Layer 
 
 ### Input variables
 
-- `capture_layer_json`: The structured Capture Layer JSON.
+- `capture_layer_json`: The structured Capture Layer JSON matching the canonical `CaptureLayer` type in `docs/architecture/data-model.md`.
 - `brief_type`: One of `product`, `strategy`, or `execution`.
 - `brief_type_guidance`: The selected brief type's output emphasis.
 - `markdown_structure`: Required or preferred Markdown headings for the MVP.
@@ -173,7 +182,11 @@ Sections may be concise, but the output should remain complete enough to export 
 - The real adapter should accept text prompts and return Markdown without relying on provider-specific formatting features.
 - Prompt inputs should remain plain JSON and text so they can be routed through local or self-hosted FOSS-compatible inference.
 
-## Contract 3: Critique Decision Brief
+## Post-MVP prompt contracts
+
+MVP implementation should not build critique or section regeneration unless a later issue explicitly pulls them into scope. These contracts are retained as future design notes, not first-build requirements.
+
+## Post-MVP Contract 3: Critique Decision Brief
 
 ### Purpose
 
@@ -181,7 +194,7 @@ Review a generated Decision Brief against the Capture Layer before or during use
 
 ### When used in the MVP workflow
 
-Used after Decision Brief generation when the user wants a quality check, or as an optional internal review step before presenting the brief.
+Not used in the first MVP implementation. A later issue may pull this into scope after the core two-step pipeline is working.
 
 ### System role
 
@@ -231,7 +244,7 @@ Return Markdown with these sections:
 - The real adapter should use the same plain-text and JSON inputs as the generation contracts.
 - The critique contract must not depend on hidden model tools, background agents, or provider-specific evaluation APIs.
 
-## Contract 4: Regenerate Section
+## Post-MVP Contract 4: Regenerate Section
 
 ### Purpose
 
@@ -239,7 +252,7 @@ Regenerate one section of the Decision Brief while preserving the rest of the us
 
 ### When used in the MVP workflow
 
-Used during review/edit after the Decision Brief exists and the user wants to improve a specific section.
+Not used in the first MVP implementation. A later issue may pull this into scope after the core two-step pipeline is working.
 
 ### System role
 
