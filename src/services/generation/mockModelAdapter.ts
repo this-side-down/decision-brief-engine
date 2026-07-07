@@ -23,7 +23,7 @@ function buildMockCaptureLayer(
   const normalizedInput = input.rawInputText.toLowerCase();
 
   if (
-    input.briefType.id === "product" &&
+    (input.briefType.id === "product" || input.briefType.id === "strategy") &&
     normalizedInput.includes("specialty trades") &&
     normalizedInput.includes("gc workforce planning")
   ) {

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { BRIEF_TYPES, PRODUCT_DECISION_BRIEF } from "./data/briefTypes";
+import { BRIEF_TYPES, STRATEGY_DECISION_BRIEF } from "./data/briefTypes";
 import { generateCaptureLayerForSession } from "./services/generation/generateCaptureLayer";
 import { generateDecisionBriefForSession } from "./services/generation/generateDecisionBrief";
 import type { BriefSession, BriefTypeId } from "./types/brief";
@@ -44,6 +44,30 @@ my leaning, and i think maybe the group mostly agreed but not fully, is do a nar
 next steps would be: identify three design partners, define success criteria before build work, run workflow interviews with VP Ops and staffing coordinators, map where current GC model fits or breaks, create a prototype or mocked workflow before touching production data model, and then decide by end of pilot whether specialty trades are an extension of current platform or separate product path.
 
 i think we need exec alignment on the sales language too because if this gets positioned wrong we’ll end up with expectations we can’t meet.`;
+
+const BRIEF_TYPE_CONTEXT = {
+  product:
+    "Product: Feature, workflow, service, packaging, or customer-problem decisions.",
+  strategy:
+    "Strategy: Market, ICP, positioning, investment, or bet/no-bet decisions.",
+  execution:
+    "Execution: Rollout, resourcing, ownership, sequencing, or delivery-plan decisions.",
+} satisfies Record<BriefTypeId, string>;
+
+const BRIEF_TYPE_HINTS = {
+  product:
+    "Product focuses the brief on customer problems, workflows, features, and offering scope.",
+  strategy:
+    "Strategy focuses the brief on markets, positioning, investments, and tradeoffs.",
+  execution:
+    "Execution focuses the brief on rollout, resourcing, ownership, sequencing, and delivery.",
+} satisfies Record<BriefTypeId, string>;
+
+const BRIEF_TYPE_LABELS = {
+  product: "Product",
+  strategy: "Strategy",
+  execution: "Execution",
+} satisfies Record<BriefTypeId, string>;
 
 function createInitialSession(): BriefSession {
   const now = new Date().toISOString();
@@ -126,7 +150,7 @@ function ListSection({
 
 function CaptureLayerSummary({ captureLayer }: { captureLayer: CaptureLayer }) {
   return (
-    <div className="min-h-[32rem] space-y-3 overflow-y-auto border border-slate-200 bg-slate-50 p-4">
+    <div className="space-y-3 border border-slate-200 bg-slate-50 p-4">
       <div className="flex items-center justify-between rounded border border-slate-200 bg-white p-3 text-xs text-slate-600">
         <span className="font-bold uppercase tracking-wide text-slate-500">
           Confidence
@@ -164,7 +188,7 @@ function DecisionBriefEditor({
   return (
     <textarea
       aria-label="Editable Decision Brief Markdown"
-      className="min-h-[32rem] w-full resize-none border border-slate-200 bg-slate-50 p-4 font-mono text-sm leading-6 text-slate-800 outline-none transition focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
+      className="min-h-full w-full resize-none border border-slate-200 bg-slate-50 p-4 font-mono text-sm leading-6 text-slate-800 outline-none transition focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
       onChange={(event) => onChange(event.target.value)}
       value={markdown}
     />
@@ -176,6 +200,8 @@ export function App() {
     createInitialSession(),
   );
   const [exportMessage, setExportMessage] = useState<string>("");
+  const [isBriefTypeHelpOpen, setIsBriefTypeHelpOpen] =
+    useState<boolean>(false);
 
   const selectedBriefTypeId = useMemo(
     () => briefSession.briefType?.id ?? "",
@@ -191,6 +217,9 @@ export function App() {
     briefSession.status === "generating_brief";
   const currentMarkdown = briefSession.decisionBrief?.markdown ?? "";
   const hasMarkdown = currentMarkdown.trim().length > 0;
+  const selectedBriefTypeHint = briefSession.briefType
+    ? BRIEF_TYPE_HINTS[briefSession.briefType.id]
+    : "Select Product, Strategy, or Execution to shape the Capture Layer.";
   const captureLayerStatus = isGeneratingCaptureLayer
     ? "Generating"
     : briefSession.captureLayer
@@ -233,7 +262,7 @@ export function App() {
         sourceLabel: "Construction workforce planning example",
         createdAt: now,
       },
-      briefType: PRODUCT_DECISION_BRIEF,
+      briefType: STRATEGY_DECISION_BRIEF,
       captureLayer: null,
       decisionBrief: null,
       status: "draft",
@@ -413,9 +442,9 @@ export function App() {
   }
 
   return (
-    <main className="min-h-screen bg-neutral-950 p-4 text-slate-900">
-      <section className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-7xl flex-col overflow-hidden border border-slate-200 bg-white shadow-2xl">
-        <header className="flex items-center justify-between bg-neutral-950 px-5 py-4 text-white">
+    <main className="h-screen overflow-hidden bg-neutral-950 p-4 text-slate-900">
+      <section className="mx-auto flex h-full max-w-7xl flex-col overflow-hidden border border-slate-200 bg-white shadow-2xl">
+        <header className="flex shrink-0 items-center justify-between bg-neutral-950 px-5 py-4 text-white">
           <div className="flex items-baseline gap-4">
             <h1 className="text-lg font-semibold tracking-tight">
               Decision Brief Engine
@@ -434,10 +463,10 @@ export function App() {
           </div>
         </header>
 
-        <div className="grid flex-1 grid-cols-[minmax(16rem,1fr)_minmax(16rem,0.95fr)_minmax(24rem,2fr)] divide-x divide-slate-200">
+        <div className="grid min-h-0 flex-1 grid-cols-[minmax(16rem,1fr)_minmax(16rem,0.95fr)_minmax(24rem,2fr)] divide-x divide-slate-200 overflow-hidden">
           <section
             aria-labelledby="input-workspace-heading"
-            className="flex flex-col gap-5 p-5"
+            className="flex min-h-0 flex-col gap-5 overflow-y-auto p-5"
           >
             <div>
               <h2
@@ -460,7 +489,7 @@ export function App() {
               </div>
               <textarea
                 aria-describedby="raw-input-help"
-                className="mt-3 min-h-72 w-full resize-none border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
+                className="mt-3 min-h-72 w-full resize-y border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
                 onChange={(event) => updateRawInput(event.target.value)}
                 placeholder="Paste meeting notes or brainstorms..."
                 value={briefSession.rawInput.text}
@@ -478,15 +507,44 @@ export function App() {
             </div>
 
             <fieldset>
-              <legend className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                Brief Type
-              </legend>
+              <div className="relative flex items-center gap-2">
+                <legend className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                  Brief Type
+                </legend>
+                <button
+                  aria-expanded={isBriefTypeHelpOpen}
+                  aria-label="Show brief type guidance"
+                  className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-300 text-[11px] font-bold text-slate-500 hover:border-neutral-950 hover:text-neutral-950 focus:outline-none focus:ring-2 focus:ring-neutral-950/20"
+                  onClick={() =>
+                    setIsBriefTypeHelpOpen((isOpen) => !isOpen)
+                  }
+                  type="button"
+                >
+                  ?
+                </button>
+                {isBriefTypeHelpOpen ? (
+                  <div className="absolute left-0 top-7 z-10 w-80 rounded border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-700 shadow-lg">
+                    <ul className="space-y-2">
+                      {BRIEF_TYPES.map((briefType) => (
+                        <li key={briefType.id}>
+                          {BRIEF_TYPE_CONTEXT[briefType.id]}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
               <div className="mt-3 space-y-3">
                 {BRIEF_TYPES.map((briefType) => (
                   <label
-                    className="flex items-center gap-3 text-sm text-slate-700"
+                    className={`flex cursor-pointer items-center justify-between gap-3 rounded border px-3 py-2 text-sm ${
+                      selectedBriefTypeId === briefType.id
+                        ? "border-neutral-950 bg-neutral-950 text-white"
+                        : "border-slate-200 bg-white text-slate-700"
+                    }`}
                     key={briefType.id}
                   >
+                    <span>{BRIEF_TYPE_LABELS[briefType.id]}</span>
                     <input
                       checked={selectedBriefTypeId === briefType.id}
                       className="h-4 w-4 border-slate-300 text-neutral-950"
@@ -494,25 +552,18 @@ export function App() {
                       onChange={() => updateBriefType(briefType.id)}
                       type="radio"
                     />
-                    {briefType.name}
                   </label>
                 ))}
               </div>
-              <p
-                className={`mt-3 text-xs ${
-                  hasBriefType ? "text-slate-500" : "text-amber-700"
-                }`}
-              >
-                {hasBriefType
-                  ? `${briefSession.briefType?.name} selected.`
-                  : "Select an MVP brief type before generation."}
+              <p className="mt-3 text-xs text-slate-500">
+                {selectedBriefTypeHint}
               </p>
             </fieldset>
           </section>
 
           <section
             aria-labelledby="capture-layer-heading"
-            className="flex flex-col p-5"
+            className="flex min-h-0 flex-col overflow-y-auto p-5"
           >
             <div className="mb-4 flex items-center justify-between">
               <h2
@@ -549,7 +600,7 @@ export function App() {
 
           <section
             aria-labelledby="decision-brief-heading"
-            className="flex flex-col p-5"
+            className="flex min-h-0 flex-col overflow-y-auto p-5"
           >
             <div className="mb-4 flex items-center justify-between">
               <h2
@@ -577,7 +628,7 @@ export function App() {
           </section>
         </div>
 
-        <footer className="flex items-center justify-between border-t border-slate-200 bg-white px-5 py-3">
+        <footer className="sticky bottom-0 z-20 flex shrink-0 items-center justify-between border-t border-slate-200 bg-white px-5 py-3 shadow-[0_-8px_20px_rgba(15,23,42,0.06)]">
           <div className="flex gap-3">
             <button
               className={`rounded border px-4 py-2 text-sm font-semibold transition ${
@@ -641,7 +692,7 @@ export function App() {
             </button>
           </div>
         </footer>
-        <div className="border-t border-slate-200 bg-slate-50 px-5 py-2 text-xs text-slate-600">
+        <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-5 py-2 text-xs text-slate-600">
           Mocked local generation only. No model calls, persistence, or external
           integrations are used in this demo.
         </div>
