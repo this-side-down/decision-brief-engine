@@ -110,6 +110,7 @@ Use the field types defined in `docs/architecture/data-model.md`.
 - The mocked adapter can return fixture JSON that matches the required fields.
 - The real adapter should validate parseable JSON before passing the Capture Layer to brief generation.
 - Do not rely on proprietary response-format features; the contract should work with any FOSS-compatible inference path that can produce text.
+- For Ollama + Qwen3 JSON mode, valid JSON may appear in the `thinking` field while `response` is empty. See [Ollama Qwen3 JSON quirk](ollama-qwen3-json-quirk.md).
 
 ## MVP Contract 2: Generate Decision Brief
 

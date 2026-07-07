@@ -1,6 +1,6 @@
 import type { BriefType } from "../../types/brief";
 import type { CaptureLayer } from "../../types/captureLayer";
-import { mockModelAdapter } from "./mockModelAdapter";
+import { getModelAdapter } from "./getModelAdapter";
 import {
   DECISION_BRIEF_MARKDOWN_STRUCTURE,
   type ModelAdapter,
@@ -13,7 +13,7 @@ type GenerateDecisionBriefForSessionInput = {
 };
 
 export async function generateDecisionBriefForSession({
-  adapter = mockModelAdapter,
+  adapter = getModelAdapter(),
   briefType,
   captureLayer,
 }: GenerateDecisionBriefForSessionInput): Promise<string> {

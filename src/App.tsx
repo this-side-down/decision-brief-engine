@@ -2,6 +2,11 @@ import { useMemo, useState } from "react";
 import { BRIEF_TYPES, STRATEGY_DECISION_BRIEF } from "./data/briefTypes";
 import { generateCaptureLayerForSession } from "./services/generation/generateCaptureLayer";
 import { generateDecisionBriefForSession } from "./services/generation/generateDecisionBrief";
+import {
+  getGenerationMode,
+  getGenerationModeBadge,
+  getGenerationModeLabel,
+} from "./services/generation/generationMode";
 import type { BriefSession, BriefTypeId } from "./types/brief";
 import type { CaptureLayer } from "./types/captureLayer";
 
@@ -196,6 +201,10 @@ function DecisionBriefEditor({
 }
 
 export function App() {
+  const generationMode = useMemo(() => getGenerationMode(), []);
+  const generationModeLabel = useMemo(() => getGenerationModeLabel(), []);
+  const generationModeBadge = useMemo(() => getGenerationModeBadge(), []);
+  const isOllamaMode = generationMode === "ollama";
   const [briefSession, setBriefSession] = useState<BriefSession>(() =>
     createInitialSession(),
   );
@@ -455,10 +464,10 @@ export function App() {
           </div>
           <div className="flex items-center gap-3">
             <span className="text-xs text-neutral-400">
-              Mocked local generation for workflow validation
+              {generationModeLabel}
             </span>
             <span className="rounded-full bg-neutral-800 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-neutral-200">
-              Demo
+              {generationModeBadge}
             </span>
           </div>
         </header>
@@ -586,7 +595,9 @@ export function App() {
               <EmptyPanel
                 label={
                   isGeneratingCaptureLayer
-                    ? "Generating mocked Capture Layer..."
+                    ? isOllamaMode
+                      ? "Generating Capture Layer via Ollama..."
+                      : "Generating mocked Capture Layer..."
                     : "Capture Layer will appear here"
                 }
               />
@@ -620,7 +631,9 @@ export function App() {
               <EmptyPanel
                 label={
                   isGeneratingDecisionBrief
-                    ? "Generating mocked Decision Brief..."
+                    ? isOllamaMode
+                      ? "Generating Decision Brief via Ollama..."
+                      : "Generating mocked Decision Brief..."
                     : "Decision Brief will appear here"
                 }
               />
@@ -659,7 +672,9 @@ export function App() {
               onClick={handleGenerateDecisionBrief}
               title={
                 canGenerateDecisionBrief
-                  ? "Generate mocked Decision Brief Markdown."
+                  ? isOllamaMode
+                    ? "Generate Decision Brief Markdown via Ollama."
+                    : "Generate mocked Decision Brief Markdown."
                   : "Generate a Capture Layer first."
               }
               type="button"
@@ -693,8 +708,9 @@ export function App() {
           </div>
         </footer>
         <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-5 py-2 text-xs text-slate-600">
-          Mocked local generation only. No model calls, persistence, or external
-          integrations are used in this demo.
+          {isOllamaMode
+            ? "Local Ollama inference. Session state stays in memory; model thinking is never shown or stored."
+            : "Mocked local generation only. No model calls, persistence, or external integrations are used in this demo."}
         </div>
         {exportMessage ? (
           <div className="border-t border-slate-200 bg-slate-50 px-5 py-2 text-xs text-slate-600">

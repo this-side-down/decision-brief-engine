@@ -1,6 +1,6 @@
 import type { BriefType } from "../../types/brief";
 import type { CaptureLayer } from "../../types/captureLayer";
-import { mockModelAdapter } from "./mockModelAdapter";
+import { getModelAdapter } from "./getModelAdapter";
 import { CAPTURE_LAYER_FIELDS, type ModelAdapter } from "./types";
 
 type GenerateCaptureLayerForSessionInput = {
@@ -11,7 +11,7 @@ type GenerateCaptureLayerForSessionInput = {
 };
 
 export async function generateCaptureLayerForSession({
-  adapter = mockModelAdapter,
+  adapter = getModelAdapter(),
   briefType,
   rawInputText,
   sourceLabel,
