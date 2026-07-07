@@ -81,11 +81,20 @@ function CaptureLayerSummary({ captureLayer }: { captureLayer: CaptureLayer }) {
   );
 }
 
-function DecisionBriefPreview({ markdown }: { markdown: string }) {
+function DecisionBriefEditor({
+  markdown,
+  onChange,
+}: {
+  markdown: string;
+  onChange: (markdown: string) => void;
+}) {
   return (
-    <pre className="min-h-[32rem] whitespace-pre-wrap border border-slate-200 bg-slate-50 p-4 font-mono text-sm leading-6 text-slate-800">
-      {markdown}
-    </pre>
+    <textarea
+      aria-label="Editable Decision Brief Markdown"
+      className="min-h-[32rem] w-full resize-none border border-slate-200 bg-slate-50 p-4 font-mono text-sm leading-6 text-slate-800 outline-none transition focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
+      onChange={(event) => onChange(event.target.value)}
+      value={markdown}
+    />
   );
 }
 
@@ -93,6 +102,7 @@ export function App() {
   const [briefSession, setBriefSession] = useState<BriefSession>(() =>
     createInitialSession(),
   );
+  const [exportMessage, setExportMessage] = useState<string>("");
 
   const selectedBriefTypeId = useMemo(
     () => briefSession.briefType?.id ?? "",
@@ -106,6 +116,8 @@ export function App() {
   const canGenerateDecisionBrief = briefSession.captureLayer !== null;
   const isGeneratingDecisionBrief =
     briefSession.status === "generating_brief";
+  const currentMarkdown = briefSession.decisionBrief?.markdown ?? "";
+  const hasMarkdown = currentMarkdown.trim().length > 0;
   const captureLayerStatus = isGeneratingCaptureLayer
     ? "Generating"
     : briefSession.captureLayer
@@ -228,6 +240,62 @@ export function App() {
         ],
         updatedAt: new Date().toISOString(),
       }));
+    }
+  }
+
+  function updateDecisionBriefMarkdown(markdown: string) {
+    setExportMessage("");
+    setBriefSession((currentSession) => {
+      if (!currentSession.decisionBrief) {
+        return currentSession;
+      }
+
+      return {
+        ...currentSession,
+        decisionBrief: {
+          ...currentSession.decisionBrief,
+          markdown,
+          editedByUser: true,
+          updatedAt: new Date().toISOString(),
+        },
+        updatedAt: new Date().toISOString(),
+      };
+    });
+  }
+
+  async function handleCopyMarkdown() {
+    if (!hasMarkdown) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(currentMarkdown);
+      setExportMessage("Markdown copied to clipboard.");
+    } catch {
+      setExportMessage("Unable to copy Markdown to clipboard.");
+    }
+  }
+
+  function handleDownloadMarkdown() {
+    if (!hasMarkdown) {
+      return;
+    }
+
+    try {
+      const blob = new Blob([currentMarkdown], {
+        type: "text/markdown;charset=utf-8",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "decision-brief.md";
+      document.body.append(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setExportMessage("Markdown download started.");
+    } catch {
+      setExportMessage("Unable to download Markdown.");
     }
   }
 
@@ -374,7 +442,10 @@ export function App() {
               <StatusBadge label={decisionBriefStatus} />
             </div>
             {briefSession.decisionBrief ? (
-              <DecisionBriefPreview markdown={briefSession.decisionBrief.markdown} />
+              <DecisionBriefEditor
+                markdown={briefSession.decisionBrief.markdown}
+                onChange={updateDecisionBriefMarkdown}
+              />
             ) : (
               <EmptyPanel
                 label={
@@ -430,21 +501,32 @@ export function App() {
           </div>
           <div className="flex gap-3">
             <button
-              className="rounded px-4 py-2 text-sm font-semibold text-slate-500"
-              disabled
+              className={`rounded px-4 py-2 text-sm font-semibold ${
+                hasMarkdown ? "text-slate-900" : "text-slate-500"
+              }`}
+              disabled={!hasMarkdown}
+              onClick={handleCopyMarkdown}
               type="button"
             >
               Copy Markdown
             </button>
             <button
-              className="rounded px-4 py-2 text-sm font-semibold text-slate-500"
-              disabled
+              className={`rounded px-4 py-2 text-sm font-semibold ${
+                hasMarkdown ? "text-slate-900" : "text-slate-500"
+              }`}
+              disabled={!hasMarkdown}
+              onClick={handleDownloadMarkdown}
               type="button"
             >
               Download .md
             </button>
           </div>
         </footer>
+        {exportMessage ? (
+          <div className="border-t border-slate-200 bg-slate-50 px-5 py-2 text-xs text-slate-600">
+            {exportMessage}
+          </div>
+        ) : null}
       </section>
     </main>
   );
