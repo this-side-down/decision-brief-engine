@@ -29,6 +29,12 @@ Decision Brief Engine answers:
 - The MVP runtime stack is FOSS-only.
 - Generation can start mocked before local or self-hosted FOSS-compatible inference is wired in.
 
+## Demo
+
+Production demo: https://decision-brief-engine.vercel.app/
+
+The app is currently deployed on Vercel as a static frontend preview/demo host only.
+
 ## Documentation
 
 - [MVP product specification](docs/product/mvp-spec.md)
