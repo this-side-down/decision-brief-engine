@@ -42,6 +42,16 @@ Decision Brief Engine answers:
 - [MVP implementation checklist](docs/implementation/mvp-checklist.md)
 - [ADR 0002: FOSS-only MVP runtime stack](docs/decisions/0002-foss-only-mvp-stack.md)
 
+## Development
+
+```sh
+npm install
+npm run dev
+npm run typecheck
+npm run build
+npm run preview
+```
+
 ## Product Lab
 
 This project is part of an ongoing exploration into AI-native product systems, decision support, and intent-centric workflows.
