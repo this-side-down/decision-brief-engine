@@ -92,6 +92,9 @@ This is implementation guidance for the current v0 state, not a legal privacy po
 - [Implementation build plan](docs/implementation/build-plan.md)
 - [MVP implementation checklist](docs/implementation/mvp-checklist.md)
 - [ADR 0002: FOSS-only MVP runtime stack](docs/decisions/0002-foss-only-mvp-stack.md)
+- [ADR 0004: inference path decision brief](docs/decisions/0004-inference-path-decision-brief.md)
+- [Release and versioning policy](docs/project/release-process.md)
+- [Changelog](CHANGELOG.md)
 - [Repository maintenance](docs/repo-maintenance.md)
 
 ## Development
