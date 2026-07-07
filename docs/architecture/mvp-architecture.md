@@ -4,7 +4,7 @@
 
 Decision Brief Engine should start as a frontend-first MVP that proves the core decision-support workflow before adding durable persistence, integrations, collaboration, or enterprise infrastructure.
 
-The MVP should use Vite, React, TypeScript, and Tailwind. shadcn/ui can be used where it speeds up implementation with accessible primitives, but it should not become a dependency on a large design system effort. A lightweight backend or serverless API should be introduced only if model calls cannot safely or practically happen from the client.
+The MVP runtime stack must use only free and open-source software, including frontend framework, build tooling, styling, server/backend layer if any, AI engine, model runner, inference engine, and model. The MVP should use Vite, React, TypeScript, and Tailwind. shadcn/ui can be used where it speeds up implementation with accessible primitives, but it should not become a dependency on a large design system effort. A lightweight backend or serverless API should be introduced only if needed for a local or self-hosted FOSS inference path.
 
 The product workflow is:
 
@@ -28,18 +28,21 @@ Recommended stack:
 - TypeScript for typed state, data contracts, and prompt inputs/outputs.
 - Tailwind for styling.
 - shadcn/ui only for simple UI primitives if it is easy to add.
+- FOSS-compatible AI engine, model runner, inference engine, and model after license review.
 
-### Model call boundary
+### Model adapter boundary
 
-The MVP needs a boundary for AI model calls. Prefer the lightest implementation that protects secrets and keeps the product flow simple.
+The MVP needs a provider-neutral model adapter boundary for generation. Prefer local or self-hosted inference for the MVP, and keep the UI and prompt pipeline from coupling directly to one engine, model runner, inference engine, model, or hosted provider API.
 
 Acceptable MVP options:
 
-- A minimal serverless API route for model calls.
-- A small lightweight backend endpoint for model calls.
 - A mocked model adapter during early UI implementation.
+- A minimal local or self-hosted FOSS inference path behind the adapter.
+- A small lightweight backend endpoint only if needed to connect the UI to the FOSS-compatible inference path.
 
-Do not add a broader backend platform, database, job system, queue, workflow engine, enterprise auth layer, or integration service for the MVP.
+Hosted proprietary model APIs are out of scope for MVP implementation. Any candidate model must pass license review before adoption. Prompt and data contracts should remain provider-neutral so model selection can change without rewriting the product workflow.
+
+Do not add a broader backend platform, database, job system, queue, workflow engine, enterprise auth layer, integration service, or production deployment architecture for the MVP.
 
 ### State and persistence
 
@@ -137,7 +140,7 @@ The Capture Layer and final Decision Brief should not be collapsed into one gene
 5. Add a mocked Decision Brief Generator that produces Markdown from the Capture Layer.
 6. Build the Review/Edit Surface for the Markdown output.
 7. Add Markdown export.
-8. Replace mocked generation with the lightest safe model-call boundary.
+8. Replace mocked generation with the lightest FOSS-compatible local or self-hosted inference path behind the model adapter.
 9. Add basic error states for invalid input, model failure, malformed Capture Layer JSON, and empty output.
 10. Add evaluation examples only after the core pipeline is usable.
 
@@ -150,5 +153,7 @@ The Capture Layer and final Decision Brief should not be collapsed into one gene
 - Billing.
 - Enterprise administration.
 - Production deployment architecture.
+- Hosted proprietary model APIs for MVP implementation.
+- Selecting a final model before license review.
 - Queues, background agents, or complex workflow orchestration.
 - Database-specific schema.

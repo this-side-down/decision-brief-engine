@@ -41,6 +41,8 @@ Turn messy context into a structured decision brief that makes the decision, tra
 - Review and edit of generated output before export.
 - Markdown export for the final Decision Brief.
 - Clear product copy and document structure that support implementation.
+- A FOSS-only MVP runtime stack, including frontend framework, build tooling, styling, server/backend layer if any, AI engine, model runner, inference engine, and model.
+- Mocked generation before local or self-hosted FOSS inference is wired in.
 
 ## Out of scope
 
@@ -53,6 +55,8 @@ Turn messy context into a structured decision brief that makes the decision, tra
 - App code beyond what future implementation work requires.
 - UI design beyond basic product flow requirements.
 - Final prompt tuning.
+- Hosted proprietary model APIs for MVP implementation.
+- Selecting a final model before license review.
 - Production architecture.
 
 ## Success criteria
@@ -68,6 +72,8 @@ Turn messy context into a structured decision brief that makes the decision, tra
 - The product flow matches the README: paste notes, select brief type, generate Capture Layer, generate Decision Brief, export Markdown.
 - The implementation keeps Capture Layer generation and Decision Brief generation as separate steps.
 - The MVP can run without auth, database persistence, integrations, collaboration, billing, or enterprise admin.
+- The MVP runtime stack uses only free and open-source software, including AI engines, model runners, inference engines, and models.
+- Any candidate model passes license review before adoption.
 - The user can inspect or review generated content before exporting.
 - Markdown export produces a complete final Decision Brief artifact.
 - The system is structured so future brief types, evaluation cases, and prompt contracts can build on the same product model.
@@ -79,6 +85,8 @@ Turn messy context into a structured decision brief that makes the decision, tra
 - A focused MVP can prove value through artifact quality before adding collaboration, integrations, persistence, or enterprise controls.
 - Markdown export is sufficient for early use because teams can move the artifact into their existing docs, wikis, or planning tools.
 - The product differentiates by structuring intent and decision logic, not by summarizing transcripts.
+- A FOSS-only runtime stack supports inspectable, locally reproducible, and enterprise-compatible MVP evaluation.
+- Provider-neutral prompt and data contracts will keep the product from depending on one proprietary hosted AI API.
 
 ## MVP risks
 
@@ -87,3 +95,5 @@ Turn messy context into a structured decision brief that makes the decision, tra
 - If the Capture Layer is too verbose, users may skip review and lose trust in the final brief.
 - If the final brief reads like a generic summary, the product will not demonstrate decision-support value.
 - Without persistence or integrations, early usage depends on the Markdown export being immediately useful.
+- FOSS model quality, latency, and hardware requirements may constrain early output quality or local evaluation.
+- License compatibility must be treated as a product and architecture requirement, not a cleanup task after model selection.
