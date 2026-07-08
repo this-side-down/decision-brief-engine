@@ -28,7 +28,7 @@ export function GenerationModeControl({
     !preflightSupported || inferenceUiState === "browser_unsupported";
 
   return (
-    <fieldset className="rounded border border-slate-200 bg-slate-50 p-4">
+    <fieldset className="min-w-0 shrink-0 rounded border border-slate-200 bg-slate-50 p-4">
       <legend
         className="px-1 text-[11px] font-bold uppercase tracking-wide text-slate-500"
         id="generation-mode-legend"
@@ -37,13 +37,13 @@ export function GenerationModeControl({
       </legend>
       <div className="mt-3 space-y-3">
         <label
-          className={`flex cursor-pointer items-center justify-between gap-3 rounded border px-3 py-2 text-sm ${
+          className={`flex min-w-0 cursor-pointer items-center justify-between gap-3 rounded border px-3 py-2 text-sm ${
             modePreference === "mock"
               ? "border-neutral-950 bg-neutral-950 text-white"
               : "border-slate-200 bg-white text-slate-700"
           }`}
         >
-          <span>Mock demo</span>
+          <span className="min-w-0 break-words">Mock demo</span>
           <input
             aria-labelledby="generation-mode-legend"
             checked={modePreference === "mock"}
@@ -54,7 +54,7 @@ export function GenerationModeControl({
           />
         </label>
         <label
-          className={`flex cursor-pointer items-center justify-between gap-3 rounded border px-3 py-2 text-sm ${
+          className={`flex min-w-0 cursor-pointer items-center justify-between gap-3 rounded border px-3 py-2 text-sm ${
             modePreference === "webgpu"
               ? "border-neutral-950 bg-neutral-950 text-white"
               : liveDisabled
@@ -62,7 +62,7 @@ export function GenerationModeControl({
                 : "border-slate-200 bg-white text-slate-700"
           }`}
         >
-          <span>Live in browser</span>
+          <span className="min-w-0 break-words">Live in browser</span>
           <input
             aria-labelledby="generation-mode-legend"
             checked={modePreference === "webgpu"}

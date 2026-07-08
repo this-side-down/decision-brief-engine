@@ -103,10 +103,14 @@ function StatusBadge({ label }: { label: string }) {
 
 function EmptyPanel({ label }: { label: string }) {
   return (
-    <div className="flex min-h-[32rem] items-center justify-center border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-400">
+    <div className="flex min-h-48 flex-1 items-center justify-center border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-400">
       {label}
     </div>
   );
+}
+
+function captureCardTextClassName() {
+  return "mt-2 min-w-0 break-words text-sm leading-6 text-slate-700 [overflow-wrap:anywhere]";
 }
 
 function TextSection({
@@ -117,11 +121,11 @@ function TextSection({
   value: string;
 }) {
   return (
-    <section className="rounded border border-slate-200 bg-white p-3">
+    <section className="min-w-0 rounded border border-slate-200 bg-white p-3">
       <h3 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
         {label}
       </h3>
-      <p className="mt-2 text-sm leading-6 text-slate-700">
+      <p className={captureCardTextClassName()}>
         {value || "Not captured yet."}
       </p>
     </section>
@@ -136,14 +140,16 @@ function ListSection({
   label: string;
 }) {
   return (
-    <section className="rounded border border-slate-200 bg-white p-3">
+    <section className="min-w-0 rounded border border-slate-200 bg-white p-3">
       <h3 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
         {label}
       </h3>
       {items.length > 0 ? (
-        <ul className="mt-2 list-disc space-y-1 pl-4 text-sm leading-6 text-slate-700">
+        <ul className="mt-2 min-w-0 list-disc space-y-1 pl-4 text-sm leading-6 text-slate-700">
           {items.map((item) => (
-            <li key={item}>{item}</li>
+            <li className="break-words [overflow-wrap:anywhere]" key={item}>
+              {item}
+            </li>
           ))}
         </ul>
       ) : (
@@ -155,12 +161,12 @@ function ListSection({
 
 function CaptureLayerSummary({ captureLayer }: { captureLayer: CaptureLayer }) {
   return (
-    <div className="space-y-3 border border-slate-200 bg-slate-50 p-4">
-      <div className="flex items-center justify-between rounded border border-slate-200 bg-white p-3 text-xs text-slate-600">
-        <span className="font-bold uppercase tracking-wide text-slate-500">
+    <div className="min-w-0 space-y-3 border border-slate-200 bg-slate-50 p-4">
+      <div className="flex min-w-0 items-center justify-between gap-3 rounded border border-slate-200 bg-white p-3 text-xs text-slate-600">
+        <span className="shrink-0 font-bold uppercase tracking-wide text-slate-500">
           Confidence
         </span>
-        <span className="font-semibold text-slate-900">
+        <span className="min-w-0 break-words text-right font-semibold text-slate-900 [overflow-wrap:anywhere]">
           {captureLayer.confidence}
         </span>
       </div>
@@ -193,7 +199,7 @@ function DecisionBriefEditor({
   return (
     <textarea
       aria-label="Editable Decision Brief Markdown"
-      className="min-h-full w-full resize-none border border-slate-200 bg-slate-50 p-4 font-mono text-sm leading-6 text-slate-800 outline-none transition focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
+      className="min-h-0 w-full flex-1 resize-none border border-slate-200 bg-slate-50 p-4 font-mono text-sm leading-6 text-slate-800 outline-none transition focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
       onChange={(event) => onChange(event.target.value)}
       value={markdown}
     />
@@ -566,24 +572,97 @@ export function App() {
           </div>
         </header>
 
-        <div className="grid min-h-0 flex-1 grid-cols-[minmax(16rem,1fr)_minmax(16rem,0.95fr)_minmax(24rem,2fr)] divide-x divide-slate-200 overflow-hidden">
+        <div className="grid min-h-0 flex-1 grid-cols-[minmax(12rem,1fr)_minmax(12rem,0.95fr)_minmax(18rem,2fr)] divide-x divide-slate-200 overflow-hidden xl:grid-cols-[minmax(16rem,1fr)_minmax(16rem,0.95fr)_minmax(24rem,2fr)]">
           <section
             aria-labelledby="input-workspace-heading"
-            className="flex min-h-0 flex-col gap-5 overflow-y-auto p-5"
+            className="flex min-h-0 min-w-0 flex-col overflow-hidden p-5"
           >
-            <div>
-              <h2
-                className="text-[11px] font-bold uppercase tracking-wide text-slate-500"
-                id="input-workspace-heading"
-              >
-                Input Workspace
-              </h2>
-              <div className="mt-4 flex items-center justify-between gap-3">
-                <p className="text-xs text-slate-500">
-                  Paste notes or load a construction workforce planning example.
+            <div className="shrink-0 space-y-5">
+              <div>
+                <h2
+                  className="text-[11px] font-bold uppercase tracking-wide text-slate-500"
+                  id="input-workspace-heading"
+                >
+                  Input Workspace
+                </h2>
+                <p className="mt-2 text-xs text-slate-500">
+                  Paste notes or load the construction workforce planning example,
+                  then choose brief type and generation mode before generating.
                 </p>
+              </div>
+
+              <fieldset className="min-w-0">
+                <div className="relative flex items-center gap-2">
+                  <legend className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                    Brief Type
+                  </legend>
+                  <button
+                    aria-expanded={isBriefTypeHelpOpen}
+                    aria-label="Show brief type guidance"
+                    className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-300 text-[11px] font-bold text-slate-500 hover:border-neutral-950 hover:text-neutral-950 focus:outline-none focus:ring-2 focus:ring-neutral-950/20"
+                    onClick={() =>
+                      setIsBriefTypeHelpOpen((isOpen) => !isOpen)
+                    }
+                    type="button"
+                  >
+                    ?
+                  </button>
+                  {isBriefTypeHelpOpen ? (
+                    <div className="absolute left-0 top-7 z-10 w-80 max-w-[calc(100vw-4rem)] rounded border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-700 shadow-lg">
+                      <ul className="space-y-2">
+                        {BRIEF_TYPES.map((briefType) => (
+                          <li key={briefType.id}>
+                            {BRIEF_TYPE_CONTEXT[briefType.id]}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                </div>
+                <div className="mt-3 space-y-2">
+                  {BRIEF_TYPES.map((briefType) => (
+                    <label
+                      className={`flex min-w-0 cursor-pointer items-center justify-between gap-3 rounded border px-3 py-2 text-sm ${
+                        selectedBriefTypeId === briefType.id
+                          ? "border-neutral-950 bg-neutral-950 text-white"
+                          : "border-slate-200 bg-white text-slate-700"
+                      }`}
+                      key={briefType.id}
+                    >
+                      <span className="min-w-0 break-words">
+                        {BRIEF_TYPE_LABELS[briefType.id]}
+                      </span>
+                      <input
+                        checked={selectedBriefTypeId === briefType.id}
+                        className="h-4 w-4 shrink-0 border-slate-300 text-neutral-950"
+                        name="brief-type"
+                        onChange={() => updateBriefType(briefType.id)}
+                        type="radio"
+                      />
+                    </label>
+                  ))}
+                </div>
+                <p className="mt-3 text-xs text-slate-500">
+                  {selectedBriefTypeHint}
+                </p>
+              </fieldset>
+
+              <GenerationModeControl
+                canSelectBrowserInference={canSelectBrowserInference}
+                inferenceUiState={inferenceUiState}
+                modePreference={modePreference}
+                onSelectLiveInBrowser={selectLiveInBrowser}
+                onSelectMockDemo={selectMockDemo}
+                preflightReason={preflight.reason}
+                preflightSupported={preflight.supported}
+              />
+            </div>
+
+            <div className="mt-5 flex min-h-0 min-w-0 flex-1 flex-col">
+              <div className="mb-3 flex shrink-0 items-center justify-between gap-3">
+                <p className="text-xs text-slate-500">Raw notes</p>
                 <button
-                  className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-neutral-950 hover:text-neutral-950"
+                  className="shrink-0 rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-neutral-950 hover:text-neutral-950"
                   onClick={handleLoadExampleNotes}
                   type="button"
                 >
@@ -592,13 +671,13 @@ export function App() {
               </div>
               <textarea
                 aria-describedby="raw-input-help"
-                className="mt-3 min-h-72 w-full resize-y border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
+                className="min-h-0 flex-1 resize-none border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
                 onChange={(event) => updateRawInput(event.target.value)}
                 placeholder="Paste meeting notes or brainstorms..."
                 value={briefSession.rawInput.text}
               />
               <p
-                className={`mt-2 text-xs ${
+                className={`mt-2 shrink-0 text-xs ${
                   hasRawInput ? "text-slate-500" : "text-amber-700"
                 }`}
                 id="raw-input-help"
@@ -608,108 +687,46 @@ export function App() {
                   : "Paste messy notes before generating a Capture Layer."}
               </p>
             </div>
-
-            <fieldset>
-              <div className="relative flex items-center gap-2">
-                <legend className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                  Brief Type
-                </legend>
-                <button
-                  aria-expanded={isBriefTypeHelpOpen}
-                  aria-label="Show brief type guidance"
-                  className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-300 text-[11px] font-bold text-slate-500 hover:border-neutral-950 hover:text-neutral-950 focus:outline-none focus:ring-2 focus:ring-neutral-950/20"
-                  onClick={() =>
-                    setIsBriefTypeHelpOpen((isOpen) => !isOpen)
-                  }
-                  type="button"
-                >
-                  ?
-                </button>
-                {isBriefTypeHelpOpen ? (
-                  <div className="absolute left-0 top-7 z-10 w-80 rounded border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-700 shadow-lg">
-                    <ul className="space-y-2">
-                      {BRIEF_TYPES.map((briefType) => (
-                        <li key={briefType.id}>
-                          {BRIEF_TYPE_CONTEXT[briefType.id]}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-              </div>
-              <div className="mt-3 space-y-3">
-                {BRIEF_TYPES.map((briefType) => (
-                  <label
-                    className={`flex cursor-pointer items-center justify-between gap-3 rounded border px-3 py-2 text-sm ${
-                      selectedBriefTypeId === briefType.id
-                        ? "border-neutral-950 bg-neutral-950 text-white"
-                        : "border-slate-200 bg-white text-slate-700"
-                    }`}
-                    key={briefType.id}
-                  >
-                    <span>{BRIEF_TYPE_LABELS[briefType.id]}</span>
-                    <input
-                      checked={selectedBriefTypeId === briefType.id}
-                      className="h-4 w-4 border-slate-300 text-neutral-950"
-                      name="brief-type"
-                      onChange={() => updateBriefType(briefType.id)}
-                      type="radio"
-                    />
-                  </label>
-                ))}
-              </div>
-              <p className="mt-3 text-xs text-slate-500">
-                {selectedBriefTypeHint}
-              </p>
-            </fieldset>
-
-            <GenerationModeControl
-              canSelectBrowserInference={canSelectBrowserInference}
-              inferenceUiState={inferenceUiState}
-              modePreference={modePreference}
-              onSelectLiveInBrowser={selectLiveInBrowser}
-              onSelectMockDemo={selectMockDemo}
-              preflightReason={preflight.reason}
-              preflightSupported={preflight.supported}
-            />
           </section>
 
           <section
             aria-labelledby="capture-layer-heading"
-            className="flex min-h-0 flex-col overflow-y-auto p-5"
+            className="flex min-h-0 min-w-0 flex-col overflow-hidden p-5"
           >
-            <div className="mb-4 flex items-center justify-between">
-              <h2
-                className="text-[11px] font-bold uppercase tracking-wide text-slate-500"
-                id="capture-layer-heading"
-              >
-                Capture Layer
-              </h2>
-            </div>
-            <div className="mb-4 flex items-center justify-between">
-              <span className="text-xs text-slate-500">
+            <div className="mb-4 shrink-0">
+              <div className="flex items-center justify-between">
+                <h2
+                  className="text-[11px] font-bold uppercase tracking-wide text-slate-500"
+                  id="capture-layer-heading"
+                >
+                  Capture Layer
+                </h2>
+                <StatusBadge label={captureLayerStatus} />
+              </div>
+              <p className="mt-2 text-xs text-slate-500">
                 Intermediate capture artifact: review ambiguity before brief
                 generation.
-              </span>
-              <StatusBadge label={captureLayerStatus} />
+              </p>
             </div>
-            {briefSession.captureLayer ? (
-              <CaptureLayerSummary captureLayer={briefSession.captureLayer} />
-            ) : (
-              <EmptyPanel
-                label={
-                  isGeneratingCaptureLayer
-                    ? isOllamaMode
-                      ? "Generating Capture Layer via Ollama..."
-                      : isWebGpuMode
-                        ? "Generating Capture Layer in your browser..."
-                        : "Generating mocked Capture Layer..."
-                    : "Capture Layer will appear here"
-                }
-              />
-            )}
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              {briefSession.captureLayer ? (
+                <CaptureLayerSummary captureLayer={briefSession.captureLayer} />
+              ) : (
+                <EmptyPanel
+                  label={
+                    isGeneratingCaptureLayer
+                      ? isOllamaMode
+                        ? "Generating Capture Layer via Ollama..."
+                        : isWebGpuMode
+                          ? "Generating Capture Layer in your browser..."
+                          : "Generating mocked Capture Layer..."
+                      : "Capture Layer will appear here"
+                  }
+                />
+              )}
+            </div>
             {briefSession.errors.length > 0 ? (
-              <p className="mt-3 text-xs text-red-700">
+              <p className="mt-3 shrink-0 text-xs text-red-700">
                 {briefSession.errors[0]}
               </p>
             ) : null}
@@ -717,9 +734,9 @@ export function App() {
 
           <section
             aria-labelledby="decision-brief-heading"
-            className="flex min-h-0 flex-col overflow-y-auto p-5"
+            className="flex min-h-0 min-w-0 flex-col overflow-hidden p-5"
           >
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex shrink-0 items-center justify-between">
               <h2
                 className="text-[11px] font-bold uppercase tracking-wide text-slate-500"
                 id="decision-brief-heading"
@@ -728,24 +745,26 @@ export function App() {
               </h2>
               <StatusBadge label={decisionBriefStatus} />
             </div>
-            {briefSession.decisionBrief ? (
-              <DecisionBriefEditor
-                markdown={briefSession.decisionBrief.markdown}
-                onChange={updateDecisionBriefMarkdown}
-              />
-            ) : (
-              <EmptyPanel
-                label={
-                  isGeneratingDecisionBrief
-                    ? isOllamaMode
-                      ? "Generating Decision Brief via Ollama..."
-                      : isWebGpuMode
-                        ? "Generating Decision Brief in your browser..."
-                        : "Generating mocked Decision Brief..."
-                    : "Decision Brief will appear here"
-                }
-              />
-            )}
+            <div className="flex min-h-0 flex-1 flex-col">
+              {briefSession.decisionBrief ? (
+                <DecisionBriefEditor
+                  markdown={briefSession.decisionBrief.markdown}
+                  onChange={updateDecisionBriefMarkdown}
+                />
+              ) : (
+                <EmptyPanel
+                  label={
+                    isGeneratingDecisionBrief
+                      ? isOllamaMode
+                        ? "Generating Decision Brief via Ollama..."
+                        : isWebGpuMode
+                          ? "Generating Decision Brief in your browser..."
+                          : "Generating mocked Decision Brief..."
+                      : "Decision Brief will appear here"
+                  }
+                />
+              )}
+            </div>
           </section>
         </div>
 
