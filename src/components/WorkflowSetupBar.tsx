@@ -59,16 +59,28 @@ export function WorkflowSetupBar({
   onSelectMockDemo,
   onSelectLiveInBrowser,
 }: WorkflowSetupBarProps) {
+  const isMockDemo = modePreference === "mock";
+
   return (
     <div
       aria-label="Workflow setup"
       className="shrink-0 border-b border-slate-200 bg-slate-50 px-5 py-3"
     >
       <p className="text-xs text-slate-600">
-        Choose a messy example to see how Decision Brief Engine turns raw notes
-        into a Capture Layer and then a structured brief. The public demo uses{" "}
-        <span className="font-semibold">mocked generation</span> so the workflow
-        is reliable and reviewable.
+        {isMockDemo ? (
+          <>
+            Choose a messy example to see how Decision Brief Engine turns raw
+            notes into a Capture Layer and then a structured brief. The public
+            demo uses <span className="font-semibold">mocked generation</span>{" "}
+            so the workflow is reliable and reviewable.
+          </>
+        ) : (
+          <>
+            Choose a messy example to test the gated browser model path. Notes
+            stay local in this browser, but quality may be weaker than the Mock
+            demo or Local Ollama.
+          </>
+        )}
       </p>
 
       <div className="mt-3 flex flex-wrap items-end gap-x-6 gap-y-3">
