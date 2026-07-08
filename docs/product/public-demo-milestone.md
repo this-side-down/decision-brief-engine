@@ -1,8 +1,10 @@
-# Public demo milestone
+# Public demo milestone (`v0.1.0`)
 
 Decision Brief Engine now has a credible public workflow demo: a three-column layout, durable example scenarios, export polish, and local inference tooling that make the product legible to evaluators without exposing unfinished runtime paths.
 
 Production demo: https://decision-brief-engine.vercel.app/
+
+GitHub release target: **`v0.1.0`** — Public Demo Milestone. See [CHANGELOG.md](../../CHANGELOG.md).
 
 ## Summary
 

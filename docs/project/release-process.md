@@ -39,10 +39,8 @@ Use the following milestone map unless a later ADR or issue explicitly changes i
 
 | Version | Milestone |
 | --- | --- |
-| `v0.1.0` | Mocked public workflow baseline |
-| `v0.2.0` | Local Ollama inference and v0 readiness documentation |
-| `v0.3.0` | Browser inference decision and quality gate |
-| `v0.4.0` | Opt-in browser inference, if ungated for general use (currently experimental behind build flag) |
+| `v0.1.0` | Public demo milestone: mock default, example gallery, export polish, Local Ollama dev tools, gated WebGPU, generation telemetry |
+| `v0.2.0` | Reserved for the next capability milestone after `v0.1.0` is tagged |
 
 Intermediate `0.x.y` releases should note whether they change product behavior or docs only.
 
@@ -91,19 +89,19 @@ Keep release notes concise and product-oriented. Prefer capability statements ov
 Example structure:
 
 ```markdown
-## v0.2.0 — Local Ollama inference
+## v0.1.0 — Public Demo Milestone
 
 ### Product state
-- Public Vercel demo: mocked/static workflow
-- Local development: Ollama + qwen3:4b inference via ModelAdapter
-- Browser inference: not shipped
+- Public Vercel demo: mocked/static workflow with example gallery
+- Local development: Ollama + qwen3:4b via ModelAdapter; health check CLI
+- Browser inference: experimental, gated behind build flag
 
 ### Highlights
 - ...
 
 ### Deferred
 - Public hosted inference
-- Desktop/mobile distribution
+- WebGPU public ungating pending quality gate
 ```
 
 ## Changelog maintenance
