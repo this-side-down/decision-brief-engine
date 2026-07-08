@@ -68,7 +68,7 @@ Do not tag for:
    - `npm run typecheck`
    - `npm run build`
    - For inference-mode changes, run manual smoke checks for mock default, optional WebGPU flag, and Ollama locked mode; record browser model results in `fixtures/evaluation/` when relevant.
-4. Create an annotated Git tag matching the version, for example `v0.2.0`.
+4. Create an annotated Git tag matching the version, for example `v0.1.0`.
 5. Create a GitHub Release from that tag.
 6. Copy the corresponding `CHANGELOG.md` section into the GitHub Release description.
 
