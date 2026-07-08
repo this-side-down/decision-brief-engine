@@ -4,6 +4,10 @@ import type { DemoExample, DemoExampleId } from "../data/demoExamples";
 import type { BriefTypeId } from "../types/brief";
 import { GenerationModeControl } from "./generation/GenerationModeControl";
 import type { UserGenerationModePreference } from "../services/generation/generationMode";
+import {
+  getWorkflowSetupCopy,
+  type GenerationMode,
+} from "../services/generation/generationMode";
 
 const BRIEF_TYPE_LABELS = {
   product: "Product",
@@ -32,6 +36,7 @@ type WorkflowSetupBarProps = {
   onDemoExampleChange: (exampleId: DemoExampleId) => void;
   onLoadDemoExample: () => void;
   canSelectBrowserInference: boolean;
+  effectiveMode: GenerationMode;
   modePreference: UserGenerationModePreference;
   preflightSupported: boolean;
   preflightReason?: string;
@@ -52,6 +57,7 @@ export function WorkflowSetupBar({
   onDemoExampleChange,
   onLoadDemoExample,
   canSelectBrowserInference,
+  effectiveMode,
   modePreference,
   preflightSupported,
   preflightReason,
@@ -59,29 +65,14 @@ export function WorkflowSetupBar({
   onSelectMockDemo,
   onSelectLiveInBrowser,
 }: WorkflowSetupBarProps) {
-  const isMockDemo = modePreference === "mock";
+  const setupCopy = getWorkflowSetupCopy(effectiveMode);
 
   return (
     <div
       aria-label="Workflow setup"
       className="shrink-0 border-b border-slate-200 bg-slate-50 px-5 py-3"
     >
-      <p className="text-xs text-slate-600">
-        {isMockDemo ? (
-          <>
-            Choose a messy example to see how Decision Brief Engine turns raw
-            notes into a Capture Layer and then a structured brief. The public
-            demo uses <span className="font-semibold">mocked generation</span>{" "}
-            so the workflow is reliable and reviewable.
-          </>
-        ) : (
-          <>
-            Choose a messy example to test the gated browser model path. Notes
-            stay local in this browser, but quality may be weaker than the Mock
-            demo or Local Ollama.
-          </>
-        )}
-      </p>
+      <p className="text-xs text-slate-600">{setupCopy}</p>
 
       <div className="mt-3 flex flex-wrap items-end gap-x-6 gap-y-3">
         <fieldset className="min-w-0">

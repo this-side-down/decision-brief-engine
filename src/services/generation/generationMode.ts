@@ -68,6 +68,17 @@ export function getGenerationModeDescription(
   }
 }
 
+export function getWorkflowSetupCopy(mode: GenerationMode = getGenerationMode()): string {
+  switch (mode) {
+    case "ollama":
+      return "Running with Local Ollama. Notes stay on this machine, but generation speed depends on local hardware and model performance.";
+    case "webgpu":
+      return "Choose a messy example to test the gated browser model path. Notes stay local in this browser, but quality may be weaker than the Mock demo or Local Ollama.";
+    default:
+      return "Choose a messy example to see how Decision Brief Engine turns raw notes into a Capture Layer and then a structured brief. The public demo uses mocked generation so the workflow is reliable and reviewable.";
+  }
+}
+
 export function canSelectBrowserInference(): boolean {
   return !isOllamaLocked() && isWebGpuInferenceEnabled();
 }

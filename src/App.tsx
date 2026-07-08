@@ -67,6 +67,7 @@ function createInitialSession(): BriefSession {
     decisionBrief: null,
     status: "draft",
     errors: [],
+    errorStep: null,
     createdAt: now,
     updatedAt: now,
   };
@@ -274,16 +275,20 @@ export function App() {
     ? "Generating"
     : briefSession.captureLayer
       ? "Generated"
-      : briefSession.status === "error"
+      : briefSession.errorStep === "capture"
         ? "Failed"
         : "Pending";
   const decisionBriefStatus = isGeneratingDecisionBrief
     ? "Generating"
     : briefSession.decisionBrief
       ? "Ready"
-      : briefSession.status === "error"
-        ? "Waiting"
+      : briefSession.errorStep === "brief"
+        ? "Failed"
         : "Waiting";
+  const captureErrorMessage =
+    briefSession.errorStep === "capture" ? briefSession.errors[0] : null;
+  const briefErrorMessage =
+    briefSession.errorStep === "brief" ? briefSession.errors[0] : null;
   const generationStatusMessage =
     telemetry.liveStatusMessage ||
     (isWebGpuMode ? statusMessage : "");
@@ -334,6 +339,7 @@ export function App() {
       decisionBrief: null,
       status: "draft",
       errors: [],
+      errorStep: null,
       updatedAt: new Date().toISOString(),
     }));
   }
@@ -365,6 +371,7 @@ export function App() {
       decisionBrief: null,
       status: "draft",
       errors: [],
+      errorStep: null,
       updatedAt: now,
     }));
   }
@@ -376,6 +383,7 @@ export function App() {
       ...currentSession,
       status: "generating_capture",
       errors: [],
+      errorStep: null,
       updatedAt: new Date().toISOString(),
     }));
     telemetry.startCapture();
@@ -402,6 +410,7 @@ export function App() {
         decisionBrief: null,
         status: "capture_ready",
         errors: [],
+        errorStep: null,
         updatedAt: new Date().toISOString(),
       }));
       notifyCaptureReady();
@@ -412,6 +421,7 @@ export function App() {
           ...currentSession,
           status: "draft",
           errors: [],
+          errorStep: null,
           updatedAt: new Date().toISOString(),
         }));
         cancelActiveGeneration();
@@ -431,6 +441,7 @@ export function App() {
         ...currentSession,
         status: "error",
         errors: [message],
+        errorStep: "capture",
         updatedAt: new Date().toISOString(),
       }));
       notifyCaptureFailed(
@@ -452,6 +463,7 @@ export function App() {
       ...currentSession,
       status: "generating_brief",
       errors: [],
+      errorStep: null,
       updatedAt: new Date().toISOString(),
     }));
     telemetry.startBrief();
@@ -489,6 +501,7 @@ export function App() {
         },
         status: "brief_ready",
         errors: [],
+        errorStep: null,
         updatedAt: now,
       }));
       notifyGenerationComplete();
@@ -499,6 +512,7 @@ export function App() {
           ...currentSession,
           status: "capture_ready",
           errors: [],
+          errorStep: null,
           updatedAt: new Date().toISOString(),
         }));
         cancelActiveGeneration();
@@ -516,8 +530,9 @@ export function App() {
 
       setBriefSession((currentSession) => ({
         ...currentSession,
-        status: "error",
+        status: "capture_ready",
         errors: [message],
+        errorStep: "brief",
         updatedAt: new Date().toISOString(),
       }));
       notifyBriefFailed(
@@ -673,6 +688,7 @@ export function App() {
       decisionBrief: null,
       status: "draft",
       errors: [],
+      errorStep: null,
       updatedAt: new Date().toISOString(),
     }));
   }
@@ -700,6 +716,7 @@ export function App() {
         <WorkflowSetupBar
           canSelectBrowserInference={canSelectBrowserInference}
           demoExamples={DEMO_EXAMPLES}
+          effectiveMode={effectiveMode}
           inferenceUiState={inferenceUiState}
           isBriefTypeHelpOpen={isBriefTypeHelpOpen}
           modePreference={modePreference}
@@ -793,9 +810,9 @@ export function App() {
                 />
               )}
             </div>
-            {briefSession.errors.length > 0 ? (
+            {captureErrorMessage ? (
               <p className="mt-3 shrink-0 text-xs text-red-700">
-                {briefSession.errors[0]}
+                {captureErrorMessage}
               </p>
             ) : null}
           </section>
@@ -834,6 +851,11 @@ export function App() {
                 />
               )}
             </div>
+            {briefErrorMessage ? (
+              <p className="mt-3 shrink-0 text-xs text-red-700">
+                {briefErrorMessage}
+              </p>
+            ) : null}
           </section>
         </div>
 
