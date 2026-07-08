@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
+import { BrowserInferenceStatus } from "./components/generation/BrowserInferenceStatus";
+import { DownloadDisclosureDialog } from "./components/generation/DownloadDisclosureDialog";
+import { GenerationModeControl } from "./components/generation/GenerationModeControl";
 import { BRIEF_TYPES, STRATEGY_DECISION_BRIEF } from "./data/briefTypes";
+import { useGenerationMode } from "./hooks/useGenerationMode";
 import { generateCaptureLayerForSession } from "./services/generation/generateCaptureLayer";
 import { generateDecisionBriefForSession } from "./services/generation/generateDecisionBrief";
-import {
-  getGenerationMode,
-  getGenerationModeBadge,
-  getGenerationModeLabel,
-} from "./services/generation/generationMode";
+import { GenerationCancelledError } from "./services/generation/webGpuErrors";
 import type { BriefSession, BriefTypeId } from "./types/brief";
 import type { CaptureLayer } from "./types/captureLayer";
 
@@ -201,10 +201,42 @@ function DecisionBriefEditor({
 }
 
 export function App() {
-  const generationMode = useMemo(() => getGenerationMode(), []);
-  const generationModeLabel = useMemo(() => getGenerationModeLabel(), []);
-  const generationModeBadge = useMemo(() => getGenerationModeBadge(), []);
-  const isOllamaMode = generationMode === "ollama";
+  const generation = useGenerationMode();
+  const {
+    effectiveMode,
+    modePreference,
+    canSelectBrowserInference,
+    modeLabel,
+    modeBadge,
+    modeDescription,
+    preflight,
+    inferenceUiState,
+    statusMessage,
+    downloadProgress,
+    isDisclosureOpen,
+    isEngineReady,
+    selectMockDemo,
+    selectLiveInBrowser,
+    openDownloadDisclosure,
+    closeDownloadDisclosure,
+    confirmModelDownload,
+    cancelModelDownload,
+    retryModelDownload,
+    fallbackToMockDemo,
+    getAdapterForGeneration,
+    beginGenerationAbort,
+    endGenerationAbort,
+    cancelActiveGeneration,
+    notifyCaptureGenerationStarted,
+    notifyCaptureRetry,
+    notifyCaptureFailed,
+    notifyCaptureReady,
+    notifyBriefGenerationStarted,
+    notifyBriefFailed,
+    notifyGenerationComplete,
+  } = generation;
+  const isOllamaMode = effectiveMode === "ollama";
+  const isWebGpuMode = effectiveMode === "webgpu";
   const [briefSession, setBriefSession] = useState<BriefSession>(() =>
     createInitialSession(),
   );
@@ -285,18 +317,30 @@ export function App() {
       return;
     }
 
+    if (isWebGpuMode && !isEngineReady) {
+      openDownloadDisclosure();
+      return;
+    }
+
+    const abortController = isWebGpuMode ? beginGenerationAbort() : null;
+
     setBriefSession((currentSession) => ({
       ...currentSession,
       status: "generating_capture",
       errors: [],
       updatedAt: new Date().toISOString(),
     }));
+    notifyCaptureGenerationStarted();
 
     try {
       const captureLayer = await generateCaptureLayerForSession({
         rawInputText: briefSession.rawInput.text,
         briefType: briefSession.briefType,
         sourceLabel: briefSession.rawInput.sourceLabel,
+        adapter: getAdapterForGeneration(
+          abortController?.signal,
+          notifyCaptureRetry,
+        ),
       });
 
       setBriefSession((currentSession) => ({
@@ -307,17 +351,39 @@ export function App() {
         errors: [],
         updatedAt: new Date().toISOString(),
       }));
+      notifyCaptureReady();
     } catch (error) {
+      if (error instanceof GenerationCancelledError) {
+        setBriefSession((currentSession) => ({
+          ...currentSession,
+          status: "draft",
+          errors: [],
+          updatedAt: new Date().toISOString(),
+        }));
+        cancelActiveGeneration();
+        return;
+      }
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to generate Capture Layer.";
+
       setBriefSession((currentSession) => ({
         ...currentSession,
         status: "error",
-        errors: [
-          error instanceof Error
-            ? error.message
-            : "Unable to generate Capture Layer.",
-        ],
+        errors: [message],
         updatedAt: new Date().toISOString(),
       }));
+      notifyCaptureFailed(
+        isWebGpuMode
+          ? "Could not generate a valid Capture Layer. Your notes are unchanged."
+          : message,
+      );
+    } finally {
+      if (abortController) {
+        endGenerationAbort();
+      }
     }
   }
 
@@ -330,7 +396,13 @@ export function App() {
       return;
     }
 
+    if (isWebGpuMode && !isEngineReady) {
+      openDownloadDisclosure();
+      return;
+    }
+
     const selectedBriefType = briefSession.briefType;
+    const abortController = isWebGpuMode ? beginGenerationAbort() : null;
 
     setBriefSession((currentSession) => ({
       ...currentSession,
@@ -338,15 +410,17 @@ export function App() {
       errors: [],
       updatedAt: new Date().toISOString(),
     }));
+    notifyBriefGenerationStarted();
 
     try {
       const markdown = await generateDecisionBriefForSession({
         captureLayer: briefSession.captureLayer,
         briefType: selectedBriefType,
+        adapter: getAdapterForGeneration(abortController?.signal),
       });
 
       if (!markdown.trim()) {
-        throw new Error("Mock Decision Brief generation returned empty Markdown.");
+        throw new Error("Decision Brief generation returned empty Markdown.");
       }
 
       const now = new Date().toISOString();
@@ -365,17 +439,39 @@ export function App() {
         errors: [],
         updatedAt: now,
       }));
+      notifyGenerationComplete();
     } catch (error) {
+      if (error instanceof GenerationCancelledError) {
+        setBriefSession((currentSession) => ({
+          ...currentSession,
+          status: "capture_ready",
+          errors: [],
+          updatedAt: new Date().toISOString(),
+        }));
+        cancelActiveGeneration();
+        return;
+      }
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to generate Decision Brief.";
+
       setBriefSession((currentSession) => ({
         ...currentSession,
         status: "error",
-        errors: [
-          error instanceof Error
-            ? error.message
-            : "Unable to generate Decision Brief.",
-        ],
+        errors: [message],
         updatedAt: new Date().toISOString(),
       }));
+      notifyBriefFailed(
+        isWebGpuMode
+          ? "Decision Brief generation failed. Your Capture Layer is preserved."
+          : message,
+      );
+    } finally {
+      if (abortController) {
+        endGenerationAbort();
+      }
     }
   }
 
@@ -463,11 +559,9 @@ export function App() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-neutral-400">
-              {generationModeLabel}
-            </span>
+            <span className="text-xs text-neutral-400">{modeLabel}</span>
             <span className="rounded-full bg-neutral-800 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-neutral-200">
-              {generationModeBadge}
+              {modeBadge}
             </span>
           </div>
         </header>
@@ -568,6 +662,16 @@ export function App() {
                 {selectedBriefTypeHint}
               </p>
             </fieldset>
+
+            <GenerationModeControl
+              canSelectBrowserInference={canSelectBrowserInference}
+              inferenceUiState={inferenceUiState}
+              modePreference={modePreference}
+              onSelectLiveInBrowser={selectLiveInBrowser}
+              onSelectMockDemo={selectMockDemo}
+              preflightReason={preflight.reason}
+              preflightSupported={preflight.supported}
+            />
           </section>
 
           <section
@@ -597,7 +701,9 @@ export function App() {
                   isGeneratingCaptureLayer
                     ? isOllamaMode
                       ? "Generating Capture Layer via Ollama..."
-                      : "Generating mocked Capture Layer..."
+                      : isWebGpuMode
+                        ? "Generating Capture Layer in your browser..."
+                        : "Generating mocked Capture Layer..."
                     : "Capture Layer will appear here"
                 }
               />
@@ -633,7 +739,9 @@ export function App() {
                   isGeneratingDecisionBrief
                     ? isOllamaMode
                       ? "Generating Decision Brief via Ollama..."
-                      : "Generating mocked Decision Brief..."
+                      : isWebGpuMode
+                        ? "Generating Decision Brief in your browser..."
+                        : "Generating mocked Decision Brief..."
                     : "Decision Brief will appear here"
                 }
               />
@@ -674,7 +782,9 @@ export function App() {
                 canGenerateDecisionBrief
                   ? isOllamaMode
                     ? "Generate Decision Brief Markdown via Ollama."
-                    : "Generate mocked Decision Brief Markdown."
+                    : isWebGpuMode
+                      ? "Generate Decision Brief Markdown in your browser."
+                      : "Generate mocked Decision Brief Markdown."
                   : "Generate a Capture Layer first."
               }
               type="button"
@@ -707,16 +817,41 @@ export function App() {
             </button>
           </div>
         </footer>
+        <BrowserInferenceStatus
+          downloadProgress={downloadProgress}
+          inferenceUiState={inferenceUiState}
+          onCancelDownload={cancelModelDownload}
+          onCancelGeneration={cancelActiveGeneration}
+          onRetryDownload={retryModelDownload}
+          onStayOnMockDemo={fallbackToMockDemo}
+          onTryAgain={
+            inferenceUiState === "capture_failed"
+              ? handleGenerateCaptureLayer
+              : inferenceUiState === "brief_failed"
+                ? handleGenerateDecisionBrief
+                : undefined
+          }
+          onUseMockDemo={fallbackToMockDemo}
+          statusMessage={statusMessage}
+        />
         <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-5 py-2 text-xs text-slate-600">
-          {isOllamaMode
-            ? "Local Ollama inference. Session state stays in memory; model thinking is never shown or stored."
-            : "Mocked local generation only. No model calls, persistence, or external integrations are used in this demo."}
+          {modeDescription}
         </div>
         {exportMessage ? (
           <div className="border-t border-slate-200 bg-slate-50 px-5 py-2 text-xs text-slate-600">
             {exportMessage}
           </div>
         ) : null}
+        <DownloadDisclosureDialog
+          isOpen={isDisclosureOpen}
+          onCancel={() => {
+            closeDownloadDisclosure();
+            if (!isEngineReady) {
+              selectMockDemo();
+            }
+          }}
+          onConfirm={confirmModelDownload}
+        />
       </section>
     </main>
   );
