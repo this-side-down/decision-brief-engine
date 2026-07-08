@@ -1,5 +1,6 @@
 import type { BrowserInferenceUiState } from "../hooks/useGenerationMode";
 import { BRIEF_TYPES } from "../data/briefTypes";
+import type { DemoExample, DemoExampleId } from "../data/demoExamples";
 import type { BriefTypeId } from "../types/brief";
 import { GenerationModeControl } from "./generation/GenerationModeControl";
 import type { UserGenerationModePreference } from "../services/generation/generationMode";
@@ -25,7 +26,11 @@ type WorkflowSetupBarProps = {
   isBriefTypeHelpOpen: boolean;
   onBriefTypeHelpToggle: () => void;
   onBriefTypeChange: (briefTypeId: BriefTypeId) => void;
-  onLoadExampleNotes: () => void;
+  demoExamples: DemoExample[];
+  selectedDemoExampleId: DemoExampleId;
+  selectedDemoExample: DemoExample;
+  onDemoExampleChange: (exampleId: DemoExampleId) => void;
+  onLoadDemoExample: () => void;
   canSelectBrowserInference: boolean;
   modePreference: UserGenerationModePreference;
   preflightSupported: boolean;
@@ -41,7 +46,11 @@ export function WorkflowSetupBar({
   isBriefTypeHelpOpen,
   onBriefTypeHelpToggle,
   onBriefTypeChange,
-  onLoadExampleNotes,
+  demoExamples,
+  selectedDemoExampleId,
+  selectedDemoExample,
+  onDemoExampleChange,
+  onLoadDemoExample,
   canSelectBrowserInference,
   modePreference,
   preflightSupported,
@@ -50,12 +59,31 @@ export function WorkflowSetupBar({
   onSelectMockDemo,
   onSelectLiveInBrowser,
 }: WorkflowSetupBarProps) {
+  const isMockDemo = modePreference === "mock";
+
   return (
     <div
       aria-label="Workflow setup"
       className="shrink-0 border-b border-slate-200 bg-slate-50 px-5 py-3"
     >
-      <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
+      <p className="text-xs text-slate-600">
+        {isMockDemo ? (
+          <>
+            Choose a messy example to see how Decision Brief Engine turns raw
+            notes into a Capture Layer and then a structured brief. The public
+            demo uses <span className="font-semibold">mocked generation</span>{" "}
+            so the workflow is reliable and reviewable.
+          </>
+        ) : (
+          <>
+            Choose a messy example to test the gated browser model path. Notes
+            stay local in this browser, but quality may be weaker than the Mock
+            demo or Local Ollama.
+          </>
+        )}
+      </p>
+
+      <div className="mt-3 flex flex-wrap items-end gap-x-6 gap-y-3">
         <fieldset className="min-w-0">
           <div className="relative flex items-center gap-2">
             <legend className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
@@ -118,21 +146,58 @@ export function WorkflowSetupBar({
           preflightSupported={preflightSupported}
         />
 
-        <div className="flex shrink-0 items-end sm:ml-auto">
-          <button
-            className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-neutral-950 hover:text-neutral-950"
-            onClick={onLoadExampleNotes}
-            type="button"
+        <div className="flex min-w-[12rem] flex-1 flex-col gap-1 sm:max-w-xs">
+          <label
+            className="text-[11px] font-bold uppercase tracking-wide text-slate-500"
+            htmlFor="demo-example-select"
           >
-            Load example notes
-          </button>
+            Example scenario
+          </label>
+          <div className="flex gap-2">
+            <select
+              className="min-w-0 flex-1 rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 focus:border-neutral-950 focus:outline-none focus:ring-2 focus:ring-neutral-950/10"
+              id="demo-example-select"
+              onChange={(event) =>
+                onDemoExampleChange(event.target.value as DemoExampleId)
+              }
+              value={selectedDemoExampleId}
+            >
+              {(["strategy", "product", "execution"] as const).map(
+                (briefTypeId) => (
+                  <optgroup
+                    key={briefTypeId}
+                    label={BRIEF_TYPE_LABELS[briefTypeId]}
+                  >
+                    {demoExamples
+                      .filter((example) => example.briefTypeId === briefTypeId)
+                      .map((example) => (
+                        <option key={example.id} value={example.id}>
+                          {example.title}
+                        </option>
+                      ))}
+                  </optgroup>
+                ),
+              )}
+            </select>
+            <button
+              className="shrink-0 rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-neutral-950 hover:text-neutral-950"
+              onClick={onLoadDemoExample}
+              type="button"
+            >
+              Load
+            </button>
+          </div>
         </div>
       </div>
+
       <p
-        className="mt-2 line-clamp-1 text-xs text-slate-500"
-        title={selectedBriefTypeHint}
+        className="mt-2 line-clamp-2 text-xs text-slate-500"
+        title={`${selectedDemoExample.description} ${selectedBriefTypeHint}`}
       >
-        {selectedBriefTypeHint}
+        <span className="font-medium text-slate-600">
+          {selectedDemoExample.title}:
+        </span>{" "}
+        {selectedDemoExample.description} · {selectedBriefTypeHint}
       </p>
     </div>
   );

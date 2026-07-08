@@ -15,6 +15,7 @@ export type GenerateDecisionBriefInput = {
   briefTypeGuidance: BriefTypeGuidance;
   markdownStructure: string[];
   toneGuidance?: string;
+  sourceLabel?: string;
 };
 
 export type ModelAdapter = {
