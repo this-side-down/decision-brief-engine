@@ -56,7 +56,13 @@ VITE_OLLAMA_MODEL=qwen3:4b
 VITE_OLLAMA_HOST=http://127.0.0.1:11434
 ```
 
-See `docs/ai/ollama-qwen3-json-quirk.md` for operational notes and the current Qwen3 JSON-mode behavior.
+Validate setup before generating:
+
+```sh
+npm run health:ollama
+```
+
+See [Local Ollama setup and health check](docs/ai/ollama-local-setup.md) for Mac and Windows setup paths, troubleshooting, and a local smoke-test checklist. See `docs/ai/ollama-qwen3-json-quirk.md` for operational notes and the current Qwen3 JSON-mode behavior.
 
 ## Browser inference (experimental, gated)
 
@@ -100,6 +106,7 @@ This is implementation guidance for the current v0 state, not a legal privacy po
 - [Browser model / prompt variant eval](docs/ai/browser-model-prompt-variant-eval.md)
 - [Browser model quality gate evaluation](docs/ai/browser-model-quality-gate.md)
 - [Browser inference adapter feasibility](docs/ai/browser-inference-adapter-feasibility.md)
+- [Local Ollama setup and health check](docs/ai/ollama-local-setup.md)
 - [Qwen3/Ollama JSON-mode quirk](docs/ai/ollama-qwen3-json-quirk.md)
 - [Implementation build plan](docs/implementation/build-plan.md)
 - [MVP implementation checklist](docs/implementation/mvp-checklist.md)
@@ -118,6 +125,7 @@ npm run typecheck
 npm test
 npm run build
 npm run preview
+npm run health:ollama
 ```
 
 ### Capture Layer evaluation (#72)

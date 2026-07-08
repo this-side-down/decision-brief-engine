@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "eval:capture": "tsx scripts/eval-capture-layer.ts"
+    "eval:capture": "tsx scripts/eval-capture-layer.ts",
+    "health:ollama": "tsx scripts/ollama-health.ts"
   },
   "dependencies": {
     "@mlc-ai/web-llm": "^0.2.84",
