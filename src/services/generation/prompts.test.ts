@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { STRATEGY_DECISION_BRIEF } from "../../data/briefTypes";
 import { CAPTURE_LAYER_FIELDS } from "./types";
 import {
@@ -15,16 +15,29 @@ const baseInput = {
 };
 
 describe("resolveCapturePromptVariant", () => {
-  it("defaults to default for unset or unknown values", () => {
-    expect(resolveCapturePromptVariant(undefined)).toBe("default");
+  const previousVariant = process.env.VITE_CAPTURE_PROMPT_VARIANT;
+
+  afterEach(() => {
+    if (previousVariant === undefined) {
+      delete process.env.VITE_CAPTURE_PROMPT_VARIANT;
+    } else {
+      process.env.VITE_CAPTURE_PROMPT_VARIANT = previousVariant;
+    }
+  });
+
+  it("defaults to default for unset env or unknown explicit values", () => {
+    delete process.env.VITE_CAPTURE_PROMPT_VARIANT;
+    expect(resolveCapturePromptVariant()).toBe("default");
     expect(resolveCapturePromptVariant("")).toBe("default");
     expect(resolveCapturePromptVariant("other")).toBe("default");
   });
 
-  it("accepts schema_skeleton", () => {
+  it("accepts schema_skeleton explicitly or from env", () => {
     expect(resolveCapturePromptVariant("schema_skeleton")).toBe(
       "schema_skeleton",
     );
+    process.env.VITE_CAPTURE_PROMPT_VARIANT = "schema_skeleton";
+    expect(resolveCapturePromptVariant()).toBe("schema_skeleton");
   });
 });
 
