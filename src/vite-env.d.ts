@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
+  readonly VITE_APP_VERSION?: string;
   readonly VITE_ENABLE_WEBGPU_INFERENCE?: string;
   readonly VITE_GENERATION_MODE?: string;
   readonly VITE_OLLAMA_BASE_URL?: string;
