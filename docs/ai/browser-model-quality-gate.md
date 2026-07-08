@@ -1,168 +1,199 @@
-# Browser model quality gate evaluation
+# Browser model quality gate
 
 ## Purpose
 
-This document records the Capture Layer quality gate evaluation for browser-feasible inference candidates before browser adapter implementation begins.
+Define the Capture Layer quality gate for deciding whether browser WebGPU inference can ship in Decision Brief Engine.
 
-It satisfies the planning scope for [#57](https://github.com/this-side-down/decision-brief-engine/issues/57). It does not implement browser inference, select a final production model, or change app behavior.
+This document satisfies the planning scope for [#57](https://github.com/this-side-down/decision-brief-engine/issues/57). It does not implement browser inference, add runtime dependencies, call hosted model APIs, or change app behavior.
 
-## Quality gate question
+The gate exists because the product promise depends on preserving facts, inference, ambiguity, risks, assumptions, missing context, and open questions through a two-step pipeline:
 
-Can a browser-feasible model support Decision Brief Engine's two-step pipeline well enough to ship an opt-in browser inference mode without breaking the product promise around facts, inference, ambiguity, risks, assumptions, missing context, and open questions?
+1. Generate valid typed Capture Layer JSON.
+2. Generate Markdown Decision Brief from that Capture Layer.
 
-## Evaluation method
+JSON reliability is the load-bearing risk. Markdown generation is lower risk.
 
-- **Fixtures:** all five cases in `fixtures/evaluation/`
-- **Scorecard:** `fixtures/evaluation/manual-scorecard.md` (0-2 per category)
-- **Pipeline under test:** raw notes → Capture Layer JSON → Decision Brief Markdown
-- **Capture Layer contract:** `docs/product/capture-layer.md`
-- **Prompt contracts:** `docs/ai/prompt-contracts.md`
+Record evaluation results in [`fixtures/evaluation/browser-model-results.md`](../../fixtures/evaluation/browser-model-results.md).
 
-Each model/runtime combination was evaluated manually against the same fixture inputs. Scores reflect observed output quality for Capture Layer structure and Decision Brief usefulness, not mocked workflow wiring.
+## Candidate model/runtime combinations to evaluate
 
-### Decision rule
-
-Apply one outcome:
-
-| Outcome | Meaning |
-| --- | --- |
-| **Ship browser inference** | Meets baseline quality closely enough for opt-in use without an experimental downgrade. |
-| **Ship browser inference as experimental** | Usable for early adopters with visible quality caveats, but below local Ollama baseline on one or more critical dimensions. |
-| **Defer browser inference** | Fails minimum Capture Layer reliability or grounding thresholds; implementation should wait. |
-
-Minimum gate for any ship outcome:
-
-- Capture Layer JSON parses and validates on at least 4 of 5 fixtures without manual rescue.
-- No fixture produces a misleading implied decision presented as a stated decision.
-- Average manual scorecard total is at least 12/16 across fixtures.
-- Decision Brief output is usable on at least 3 of 5 fixtures.
-
-## Runtime assumptions
-
-| Combination | Runtime | Model | Approx. download | Test environment |
+| Role | Runtime | Model | License | Approx. download |
 | --- | --- | --- | --- | --- |
-| Baseline | Ollama local | `qwen3:4b` | External to app; model managed by Ollama | Local dev on Windows 11, app + Ollama via existing adapter |
-| Browser quality candidate | WebLLM (WebGPU) | `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` | ~1.0 GB first load | Manual pilot via WebLLM-compatible harness outside app |
-| Browser speed candidate | WebLLM (WebGPU) | `Llama-3.2-1B-Instruct-q4f16_1-MLC` | ~0.7 GB first load | Manual pilot via WebLLM-compatible harness outside app |
+| Quality baseline | Ollama local | `qwen3:4b` | Open-weight; review before adoption | External to app; managed by Ollama |
+| Primary browser candidate | WebLLM (`@mlc-ai/web-llm`) | Qwen2.5-1.5B-Instruct q4f16 | Apache 2.0 | ~1.0 to 1.2 GB |
+| Low-VRAM fallback | WebLLM (`@mlc-ai/web-llm`) | Qwen2.5-0.5B-Instruct q4f16 | Apache 2.0 | ~0.3 to 0.5 GB |
+| Optional backup | WebLLM (`@mlc-ai/web-llm`) | SmolLM2-1.7B-Instruct q4f16 | Apache 2.0 | Evaluate at planning time |
 
-Notes:
+### Excluded from this slice
 
-- Browser candidates were evaluated outside the app using the same prompt contracts and fixture inputs planned for the future `ModelAdapter` implementation.
-- WebGPU availability was required for browser candidates.
-- Ollama baseline reflects the current supported local path documented in `docs/ai/ollama-qwen3-json-quirk.md`.
+Do not evaluate these in the first browser slice:
 
-## Fixture results summary
+| Model | Reason excluded |
+| --- | --- |
+| Qwen2.5-3B | Too large for first browser slice |
+| Llama-3.2-1B | Size/download friction and weaker Capture Layer reliability in pilot review |
+| Gemma-2-2B | License concerns for this artifact |
+| Phi-3.5-mini | Not FOSS-clean enough for this artifact |
 
-Manual scorecard totals are summed across eight categories (max 16 per fixture).
+### Runtime notes
 
-| Fixture | Ollama `qwen3:4b` | WebLLM Qwen2.5-1.5B | WebLLM Llama-3.2-1B |
-| --- | ---: | ---: | ---: |
-| Product prioritization | 14 | 11 | 9 |
-| Strategy tradeoff | 13 | 10 | 8 |
-| Execution planning | 14 | 11 | 9 |
-| Customer interview synthesis | 13 | 10 | 8 |
-| Ambiguous stakeholder conversation | 12 | 9 | 7 |
-| **Average total** | **13.2** | **10.2** | **8.2** |
-| Valid Capture Layer JSON without rescue | 5/5 | 4/5 | 3/5 |
-| Usable Decision Brief | 5/5 | 4/5 | 3/5 |
+- Compare local Ollama `qwen3:4b` as the quality baseline.
+- Evaluate WebLLM + Qwen2.5-1.5B-Instruct q4f16 as the primary browser candidate.
+- Evaluate WebLLM + Qwen2.5-0.5B-Instruct q4f16 as the smaller/faster fallback if feasible.
+- Optionally include SmolLM2-1.7B-Instruct q4f16 as backup.
+- Do not recommend Chrome built-in AI / Prompt API; it is browser-specific and not FOSS-clean for this project.
+- Do not recommend raw ONNX Runtime Web or wllama for this slice; they are lower-level and add surface area without product gain.
 
-### Baseline: Ollama `qwen3:4b`
+## Fixtures to use
 
-**Strengths**
+Use all five evaluation fixtures in `fixtures/evaluation/`:
 
-- Preserves options, stakeholders, and open questions on most fixtures.
-- Handles ambiguity in the stakeholder conversation fixture with medium confidence rather than false certainty.
-- Decision Briefs are generally export-ready with minor editing.
+| Fixture file | Brief type |
+| --- | --- |
+| `product-prioritization.md` | Product Decision Brief |
+| `strategy-tradeoff.md` | Strategy Decision Brief |
+| `execution-planning.md` | Execution Decision Brief |
+| `customer-interview-synthesis.md` | Product Decision Brief |
+| `ambiguous-stakeholder-conversation.md` | Strategy Decision Brief |
 
-**Weaknesses**
+Each evaluation pass should run the full pipeline:
 
-- JSON may appear in Ollama `thinking` instead of `response`; adapter fallback is required.
-- Recommendation grounding weakens on strategy tradeoff when source notes are sparse.
-- Latency is acceptable locally but not representative of a zero-setup public path.
+raw notes → Capture Layer JSON → Decision Brief Markdown
 
-### Browser candidate: WebLLM + Qwen2.5-1.5B
+Use the same prompt contracts documented in `docs/ai/prompt-contracts.md` and the Capture Layer contract in `docs/product/capture-layer.md`.
 
-**Strengths**
+## Manual scorecard criteria
 
-- Best browser candidate tested for Capture Layer field coverage.
-- Preserves constraints and risks on product and execution fixtures.
-- JSON formatting is more direct than Ollama Qwen3 in pilot runs; no thinking-field fallback observed.
+Score each fixture with `fixtures/evaluation/manual-scorecard.md`:
 
-**Weaknesses**
+| Category | Score | What to check |
+| --- | --- | --- |
+| Decision clarity | 0-2 | The Capture Layer and brief make the decision or implied decision clear. |
+| Option preservation | 0-2 | Material options are preserved without collapsing them into one path. |
+| Stakeholder preservation | 0-2 | Important teams, users, buyers, owners, or reviewers are represented. |
+| Constraint and risk preservation | 0-2 | Constraints and risks are visible and not softened away. |
+| Open question preservation | 0-2 | Decision-relevant unresolved questions remain visible. |
+| Recommendation grounding | 0-2 | Recommendation candidate or final recommendation is grounded in the notes and Capture Layer. |
+| Confidence calibration | 0-2 | Confidence reflects ambiguity, gaps, and source quality. |
+| Brief usefulness | 0-2 | Markdown brief is structured, readable, and useful as an exported artifact. |
 
-- Collapses strategic ambiguity more often than the baseline.
-- Under-captures stakeholder tension on ambiguous stakeholder conversation.
-- First model load and warm-up latency are materially higher than Ollama on the same machine class.
+Maximum score per fixture: 16.
 
-### Browser speed candidate: WebLLM + Llama-3.2-1B
+Also record these Capture Layer gate checks separately for every fixture:
 
-**Strengths**
+- Capture Layer JSON validity
+- Capture Layer schema conformance
+- Fact preservation
+- Decision preservation
+- Option preservation
+- Risk coverage
+- Assumption coverage
+- Open-question coverage
+- Missing-context capture
 
-- Smaller download and faster first-token latency than the 1.5B candidate.
-- Adequate on straightforward product prioritization input.
+## Minimum thresholds
 
-**Weaknesses**
+A candidate passes the quality gate only if all minimum thresholds below are met.
 
-- Frequent Capture Layer JSON rescue required on strategy and ambiguous fixtures.
-- Higher hallucination pressure on customer interview synthesis.
-- Decision Briefs often need manual correction before export.
+### Hard gates
 
-## Capture Layer failure modes
+- Capture Layer JSON parses without manual editing on at least 4 of 5 fixtures.
+- Capture Layer output conforms to the typed schema on at least 4 of 5 fixtures.
+- Schema validation plus one repair-retry path succeeds before counting a fixture as pass or fail.
+- No fixture presents an invented stated decision as fact.
+- No fixture scores 0 on recommendation grounding and confidence calibration together.
 
-| Failure mode | Ollama `qwen3:4b` | Qwen2.5-1.5B | Llama-3.2-1B |
-| --- | --- | --- | --- |
-| Invalid or partial JSON | Occasional; recovered via thinking fallback | Occasional on longest fixture | Frequent on strategy/ambiguous fixtures |
-| Invented stated decision | Rare | Occasional on ambiguous fixture | Occasional |
-| Missing open questions | Rare | Moderate on strategy fixture | Frequent |
-| Overconfident recommendation | Occasional | Moderate | Frequent |
-| Lost option preservation | Rare | Moderate | Frequent |
-| Weak fact/inference separation | Occasional | Moderate | Frequent |
+### Score gates
 
-Highest-risk browser failure: **false certainty on ambiguous stakeholder input**, especially with the 1B speed candidate.
+- Average manual scorecard total across fixtures is at least 12/16.
+- Usable Decision Brief on at least 3 of 5 fixtures without manual rescue.
+- Ollama baseline should remain the higher-quality local/dev path in comparison notes.
 
-## Latency and download friction
+### UX gates
 
-| Combination | First-load friction | Steady-state generation | Notes |
-| --- | --- | --- | --- |
-| Ollama `qwen3:4b` | Low after model is pulled in Ollama | Moderate | Requires separate Ollama install; not a public demo path |
-| WebLLM Qwen2.5-1.5B | High (~1 GB download + compile/warm-up) | Moderate | Acceptable for opt-in mode with explicit progress UI |
-| WebLLM Llama-3.2-1B | Medium (~0.7 GB download + warm-up) | Fast | Lower quality tradeoff; better as fallback tier than primary |
+- First-load model download size is documented before download starts.
+- Latency and download friction are acceptable for an opt-in browser mode.
+- Unsupported browsers/devices fail clearly rather than silently degrading quality.
 
-Observations:
+If JSON/schema reliability fails or download/device friction is unacceptable, defer browser inference.
 
-- Browser inference should not be the default public path until model caching and progress states are designed in [#59](https://github.com/this-side-down/decision-brief-engine/issues/59).
-- Users on low-memory devices or browsers without stable WebGPU should receive a clear unsupported/fallback state rather than silent failure.
+## Failure modes to watch
 
-## Recommendation
+| Failure mode | Why it matters |
+| --- | --- |
+| Invalid JSON | Breaks `generateCaptureLayer` contract |
+| Schema mismatch | Typed Capture Layer fields missing or wrong shape |
+| Repair-retry still fails | Indicates unstable browser model behavior |
+| Invented stated decision | Violates fact/inference separation |
+| Lost options or stakeholders | Breaks decision usefulness |
+| Missing risks, assumptions, or open questions | Flattens ambiguity |
+| Missing-context not captured | Hides decision blockers |
+| Overconfident recommendation | Misleading executive output |
+| False certainty on ambiguous input | Highest-risk product failure |
+| Unacceptable first-load download | Biggest UX risk for public opt-in mode |
+| WebGPU/device incompatibility | Requires visible fallback to mock mode |
 
-**Ship browser inference as experimental.**
+## Decision rule
 
-Rationale:
+Apply exactly one outcome after recording results in `fixtures/evaluation/browser-model-results.md`:
 
-- The Qwen2.5-1.5B browser candidate clears the minimum gate for an opt-in experimental mode on 4/5 fixtures.
-- It does not match the Ollama baseline closely enough to ship as the primary public inference path.
-- The Llama-3.2-1B candidate is useful as a documented fallback tier only; it should not be the default browser model.
-- Deferral is not required because the quality candidate is good enough to justify adapter implementation with explicit experimental labeling.
+| Outcome | When to choose it |
+| --- | --- |
+| **Ship browser inference** | Quality is good enough and UX friction is acceptable; candidate is close enough to the Ollama baseline to ship opt-in without an experimental downgrade. |
+| **Ship browser inference as experimental** | Useful for early adopters but clearly weaker than local Ollama on one or more critical dimensions; JSON/schema reliability still passes hard gates. |
+| **Defer browser inference** | JSON/schema reliability fails, repair-retry is insufficient, or download/device friction is unacceptable. |
 
-Conditions for experimental ship:
+Product posture regardless of outcome:
 
-- Label the mode as experimental in UI copy and docs.
-- Default public demo remains mocked/static.
-- Use Qwen2.5-1.5B as the primary browser candidate in [#60](https://github.com/this-side-down/decision-brief-engine/issues/60).
-- Require Capture Layer JSON validation and retry behavior similar to the Ollama adapter.
-- Do not promote browser inference to default until a later quality review after real in-app integration.
+- Browser WebGPU mode remains opt-in.
+- Mock mode remains default.
+- Local Ollama remains the higher-quality local/dev path.
+- Public hosted inference remains deferred.
+- [#60](https://github.com/this-side-down/decision-brief-engine/issues/60) must not start until [#57](https://github.com/this-side-down/decision-brief-engine/issues/57), [#58](https://github.com/this-side-down/decision-brief-engine/issues/58), and [#59](https://github.com/this-side-down/decision-brief-engine/issues/59) are complete.
 
-## Next steps
+## Output format for results
 
-1. [#58](https://github.com/this-side-down/decision-brief-engine/issues/58) — finalize browser runtime and adapter integration approach.
-2. [#59](https://github.com/this-side-down/decision-brief-engine/issues/59) — design opt-in browser inference UX, loading, caching, and experimental labeling.
-3. [#60](https://github.com/this-side-down/decision-brief-engine/issues/60) — implement the browser adapter behind `ModelAdapter`.
+Record each model/runtime evaluation in `fixtures/evaluation/browser-model-results.md` using this structure:
 
-Do not start #60 until #58 and #59 are complete.
+```markdown
+## [Runtime + model name]
+
+- Device/browser:
+- Model size/download notes:
+- Recommendation: ship | ship as experimental | defer
+
+### Fixture scores
+
+| Fixture | Score total (/16) | Valid JSON | Schema pass | Usable brief | Notes |
+| --- | ---: | --- | --- | --- | --- |
+
+### Latency observations
+
+- First load:
+- Capture Layer generation:
+- Decision Brief generation:
+
+### Failure modes
+
+- ...
+
+### Gate summary
+
+- Hard gates:
+- Score gates:
+- UX gates:
+```
+
+Required placeholder rows to maintain until evaluation is complete:
+
+- Ollama `qwen3:4b` baseline
+- WebLLM + Qwen2.5-1.5B-Instruct q4f16
+- WebLLM + Qwen2.5-0.5B-Instruct q4f16
+- WebLLM + SmolLM2-1.7B-Instruct q4f16 (optional backup)
 
 ## Related documents
 
+- [WebGPU adapter feasibility](webgpu-adapter-feasibility.md)
 - [Evaluation plan](evaluation-plan.md)
-- [Browser inference adapter feasibility](browser-inference-adapter-feasibility.md)
-- [ADR 0004: inference path decision brief](../decisions/0004-inference-path-decision-brief.md)
 - [Manual scorecard](../../fixtures/evaluation/manual-scorecard.md)
+- [ADR 0004: inference path decision brief](../decisions/0004-inference-path-decision-brief.md)
