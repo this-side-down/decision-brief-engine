@@ -11,11 +11,19 @@ import {
 } from "./data/demoExamples";
 import { BRIEF_TYPES } from "./data/briefTypes";
 import { useGenerationMode } from "./hooks/useGenerationMode";
+import { useTimedStatusMessage } from "./hooks/useTimedStatusMessage";
 import { generateCaptureLayerForSession } from "./services/generation/generateCaptureLayer";
 import { generateDecisionBriefForSession } from "./services/generation/generateDecisionBrief";
 import { GenerationCancelledError } from "./services/generation/webGpuErrors";
 import type { BriefSession, BriefTypeId } from "./types/brief";
 import type { CaptureLayer } from "./types/captureLayer";
+import {
+  copyMarkdownToClipboard,
+  downloadMarkdownFile,
+  formatCopySuccessMessage,
+  formatDownloadSuccessMessage,
+  resolveDecisionBriefFilename,
+} from "./utils/decisionBriefExport";
 
 const BRIEF_TYPE_HINTS = {
   product:
@@ -198,7 +206,8 @@ export function App() {
   const [briefSession, setBriefSession] = useState<BriefSession>(() =>
     createInitialSession(),
   );
-  const [exportMessage, setExportMessage] = useState<string>("");
+  const { message: exportMessage, showMessage: showExportMessage, clearMessage: clearExportMessage } =
+    useTimedStatusMessage();
   const [isBriefTypeHelpOpen, setIsBriefTypeHelpOpen] =
     useState<boolean>(false);
   const [selectedDemoExampleId, setSelectedDemoExampleId] =
@@ -241,7 +250,7 @@ export function App() {
         : "Waiting";
 
   function updateRawInput(text: string) {
-    setExportMessage("");
+    clearExportMessage();
     setBriefSession((currentSession) => ({
       ...currentSession,
       rawInput: {
@@ -264,7 +273,7 @@ export function App() {
 
     const now = new Date().toISOString();
 
-    setExportMessage("");
+    clearExportMessage();
     setSelectedDemoExampleId(example.id);
     setBriefSession((currentSession) => ({
       ...currentSession,
@@ -447,7 +456,7 @@ export function App() {
   }
 
   function updateDecisionBriefMarkdown(markdown: string) {
-    setExportMessage("");
+    clearExportMessage();
     setBriefSession((currentSession) => {
       if (!currentSession.decisionBrief) {
         return currentSession;
@@ -471,12 +480,13 @@ export function App() {
       return;
     }
 
-    try {
-      await navigator.clipboard.writeText(currentMarkdown);
-      setExportMessage("Markdown copied to clipboard.");
-    } catch {
-      setExportMessage("Unable to copy Markdown to clipboard.");
+    const result = await copyMarkdownToClipboard(currentMarkdown);
+    if (result.ok) {
+      showExportMessage(formatCopySuccessMessage(result.method));
+      return;
     }
+
+    showExportMessage(result.errorMessage);
   }
 
   function handleDownloadMarkdown() {
@@ -484,22 +494,18 @@ export function App() {
       return;
     }
 
-    try {
-      const blob = new Blob([currentMarkdown], {
-        type: "text/markdown;charset=utf-8",
-      });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "decision-brief.md";
-      document.body.append(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-      setExportMessage("Markdown download started.");
-    } catch {
-      setExportMessage("Unable to download Markdown.");
+    const filename = resolveDecisionBriefFilename({
+      sourceLabel: briefSession.rawInput.sourceLabel,
+      briefTypeId: selectedBriefTypeId,
+    });
+    const result = downloadMarkdownFile(currentMarkdown, filename);
+
+    if (result.ok) {
+      showExportMessage(formatDownloadSuccessMessage(result.filename));
+      return;
     }
+
+    showExportMessage(result.errorMessage);
   }
 
   function updateBriefType(briefTypeId: BriefTypeId) {
@@ -734,6 +740,11 @@ export function App() {
               }`}
               disabled={!hasMarkdown}
               onClick={handleCopyMarkdown}
+              title={
+                hasMarkdown
+                  ? "Copy the reviewed Decision Brief Markdown from the editor."
+                  : "Generate a Decision Brief before copying."
+              }
               type="button"
             >
               Copy Markdown
@@ -744,6 +755,11 @@ export function App() {
               }`}
               disabled={!hasMarkdown}
               onClick={handleDownloadMarkdown}
+              title={
+                hasMarkdown
+                  ? "Download the reviewed Decision Brief Markdown from the editor."
+                  : "Generate a Decision Brief before downloading."
+              }
               type="button"
             >
               Download .md
@@ -771,7 +787,11 @@ export function App() {
           {modeDescription}
         </div>
         {exportMessage ? (
-          <div className="border-t border-slate-200 bg-slate-50 px-5 py-2 text-xs text-slate-600">
+          <div
+            aria-live="polite"
+            className="border-t border-slate-200 bg-slate-50 px-5 py-2 text-xs text-slate-600"
+            role="status"
+          >
             {exportMessage}
           </div>
         ) : null}
