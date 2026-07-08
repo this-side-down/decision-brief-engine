@@ -25,35 +25,35 @@ Case: `construction-strategy` (built-in construction workforce planning / Strate
 | M0 | Mock | `mockModelAdapter` | n/a | Yes | Yes | Pass | Yes | ~1 ms | Harness wiring reference |
 | O1 | Ollama | `qwen3:4b` | `default` | Yes | Yes | Pass | Yes | ~14 s | Local CLI harness; baseline quality path |
 | W1 | WebGPU | `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` | `default` | No (smoke) | No (after retry) | Not reached | No | ~60 s | 2026-07-07 smoke; missing `stated_decision` |
-| W2 | WebGPU | same 1.5B | `schema_skeleton` | **Pending manual** | **Pending manual** | Pending | Pending | — | Env `VITE_CAPTURE_PROMPT_VARIANT=schema_skeleton`; procedure below |
+| W2 | WebGPU | same 1.5B | `schema_skeleton` | Yes (after retry) | Yes | Fail | No | ~40–60 s CL; ~20 s brief | Manual 2026-07-08; 64 GB / i9 / RTX 3080 Ti; invalid JSON first attempt; retry succeeded; hollow implied decision / assumptions / risks / missing context; open questions present; stated decision + recommendation present; two-click model-ready UX friction ([#78](https://github.com/this-side-down/decision-brief-engine/issues/78)); layout/wrapping issues ([#79](https://github.com/this-side-down/decision-brief-engine/issues/79)) |
 
-### What was completed in this Cursor/#73 pass
+### What was completed in #73
 
 - Ran M0 and O1 via `npm run eval:capture`.
 - Fixed Node/`tsx` crash when `import.meta.env` is undefined so Ollama CLI eval works outside Vite.
 - Added experimental gated prompt variant `schema_skeleton` (default unchanged; public Mock path unchanged).
-- Documented W1 from prior smoke; **W2 was not executed in a browser from this agent session** (WebGPU remains browser-only).
+- Recorded W1 from 2026-07-07 smoke (default prompt; schema fail after retry).
+- Recorded W2 manual browser run (schema_skeleton; schema pass after retry; structural fail).
 
-### Remaining manual browser steps for W2
+### Follow-up issues (out of scope for #73)
 
-1. `.env.local`: `VITE_ENABLE_WEBGPU_INFERENCE=true` and `VITE_CAPTURE_PROMPT_VARIANT=schema_skeleton`
-2. `npm run dev` (restart after env change)
-3. Opt into **Live in browser**, load construction example, Generate Capture Layer
-4. Record Valid JSON / Schema (after one retry) / latency / error into the W2 row above
-5. If schema + structural pass, score with `manual-scorecard.md` and generate brief
+- [#78](https://github.com/this-side-down/decision-brief-engine/issues/78) — WebGPU eval telemetry and model-ready generation flow (e.g. first **Generate Capture Layer** click triggers disclosure/download; user must click again after model-ready before generation starts).
+- [#79](https://github.com/this-side-down/decision-brief-engine/issues/79) — Left-panel control layout (Brief Type / Generation Mode buried in scroll) and Capture Layer card text wrapping for long slash-separated terms.
 
-Optional W3 later: `VITE_WEBGPU_MODEL_ID=Qwen2.5-0.5B-Instruct-q4f16_1-MLC` only if W2 still fails schema.
+Optional W3 later: `VITE_WEBGPU_MODEL_ID=Qwen2.5-0.5B-Instruct-q4f16_1-MLC` — deferred; next quality experiment should target structural field extraction before another model ID.
 
 ### #73 recommendation (2026-07-08)
 
-**Keep WebGPU gated. Continue experimenting** (do not prepare ungating yet).
+**Keep WebGPU gated. Continue experimenting** (do not prepare public ungating).
 
 Rationale:
 
-- Ollama `qwen3:4b` clears schema + structural readiness on the construction Strategy case (~14s) and remains the higher-quality local/dev path.
-- Browser 1.5B + **default** prompt failed schema on the same case (smoke); Decision Brief quality was never reached.
-- A `schema_skeleton` prompt variant is now available for a clean A/B against W1 without ungating or a model picker; that manual W2 run is the next measurement.
-- Even if W2 passes construction alone, full ungating still requires the five-fixture hard gates in the quality-gate doc.
+- Ollama `qwen3:4b` clears schema + structural readiness on the construction Strategy case (~14 s) and remains the higher-quality local/dev path.
+- Browser 1.5B + **default** prompt (W1) failed schema after retry; Decision Brief was never reached.
+- Browser 1.5B + **schema_skeleton** (W2) improved schema validity: invalid JSON on first attempt (~20–30 s), built-in retry succeeded (~20–30 s more), final Capture Layer was schema-valid (~40–60 s total). **Structural readiness still failed** — implied decision, assumptions, risks, and missing context were hollow (“Not captured yet.”); open questions were present; stated decision and recommendation candidate were present.
+- W2 proves the browser pipeline can reach Capture Layer schema pass and continue to Decision Brief generation (~20 s), but under the #72 harness gate **proceed-to-brief quality is No** because structural readiness failed. Manual scorecard is not appropriate until structural gates pass.
+- Next WebGPU quality experiment should focus on preserving **risks, assumptions, missing context, and implied decision** extraction — not public ungating or another model ID until that gap is addressed.
+- Full ungating still requires the five-fixture hard gates in the quality-gate doc.
 
 Public posture unchanged: **Mock demo** default; WebGPU hidden unless `VITE_ENABLE_WEBGPU_INFERENCE=true`.
 
@@ -100,7 +100,7 @@ Public posture unchanged: **Mock demo** default; WebGPU hidden unless `VITE_ENAB
 - **Model/runtime:** WebLLM (`@mlc-ai/web-llm@0.2.84`) + `Qwen2.5-1.5B-Instruct-q4f16_1-MLC`
 - **Device/browser:** Windows 10 (10.0.26100), 64 GB RAM; Cursor embedded Chromium (Chrome/144.0.7559.236, Electron/40.10.3), WebGPU available
 - **Model size/download notes:** ~1.0 to 1.2 GB first load; post-merge smoke on `main` @ `add8fa5` (PR #67 / #60)
-- **Recommendation:** Remain gated — keep experimenting (#73); do not ungate on current evidence
+- **Recommendation:** Remain gated — continue experimenting on structural field extraction (#73 W2); do not ungate on current evidence
 
 ### Post-merge WebGPU smoke test (2026-07-07) — config W1 (default prompt)
 
@@ -122,43 +122,53 @@ Manual validation on production build (`VITE_GENERATION_MODE=mock`, preview `:41
 | Copy / Download Markdown | Copy failed in embedded browser (`Unable to copy Markdown to clipboard`); Download not exercised in smoke |
 | Hosted inference API for generation | Not observed for inference; only local WebGPU + model-weight CDN fetches (no Ollama / app backend generation calls in browser mode) |
 
-### #73 prompt variant W2 (schema_skeleton) — pending manual
+### #73 prompt variant W2 (schema_skeleton) — manual run (2026-07-08)
 
 | Check | Result |
 | --- | --- |
+| Device | 64 GB RAM, Intel i9, NVIDIA RTX 3080 Ti |
 | Env | `VITE_ENABLE_WEBGPU_INFERENCE=true` + `VITE_CAPTURE_PROMPT_VARIANT=schema_skeleton` |
-| Capture Layer on construction Strategy | **Not run in Cursor/#73 session** — follow remaining manual steps in the comparison section |
-| Schema after one retry | Pending |
-| Structural / brief / scorecard | Pending until schema passes |
+| Model | `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` |
+| First **Generate Capture Layer** click | Triggered disclosure / download / model readiness (not generation) — see [#78](https://github.com/this-side-down/decision-brief-engine/issues/78) |
+| Second **Generate Capture Layer** click (after model-ready) | Capture Layer generation started |
+| Capture Layer attempt 1 | Invalid JSON (~20–30 s) |
+| Built-in one-retry path | Succeeded (~20–30 s); schema-valid Capture Layer |
+| Capture Layer total latency | ~40–60 s |
+| Structural readiness | **Fail** — implied decision, assumptions, risks, missing context hollow (“Not captured yet.”); open questions present; stated decision + recommendation candidate present |
+| Proceed to brief (harness gate) | **No** |
+| Decision Brief | User generated after schema-valid Capture Layer (~20 s); proves pipeline continuity, not harness proceed-to-brief quality |
+| UI friction (not fixed in #73) | Brief Type / Generation Mode low in scrollable left pane ([#79](https://github.com/this-side-down/decision-brief-engine/issues/79)); Capture Layer cards wrap long slash-separated terms poorly ([#79](https://github.com/this-side-down/decision-brief-engine/issues/79)) |
 
 ### Fixture scores
 
 | Fixture | Score total (/16) | Valid JSON | Schema pass | Usable brief | Notes |
 | --- | ---: | --- | --- | --- | --- |
 | Product prioritization | TBD | TBD | TBD | TBD | |
-| Strategy tradeoff | TBD | No (W1 smoke) | No (W1 smoke) | Not reached | W2 pending |
+| Strategy tradeoff | TBD | Yes (W2, after retry) | Yes (W2) | No (structural fail) | W1 smoke schema fail; W2 schema pass, structural fail; brief generated but not harness-quality |
 | Execution planning | TBD | TBD | TBD | TBD | |
 | Customer interview synthesis | TBD | TBD | TBD | TBD | |
 | Ambiguous stakeholder conversation | TBD | TBD | TBD | TBD | |
 
 ### Latency observations
 
-- **First load:** ~30 s to model-ready after cancelled-then-retried download (not a clean cold start; partial cache from cancelled run)
-- **Engine reload after refresh:** ~4 s from browser cache (no full re-download observed)
-- **Capture Layer generation:** ~60 s before failure on construction example (includes one invalid-JSON retry) — W1
-- **Decision Brief generation:** Not observed in browser mode
+- **First load:** ~30 s to model-ready after cancelled-then-retried download (not a clean cold start; partial cache from cancelled run) — W1 smoke
+- **Engine reload after refresh:** ~4 s from browser cache (no full re-download observed) — W1 smoke
+- **Capture Layer generation:** ~60 s before failure on construction example (includes one invalid-JSON retry) — W1; ~40–60 s with retry success — W2
+- **Decision Brief generation:** Not observed in browser mode — W1; ~20 s after W2 schema-valid Capture Layer — W2
 
 ### Failure modes
 
-- 1.5B + default prompt did not produce a schema-valid Capture Layer for the built-in construction example (Strategy); retry path still failed (`stated_decision` missing).
-- Small-model JSON/schema reliability remains the main quality risk for browser inference.
-- Clipboard copy untested in a standalone Chromium tab (failed in Cursor embedded browser).
+- 1.5B + default prompt (W1) did not produce a schema-valid Capture Layer for the built-in construction example (Strategy); retry path still failed (`stated_decision` missing).
+- 1.5B + schema_skeleton (W2) reached schema-valid JSON after one retry but **structural readiness failed** — hollow implied decision, assumptions, risks, missing context.
+- Two-click model-ready flow: first Generate opens disclosure/download; second click required to start Capture Layer generation ([#78](https://github.com/this-side-down/decision-brief-engine/issues/78)).
+- Small-model JSON reliability improved with schema_skeleton but content extraction depth remains the quality risk.
+- Clipboard copy untested in a standalone Chromium tab (failed in Cursor embedded browser) — W1 smoke.
 
 ### Gate summary
 
-- **Hard gates:** Download/disclosure/cancel UX paths pass; end-to-end browser generation not proven on example fixture (W1 fail; W2 pending).
-- **Score gates:** Not evaluated (fixtures not scored).
-- **UX gates:** Progress, cancel-download, cancel-generation, cache reuse, and mock fallback behave as designed; Capture Layer failure messaging is clear.
+- **Hard gates:** Download/disclosure/cancel UX paths pass (W1 smoke); W2 schema pass on construction after retry; W2 structural fail.
+- **Score gates:** Not evaluated (manual /16 not run — structural gate failed).
+- **UX gates:** Progress, cancel-download, cancel-generation, cache reuse, and mock fallback behave as designed; model-ready two-click friction and left-panel layout issues tracked in #78 / #79.
 
 ### Current decision (2026-07-08)
 
@@ -171,7 +181,7 @@ Browser WebGPU inference remains gated behind `VITE_ENABLE_WEBGPU_INFERENCE=true
 - **Model/runtime:** WebLLM (`@mlc-ai/web-llm`) + Qwen2.5-0.5B-Instruct q4f16
 - **Device/browser:** TBD
 - **Model size/download notes:** ~0.3 to 0.5 GB first load
-- **Recommendation:** Deferred unless W2 still fails schema — optional W3 via `VITE_WEBGPU_MODEL_ID=Qwen2.5-0.5B-Instruct-q4f16_1-MLC`
+- **Recommendation:** Deferred — W2 passed schema; next experiment is prompt/quality for risks/assumptions/missing context/implied decision, not another model ID yet
 
 ### Fixture scores
 
@@ -238,7 +248,7 @@ Browser WebGPU inference remains gated behind `VITE_ENABLE_WEBGPU_INFERENCE=true
 
 ## Overall gate decision
 
-- **Primary candidate recommendation:** Keep gated; continue experimenting (schema_skeleton W2, then optional 0.5B W3)
-- **Fallback candidate recommendation:** Defer SmolLM2 until 1.5B prompt/model variants are exhausted
+- **Primary candidate recommendation:** Keep gated; continue experimenting on **structural field extraction** (risks, assumptions, missing context, implied decision) before another model ID or ungating discussion
+- **Fallback candidate recommendation:** Defer 0.5B / SmolLM2 until structural extraction improves on 1.5B + schema_skeleton
 - **Overall browser inference decision:** **defer** public ungating — `keep gated` / continue experimenting
-- **Notes:** Ollama baseline passes construction Capture Layer gates; browser 1.5B default does not. Public Mock default unchanged. Issue #73 does not ungate WebGPU.
+- **Notes:** Ollama baseline passes construction Capture Layer gates; W1 schema fail; W2 schema pass after retry but structural fail. Decision Brief generated in W2 proves pipeline continuity only. Public Mock default unchanged. Follow-up: [#78](https://github.com/this-side-down/decision-brief-engine/issues/78) (eval telemetry / model-ready flow), [#79](https://github.com/this-side-down/decision-brief-engine/issues/79) (layout / wrapping). Issue #73 does not ungate WebGPU.
