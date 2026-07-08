@@ -4,9 +4,9 @@
 
 This document defines a lightweight manual evaluation plan for Decision Brief Engine MVP workflow and output quality checks.
 
-The plan should work with mocked outputs first, then local or self-hosted FOSS-compatible inference. It does not add an automated eval runner, select a final model, introduce a benchmark suite, or use hosted proprietary model APIs as an MVP path.
+The plan should work with mocked outputs first, then local or self-hosted FOSS-compatible inference. It does not select a final model, introduce a full benchmark suite, or use hosted proprietary model APIs as an MVP path.
 
-Use this document with `fixtures/evaluation/manual-scorecard.md`.
+For the Capture Layer-first repeatable entry point (mock/Ollama CLI + manual WebGPU), see [`capture-layer-eval-harness.md`](capture-layer-eval-harness.md). Use this document with `fixtures/evaluation/manual-scorecard.md` for human product-quality scoring after schema gates pass.
 
 ## What to evaluate
 

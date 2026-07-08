@@ -4,7 +4,9 @@
 
 Define the Capture Layer quality gate for deciding whether browser WebGPU inference can ship in Decision Brief Engine.
 
-This document defines the gate to run, not a completed evaluation. Record results only after manual model runs in [`fixtures/evaluation/browser-model-results.md`](../../fixtures/evaluation/browser-model-results.md).
+This document defines the gate to run, not a completed evaluation. Record results only after model runs in [`fixtures/evaluation/browser-model-results.md`](../../fixtures/evaluation/browser-model-results.md).
+
+For a repeatable Capture Layer-first entry point (mock + Ollama CLI, WebGPU manual procedure, schema-before-score), use [`capture-layer-eval-harness.md`](capture-layer-eval-harness.md). The first harness case is the construction Strategy example; the five-fixture ungating thresholds in this document still apply before public WebGPU decisions.
 
 The gate exists because the product promise depends on preserving facts, inference, ambiguity, risks, assumptions, missing context, and open questions through a two-step pipeline:
 
@@ -193,6 +195,7 @@ Required placeholder rows to maintain until evaluation is complete:
 
 ## Related documents
 
+- [Capture Layer evaluation harness](capture-layer-eval-harness.md)
 - [WebGPU adapter feasibility](webgpu-adapter-feasibility.md)
 - [Evaluation plan](evaluation-plan.md)
 - [Manual scorecard](../../fixtures/evaluation/manual-scorecard.md)
