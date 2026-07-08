@@ -100,11 +100,11 @@ Primary reasons:
 
 | Role | Model ID | Approx. size | Use |
 | --- | --- | ---: | --- |
-| Primary | `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` | ~1.0 GB | Default experimental browser model |
-| Fallback | `Llama-3.2-1B-Instruct-q4f16_1-MLC` | ~0.7 GB | Optional low-memory fallback after explicit quality review |
-| Deferred | `Llama-3.2-3B-Instruct-q4f16_1-MLC` | ~2.0 GB | Too heavy for first public opt-in slice |
+| Primary | `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` | ~1.0 to 1.2 GB | First browser candidate to evaluate |
+| Low-VRAM fallback | `Qwen2.5-0.5B-Instruct-q4f16_1-MLC` | ~0.3 to 0.5 GB | Evaluate only if feasible |
+| Optional backup | `SmolLM2-1.7B-Instruct-q4f16_1-MLC` | TBD | Non-Qwen Apache backup if available |
 
-Model selection follows [#57](https://github.com/this-side-down/decision-brief-engine/issues/57): ship browser inference as experimental with Qwen2.5-1.5B as the primary candidate.
+Model selection follows [#57](https://github.com/this-side-down/decision-brief-engine/issues/57). The first candidate to evaluate is Qwen2.5-1.5B-Instruct q4f16. Browser inference should not ship, even experimentally, until the quality gate results are recorded.
 
 ## Model loading and caching
 

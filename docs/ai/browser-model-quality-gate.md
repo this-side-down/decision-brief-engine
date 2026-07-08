@@ -4,7 +4,7 @@
 
 Define the Capture Layer quality gate for deciding whether browser WebGPU inference can ship in Decision Brief Engine.
 
-This document satisfies the planning scope for [#57](https://github.com/this-side-down/decision-brief-engine/issues/57). It does not implement browser inference, add runtime dependencies, call hosted model APIs, or change app behavior.
+This document defines the gate to run, not a completed evaluation. Record results only after manual model runs in [`fixtures/evaluation/browser-model-results.md`](../../fixtures/evaluation/browser-model-results.md).
 
 The gate exists because the product promise depends on preserving facts, inference, ambiguity, risks, assumptions, missing context, and open questions through a two-step pipeline:
 
@@ -13,7 +13,7 @@ The gate exists because the product promise depends on preserving facts, inferen
 
 JSON reliability is the load-bearing risk. Markdown generation is lower risk.
 
-Record evaluation results in [`fixtures/evaluation/browser-model-results.md`](../../fixtures/evaluation/browser-model-results.md).
+This document satisfies the planning scope for [#57](https://github.com/this-side-down/decision-brief-engine/issues/57). It does not implement browser inference, add runtime dependencies, call hosted model APIs, or change app behavior.
 
 ## Candidate model/runtime combinations to evaluate
 
@@ -31,7 +31,7 @@ Do not evaluate these in the first browser slice:
 | Model | Reason excluded |
 | --- | --- |
 | Qwen2.5-3B | Too large for first browser slice |
-| Llama-3.2-1B | Size/download friction and weaker Capture Layer reliability in pilot review |
+| Llama-3.2-1B | Size/download friction for the first browser slice |
 | Gemma-2-2B | License concerns for this artifact |
 | Phi-3.5-mini | Not FOSS-clean enough for this artifact |
 
@@ -135,7 +135,7 @@ If JSON/schema reliability fails or download/device friction is unacceptable, de
 
 ## Decision rule
 
-Apply exactly one outcome after recording results in `fixtures/evaluation/browser-model-results.md`:
+Apply exactly one outcome only after manual runs are recorded in `fixtures/evaluation/browser-model-results.md`:
 
 | Outcome | When to choose it |
 | --- | --- |

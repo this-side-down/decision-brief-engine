@@ -8,7 +8,7 @@ Use this file with:
 - [Manual scorecard](manual-scorecard.md)
 - Evaluation fixtures in this directory
 
-Do not commit model weights. Do not treat placeholder rows as completed evaluation until manually filled.
+Do not commit model weights. Do not treat placeholder rows as completed evaluation until manually filled. Do not record a recommendation or overall gate decision until actual model runs are complete.
 
 ---
 
