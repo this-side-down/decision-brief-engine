@@ -57,6 +57,12 @@ VITE_OLLAMA_HOST=http://127.0.0.1:11434
 
 See `docs/ai/ollama-qwen3-json-quirk.md` for operational notes and the current Qwen3 JSON-mode behavior.
 
+## Browser inference (opt-in)
+
+The public demo defaults to **Mock demo**. Users can opt into **Live in browser** for local WebGPU inference with a one-time model download. **Local Ollama** remains the local/dev path when `VITE_GENERATION_MODE=ollama` is set.
+
+See `docs/product/live-browser-inference-ux.md` for mode behavior, disclosure copy, and fallback states.
+
 ## Data handling (v0)
 
 This is implementation guidance for the current v0 state, not a legal privacy policy.

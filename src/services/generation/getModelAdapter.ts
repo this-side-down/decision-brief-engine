@@ -1,8 +1,39 @@
-import { getGenerationMode } from "./generationMode";
+import type { MLCEngineInterface } from "@mlc-ai/web-llm";
+import {
+  getGenerationModePreference,
+  resolveEffectiveMode,
+  type GenerationMode,
+} from "./generationMode";
 import { mockModelAdapter } from "./mockModelAdapter";
 import { ollamaModelAdapter } from "./ollamaModelAdapter";
+import { createWebGpuModelAdapter } from "./webGpuModelAdapter";
 import type { ModelAdapter } from "./types";
 
-export function getModelAdapter(): ModelAdapter {
-  return getGenerationMode() === "ollama" ? ollamaModelAdapter : mockModelAdapter;
+type GetModelAdapterOptions = {
+  mode?: GenerationMode;
+  engine?: MLCEngineInterface | null;
+  signal?: AbortSignal;
+  onCaptureRetry?: () => void;
+};
+
+export function getModelAdapter(options: GetModelAdapterOptions = {}): ModelAdapter {
+  const mode = options.mode ?? resolveEffectiveMode(getGenerationModePreference());
+
+  if (mode === "ollama") {
+    return ollamaModelAdapter;
+  }
+
+  if (mode === "webgpu") {
+    if (!options.engine) {
+      throw new Error("Live in browser is not ready yet.");
+    }
+
+    return createWebGpuModelAdapter({
+      engine: options.engine,
+      signal: options.signal,
+      onCaptureRetry: options.onCaptureRetry,
+    });
+  }
+
+  return mockModelAdapter;
 }

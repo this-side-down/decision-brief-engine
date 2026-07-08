@@ -9,6 +9,12 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), tailwindcss()],
+    optimizeDeps: {
+      exclude: ["@mlc-ai/web-llm"],
+    },
+    build: {
+      chunkSizeWarningLimit: 2000,
+    },
     server: {
       proxy: {
         "/ollama": {
