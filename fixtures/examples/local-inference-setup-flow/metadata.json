@@ -1,0 +1,12 @@
+{
+  "id": "local-inference-setup-flow",
+  "title": "Local Inference Setup Flow",
+  "briefTypeId": "product",
+  "description": "Whether to add guided health checks, model status, endpoint validation, and clearer failure states for local inference setup.",
+  "positioning": [
+    "developer experience",
+    "AI-native workflow",
+    "local-first inference",
+    "platform credibility"
+  ]
+}

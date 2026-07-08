@@ -1,0 +1,80 @@
+{
+  "source_summary": "Household move coordination notes covering a 3–4 week window with lease overlap, budget limits, pet requirements, visa timing, furniture decisions, and unclear task ownership.",
+  "decision_context": "The household must sequence move logistics under overlapping leases, building pet approval, uncertain visa timing, elevator constraints for movers, and divided ownership of utilities and address changes.",
+  "stated_decision": "Decide move sequencing, ownership, and which commitments to make before building and visa answers are final.",
+  "implied_decision": "Whether to accept overlap rent and storage costs for a mid-month move or delay to reduce overlap while risking visa and painter dependencies.",
+  "goals": [
+    "Confirm a workable move date window",
+    "Meet building pet and lease requirements before keys",
+    "Stay within a $4–5k mover and deposit budget",
+    "Assign clear owners for utilities, address changes, and mover booking"
+  ],
+  "stakeholders": [
+    "Household partners",
+    "Building management",
+    "Movers",
+    "Veterinarian",
+    "Parents offering box transport help",
+    "Painter/flooring contractor"
+  ],
+  "options_considered": [
+    "Move on the 14th with overlap rent and short-term storage for the couch",
+    "Delay move to the 22nd to reduce overlap but risk visa timing and painter slip",
+    "Hire movers for heavy items only and handle boxes DIY to save about $1.2k",
+    "Use parent help for boxes and boarding for the dog during move weekend"
+  ],
+  "constraints": [
+    "New lease starts the 12th; old lease ends the 30th",
+    "Budget of roughly $4–5k for movers and deposits",
+    "Building requires pet registration before keys",
+    "Freight elevator slot must be confirmed before mover booking",
+    "Both partners are working full time during packing window"
+  ],
+  "risks": [
+    "Visa delay could block lease signing in both names and utility setup",
+    "Painter slip could force storage costs or overlap rent extension",
+    "Elevator hoist surcharge could blow the mover budget",
+    "Unclear ownership could leave utilities or address changes undone",
+    "DIY packing could slip while working full time"
+  ],
+  "assumptions": [
+    "Pet paperwork can clear before move-in if submitted immediately",
+    "Movers will hold a cancellable slot once elevator time is confirmed",
+    "Parents can help with boxes but not heavy furniture",
+    "Boarding is only needed if the new gate is not ready move weekend"
+  ],
+  "evidence": [
+    "Movers quoted extra if hoist is required for the small freight elevator",
+    "Building stated keys depend on pet deposit and registration",
+    "Partner visa renewal appointment is the week before the preferred move",
+    "Overlap rent for 12th–30th is straining the budget"
+  ],
+  "open_questions": [
+    "Will pet approval clear before the target move date?",
+    "What is the visa outcome timeline relative to lease signing?",
+    "Will painters finish by the 10th?",
+    "Which elevator slot is available for booking?",
+    "Who owns utilities, address changes, and mover coordination?"
+  ],
+  "tensions": [
+    "Mid-month move reduces painter risk but increases overlap rent",
+    "DIY packing saves money but conflicts with full-time work",
+    "Booking movers early reduces risk but depends on unresolved building answers",
+    "Selling the couch saves storage cost but removes fallback furniture"
+  ],
+  "recommendation_candidate": "Assign a single move owner, submit pet paperwork immediately, confirm elevator slot and mover quote, and target a mid-month move with explicit storage plan for the couch only if painter timing slips.",
+  "confidence": "Medium",
+  "missing_context": [
+    "Confirmed pet approval timeline from building management",
+    "Visa renewal outcome date",
+    "Painter completion commitment",
+    "Final mover quote with elevator constraints"
+  ],
+  "suggested_next_steps": [
+    "Name one owner for the move checklist today",
+    "Submit pet records and deposit to building management",
+    "Request elevator slot and locked mover quote with cancellation terms",
+    "Decide sell-vs-store for the couch once storage cost is known",
+    "Hold a 30-minute sequencing review after visa appointment"
+  ]
+}

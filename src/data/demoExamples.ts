@@ -4,14 +4,13 @@ import {
   STRATEGY_DECISION_BRIEF,
 } from "./briefTypes";
 import type { BriefType, BriefTypeId } from "../types/brief";
-import constructionNotes from "../../fixtures/construction-workforce-planning/messy-transcript.md?raw";
-import executionNotes from "../../fixtures/raw-inputs/execution-planning.md?raw";
-import productNotes from "../../fixtures/raw-inputs/product-prioritization.md?raw";
+import {
+  EXAMPLE_FIXTURES,
+  type DemoExampleId,
+  getExampleFixture,
+} from "./exampleFixtures";
 
-export type DemoExampleId =
-  | "construction-strategy"
-  | "product-prioritization"
-  | "execution-planning";
+export type { DemoExampleId } from "./exampleFixtures";
 
 export type DemoExample = {
   id: DemoExampleId;
@@ -19,11 +18,18 @@ export type DemoExample = {
   briefTypeId: BriefTypeId;
   briefType: BriefType;
   description: string;
+  positioning: string[];
   sourceLabel: string;
   rawNotes: string;
 };
 
 export const DEMO_EXAMPLE_SOURCE_PREFIX = "demo:";
+
+const BRIEF_TYPE_BY_ID = {
+  product: PRODUCT_DECISION_BRIEF,
+  strategy: STRATEGY_DECISION_BRIEF,
+  execution: EXECUTION_DECISION_BRIEF,
+} satisfies Record<BriefTypeId, BriefType>;
 
 export function demoExampleSourceLabel(exampleId: DemoExampleId): string {
   return `${DEMO_EXAMPLE_SOURCE_PREFIX}${exampleId}`;
@@ -37,50 +43,35 @@ export function parseDemoExampleId(
   }
 
   const exampleId = sourceLabel.slice(DEMO_EXAMPLE_SOURCE_PREFIX.length);
-  return DEMO_EXAMPLES.some((example) => example.id === exampleId)
+  return EXAMPLE_FIXTURES.some((fixture) => fixture.metadata.id === exampleId)
     ? (exampleId as DemoExampleId)
     : null;
 }
 
-export const DEMO_EXAMPLES: DemoExample[] = [
-  {
-    id: "construction-strategy",
-    title: "Construction workforce planning",
-    briefTypeId: "strategy",
-    briefType: STRATEGY_DECISION_BRIEF,
-    description:
-      "Messy strategy notes on specialty trades vs GC workforce planning before Q4.",
-    sourceLabel: demoExampleSourceLabel("construction-strategy"),
-    rawNotes: constructionNotes.trim(),
-  },
-  {
-    id: "product-prioritization",
-    title: "Product sprint prioritization",
-    briefTypeId: "product",
-    briefType: PRODUCT_DECISION_BRIEF,
-    description:
-      "Product sync deciding onboarding workflow vs reporting vs admin controls for one sprint.",
-    sourceLabel: demoExampleSourceLabel("product-prioritization"),
-    rawNotes: productNotes.trim(),
-  },
-  {
-    id: "execution-planning",
-    title: "Manager dashboard rollout",
-    briefTypeId: "execution",
-    briefType: EXECUTION_DECISION_BRIEF,
-    description:
-      "Launch sequencing, ownership, and readiness for a constrained manager dashboard release.",
-    sourceLabel: demoExampleSourceLabel("execution-planning"),
-    rawNotes: executionNotes.trim(),
-  },
-];
+function toDemoExample(fixture: (typeof EXAMPLE_FIXTURES)[number]): DemoExample {
+  const { id, title, briefTypeId, description, positioning } = fixture.metadata;
 
-export const DEFAULT_DEMO_EXAMPLE_ID: DemoExampleId = "construction-strategy";
+  return {
+    id,
+    title,
+    briefTypeId,
+    briefType: BRIEF_TYPE_BY_ID[briefTypeId],
+    description,
+    positioning,
+    sourceLabel: demoExampleSourceLabel(id),
+    rawNotes: fixture.rawNotes,
+  };
+}
+
+export const DEMO_EXAMPLES: DemoExample[] = EXAMPLE_FIXTURES.map(toDemoExample);
+
+export const DEFAULT_DEMO_EXAMPLE_ID: DemoExampleId = "specialty-trades-expansion";
 
 export function getDemoExample(
   exampleId: DemoExampleId,
 ): DemoExample | undefined {
-  return DEMO_EXAMPLES.find((example) => example.id === exampleId);
+  const fixture = getExampleFixture(exampleId);
+  return fixture ? toDemoExample(fixture) : undefined;
 }
 
 export function getDemoExamplesForBriefType(

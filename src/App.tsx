@@ -386,6 +386,7 @@ export function App() {
       const markdown = await generateDecisionBriefForSession({
         captureLayer: briefSession.captureLayer,
         briefType: selectedBriefType,
+        sourceLabel: briefSession.rawInput.sourceLabel,
         adapter: getAdapterForGeneration(abortController?.signal),
       });
 

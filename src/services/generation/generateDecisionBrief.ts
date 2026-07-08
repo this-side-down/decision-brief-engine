@@ -9,6 +9,7 @@ import {
 type GenerateDecisionBriefForSessionInput = {
   captureLayer: CaptureLayer;
   briefType: BriefType;
+  sourceLabel?: string;
   adapter?: ModelAdapter;
 };
 
@@ -16,6 +17,7 @@ export async function generateDecisionBriefForSession({
   adapter = getModelAdapter(),
   briefType,
   captureLayer,
+  sourceLabel,
 }: GenerateDecisionBriefForSessionInput): Promise<string> {
   return adapter.generateDecisionBrief({
     captureLayer,
@@ -23,5 +25,6 @@ export async function generateDecisionBriefForSession({
     briefTypeGuidance: briefType.guidance,
     markdownStructure: [...DECISION_BRIEF_MARKDOWN_STRUCTURE],
     toneGuidance: "Concise, executive-ready, direct, and decision-oriented.",
+    sourceLabel,
   });
 }

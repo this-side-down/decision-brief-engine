@@ -4,7 +4,7 @@ import type { CaptureLayerEvalCase } from "./types";
 export const CONSTRUCTION_STRATEGY_EVAL_CASE: CaptureLayerEvalCase = {
   id: "construction-strategy",
   name: "Construction workforce planning (Strategy)",
-  rawInputPath: "fixtures/construction-workforce-planning/messy-transcript.md",
+  rawInputPath: "fixtures/examples/specialty-trades-expansion/messy-notes.md",
   briefTypeId: "strategy",
   sourceLabel: "Construction workforce planning example",
   fixtureDocPath: "fixtures/evaluation/strategy-tradeoff.md",

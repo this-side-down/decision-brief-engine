@@ -1,0 +1,74 @@
+{
+  "source_summary": "Product notes on whether to add guided health checks, model status, endpoint validation, and clearer failure states for users running local inference, while keeping the public demo on mocked generation.",
+  "decision_context": "Local inference is the strongest real-generation path, but setup is fragile—wrong endpoints, missing models, and opaque errors create support noise and erode product credibility. Engineering capacity is limited before the next Capture Layer quality push.",
+  "stated_decision": "Decide whether to invest in an in-product local inference setup flow before pushing local inference harder in docs or internal demos.",
+  "implied_decision": "Whether a lightweight health-check strip is sufficient or a full first-run wizard is required to make local inference credible without complicating the public mock demo.",
+  "goals": [
+    "Make the local-first generation path credible for power users",
+    "Reduce setup confusion and opaque failure states",
+    "Keep the public mock demo as the default visitor experience",
+    "Avoid pulling engineering away from Capture Layer quality work"
+  ],
+  "stakeholders": [
+    "Product",
+    "Engineering",
+    "Design",
+    "Support",
+    "Internal demo users",
+    "Power users running local inference"
+  ],
+  "options_considered": [
+    "Add a status strip with endpoint reachability, model availability, and last smoke-test result",
+    "Build a guided first-run wizard with install checks, model pull confirmation, and plain-language failures",
+    "Improve documentation and troubleshooting only, with no in-product flow",
+    "Defer investment until there is stronger signal on local vs mock usage"
+  ],
+  "constraints": [
+    "Mock demo remains the public default; local runtime is not exposed in visitor UI",
+    "Engineering has limited capacity before the next Capture Layer quality push",
+    "The product cannot support every local stack permutation",
+    "Health checks must not block users who paste notes and use mock generation"
+  ],
+  "risks": [
+    "A wizard could feel heavy for a fast open-and-paste workflow",
+    "Health checks may produce false positives or false negatives",
+    "Scope could creep into model management and broad local-stack support",
+    "Maintenance burden if local runtime APIs change frequently"
+  ],
+  "assumptions": [
+    "Most setup failures are endpoint, model, or port mismatches rather than Capture Layer logic bugs",
+    "A short generation smoke test is more trustworthy than endpoint ping alone",
+    "Support volume reflects product credibility gaps, not just documentation gaps"
+  ],
+  "evidence": [
+    "Three support threads in two weeks involved local setup confusion",
+    "An internal demo failed because the required model was not pulled",
+    "A documentation update helped one user but not a port-mismatch case",
+    "Engineering estimates endpoint validation as straightforward and smoke test as medium effort"
+  ],
+  "open_questions": [
+    "Is setup friction blocking adoption or mostly rough edges for early users?",
+    "Is a wizard necessary or is inline status with on-demand checks enough?",
+    "What is the minimum smoke test that proves generation readiness?",
+    "Who owns failure-state copy and support escalation paths?"
+  ],
+  "tensions": [
+    "Product wants local inference credibility while keeping the public demo simple",
+    "Design wants a fast workflow; support wants explicit readiness signals",
+    "Engineering wants bounded scope; users want comprehensive setup assurance"
+  ],
+  "recommendation_candidate": "Ship a lightweight health-check and model status strip—validate endpoint, confirm model availability, run one short generation smoke test, and explain failures in plain language—before investing in a full wizard.",
+  "confidence": "Medium",
+  "missing_context": [
+    "Quantified local vs mock usage among active users",
+    "Engineering estimate for status strip vs wizard",
+    "Support ticket taxonomy for setup vs generation failures",
+    "Design review of inline status placement in the current workflow"
+  ],
+  "suggested_next_steps": [
+    "Scope a one-sprint status strip with endpoint, model, and smoke-test checks",
+    "Define plain-language failure copy for the top three setup failure modes",
+    "Measure support volume for four weeks after release",
+    "Revisit a guided wizard only if setup-related tickets remain high"
+  ]
+}

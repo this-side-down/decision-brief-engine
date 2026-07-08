@@ -1,0 +1,12 @@
+{
+  "id": "household-move-planning",
+  "title": "Household Move Planning",
+  "briefTypeId": "execution",
+  "description": "Coordinate a near-term household move with budget limits, pet requirements, work authorization uncertainty, and timing dependencies.",
+  "positioning": [
+    "household coordination",
+    "intent workflows",
+    "messy life logistics",
+    "WALLI-adjacent use case"
+  ]
+}

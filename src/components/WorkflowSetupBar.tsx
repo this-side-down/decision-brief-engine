@@ -65,9 +65,10 @@ export function WorkflowSetupBar({
       className="shrink-0 border-b border-slate-200 bg-slate-50 px-5 py-3"
     >
       <p className="text-xs text-slate-600">
-        Public demo uses <span className="font-semibold">mocked generation</span>{" "}
-        to show workflow and structure. Generate a Capture Layer first—it
-        preserves facts, inference, and ambiguity before the final brief.
+        Choose a messy example to see how Decision Brief Engine turns raw notes
+        into a Capture Layer and then a structured brief. The public demo uses{" "}
+        <span className="font-semibold">mocked generation</span> so the workflow
+        is reliable and reviewable.
       </p>
 
       <div className="mt-3 flex flex-wrap items-end gap-x-6 gap-y-3">
@@ -149,7 +150,7 @@ export function WorkflowSetupBar({
               }
               value={selectedDemoExampleId}
             >
-              {(["product", "strategy", "execution"] as const).map(
+              {(["strategy", "product", "execution"] as const).map(
                 (briefTypeId) => (
                   <optgroup
                     key={briefTypeId}

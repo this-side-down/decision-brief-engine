@@ -5,48 +5,75 @@ import {
   STRATEGY_DECISION_BRIEF,
 } from "../../data/briefTypes";
 import { demoExampleSourceLabel } from "../../data/demoExamples";
-import executionNotes from "../../../fixtures/raw-inputs/execution-planning.md?raw";
-import productNotes from "../../../fixtures/raw-inputs/product-prioritization.md?raw";
+import { getExampleFixture } from "../../data/exampleFixtures";
 import { CAPTURE_LAYER_FIELDS } from "./types";
 import { mockModelAdapter } from "./mockModelAdapter";
 
 describe("mockModelAdapter demo examples", () => {
   it("returns example-specific capture layers for demo source labels", async () => {
+    const productFixture = getExampleFixture("local-inference-setup-flow");
+    expect(productFixture).toBeDefined();
+
     const product = await mockModelAdapter.generateCaptureLayer({
-      rawInputText: productNotes,
+      rawInputText: productFixture!.rawNotes,
       briefType: PRODUCT_DECISION_BRIEF,
       briefTypeGuidance: PRODUCT_DECISION_BRIEF.guidance,
       captureLayerFields: [...CAPTURE_LAYER_FIELDS],
-      sourceLabel: demoExampleSourceLabel("product-prioritization"),
+      sourceLabel: demoExampleSourceLabel("local-inference-setup-flow"),
     });
 
-    expect(product.stated_decision).toContain("next sprint");
+    expect(product.stated_decision.toLowerCase()).toContain("local inference");
     expect(product.options_considered.length).toBeGreaterThanOrEqual(3);
-    expect(product.recommendation_candidate).toContain("onboarding");
+    expect(product.recommendation_candidate.toLowerCase()).toContain("health");
 
+    const executionFixture = getExampleFixture("household-move-planning");
     const execution = await mockModelAdapter.generateCaptureLayer({
-      rawInputText: executionNotes,
+      rawInputText: executionFixture!.rawNotes,
       briefType: EXECUTION_DECISION_BRIEF,
       briefTypeGuidance: EXECUTION_DECISION_BRIEF.guidance,
       captureLayerFields: [...CAPTURE_LAYER_FIELDS],
-      sourceLabel: demoExampleSourceLabel("execution-planning"),
+      sourceLabel: demoExampleSourceLabel("household-move-planning"),
     });
 
     expect(execution.stated_decision.toLowerCase()).toContain("sequencing");
-    expect(execution.options_considered).toHaveLength(3);
-    expect(execution.recommendation_candidate.toLowerCase()).toContain(
-      "rollout",
-    );
+    expect(execution.options_considered).toHaveLength(4);
+    expect(execution.recommendation_candidate.toLowerCase()).toContain("owner");
 
     const strategy = await mockModelAdapter.generateCaptureLayer({
       rawInputText: "specialty trades and gc workforce planning notes",
       briefType: STRATEGY_DECISION_BRIEF,
       briefTypeGuidance: STRATEGY_DECISION_BRIEF.guidance,
       captureLayerFields: [...CAPTURE_LAYER_FIELDS],
-      sourceLabel: demoExampleSourceLabel("construction-strategy"),
+      sourceLabel: demoExampleSourceLabel("specialty-trades-expansion"),
     });
 
     expect(strategy.options_considered.length).toBeGreaterThanOrEqual(3);
     expect(strategy.recommendation_candidate).toContain("discovery pilot");
+  });
+
+  it("returns example-specific decision brief markdown for demo source labels", async () => {
+    const strategyFixture = getExampleFixture("specialty-trades-expansion");
+    const strategyBrief = await mockModelAdapter.generateDecisionBrief({
+      captureLayer: strategyFixture!.expectedCaptureLayer,
+      briefType: STRATEGY_DECISION_BRIEF,
+      briefTypeGuidance: STRATEGY_DECISION_BRIEF.guidance,
+      markdownStructure: [],
+      sourceLabel: demoExampleSourceLabel("specialty-trades-expansion"),
+    });
+
+    expect(strategyBrief.toLowerCase()).toContain("specialty trade");
+    expect(strategyBrief).toContain("discovery pilot");
+
+    const productFixture = getExampleFixture("local-inference-setup-flow");
+    const productBrief = await mockModelAdapter.generateDecisionBrief({
+      captureLayer: productFixture!.expectedCaptureLayer,
+      briefType: PRODUCT_DECISION_BRIEF,
+      briefTypeGuidance: PRODUCT_DECISION_BRIEF.guidance,
+      markdownStructure: [],
+      sourceLabel: demoExampleSourceLabel("local-inference-setup-flow"),
+    });
+
+    expect(productBrief.toLowerCase()).toContain("health-check");
+    expect(productBrief.toLowerCase()).toContain("mocked generation");
   });
 });

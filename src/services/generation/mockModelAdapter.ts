@@ -1,6 +1,9 @@
 import type { CaptureLayer } from "../../types/captureLayer";
 import { parseDemoExampleId } from "../../data/demoExamples";
-import { MOCK_CAPTURE_LAYERS_BY_EXAMPLE_ID } from "../../data/mockCaptureLayers";
+import {
+  MOCK_CAPTURE_LAYERS_BY_EXAMPLE_ID,
+  MOCK_DECISION_BRIEFS_BY_EXAMPLE_ID,
+} from "../../data/exampleFixtures";
 import type {
   GenerateCaptureLayerInput,
   GenerateDecisionBriefInput,
@@ -18,7 +21,7 @@ function summarizeSource(rawInputText: string) {
 }
 
 function buildConstructionKeywordCaptureLayer(): CaptureLayer {
-  return MOCK_CAPTURE_LAYERS_BY_EXAMPLE_ID["construction-strategy"];
+  return MOCK_CAPTURE_LAYERS_BY_EXAMPLE_ID["specialty-trades-expansion"];
 }
 
 function buildMockCaptureLayer(
@@ -90,7 +93,7 @@ function formatList(items: string[]) {
   return items.map((item) => `- ${item}`).join("\n");
 }
 
-function buildMockDecisionBrief(input: GenerateDecisionBriefInput) {
+function buildTemplateDecisionBrief(input: GenerateDecisionBriefInput) {
   const { captureLayer } = input;
   const recommendation =
     captureLayer.recommendation_candidate ||
@@ -127,6 +130,15 @@ function buildMockDecisionBrief(input: GenerateDecisionBriefInput) {
     "## Confidence",
     `Confidence: ${captureLayer.confidence}`,
   ].join("\n");
+}
+
+function buildMockDecisionBrief(input: GenerateDecisionBriefInput) {
+  const demoExampleId = parseDemoExampleId(input.sourceLabel);
+  if (demoExampleId) {
+    return MOCK_DECISION_BRIEFS_BY_EXAMPLE_ID[demoExampleId];
+  }
+
+  return buildTemplateDecisionBrief(input);
 }
 
 export const mockModelAdapter: ModelAdapter = {
