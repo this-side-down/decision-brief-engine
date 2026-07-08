@@ -31,7 +31,8 @@ function isNodeRuntime(): boolean {
 }
 
 function readEnv(name: OllamaEnvName): string | undefined {
-  const viteValue = import.meta.env[name];
+  const viteEnv = import.meta.env as ImportMetaEnv | undefined;
+  const viteValue = viteEnv?.[name];
   if (typeof viteValue === "string" && viteValue.length > 0) {
     return viteValue;
   }

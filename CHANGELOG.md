@@ -11,6 +11,7 @@ Version comparison links will be added when tags are created.
 ### Added
 
 - Capture Layer evaluation harness for mock + local Ollama CLI runs, with a documented manual WebGPU procedure and shared schema/structural pass-fail gates ([#72](docs/ai/capture-layer-eval-harness.md)).
+- Browser model/prompt variant evaluation structure for gated WebGPU comparison, including experimental `VITE_CAPTURE_PROMPT_VARIANT=schema_skeleton` ([#73](docs/ai/browser-model-prompt-variant-eval.md)).
 
 ### Product Lab milestone — browser WebGPU inference (2026-07-08)
 
@@ -21,7 +22,7 @@ After #60, #68, and #69:
 - Browser inference is hidden unless `VITE_ENABLE_WEBGPU_INFERENCE=true` at build time.
 - Local Ollama (`VITE_GENERATION_MODE=ollama`) remains the higher-quality local/dev inference path.
 - Smoke validation ([#68](fixtures/evaluation/browser-model-results.md)): model download, cache reuse, and cancel paths work; `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` failed Capture Layer schema validation on the built-in construction example (Strategy).
-- Recommended next work: evaluate prompt strategy and alternate browser model candidates before ungating public opt-in.
+- Recommended next work: finish manual `schema_skeleton` WebGPU run (W2) and only then consider alternate browser model IDs before any ungating discussion ([#73](docs/ai/browser-model-prompt-variant-eval.md)).
 
 ### Added
 

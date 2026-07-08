@@ -196,6 +196,7 @@ Required placeholder rows to maintain until evaluation is complete:
 ## Related documents
 
 - [Capture Layer evaluation harness](capture-layer-eval-harness.md)
+- [Browser model / prompt variant eval (#73)](browser-model-prompt-variant-eval.md)
 - [WebGPU adapter feasibility](webgpu-adapter-feasibility.md)
 - [Evaluation plan](evaluation-plan.md)
 - [Manual scorecard](../../fixtures/evaluation/manual-scorecard.md)
