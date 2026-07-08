@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { formatAppVersionLabel } from "./appVersion";
 import { WorkflowSetupBar } from "./components/WorkflowSetupBar";
 import { BrowserInferenceStatus } from "./components/generation/BrowserInferenceStatus";
 import { DownloadDisclosureDialog } from "./components/generation/DownloadDisclosureDialog";
@@ -706,6 +707,9 @@ export function App() {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <span className="text-[10px] text-neutral-500">
+              {formatAppVersionLabel()}
+            </span>
             <span className="text-xs text-neutral-400">{modeLabel}</span>
             <span className="rounded-full bg-neutral-800 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-neutral-200">
               {modeBadge}
