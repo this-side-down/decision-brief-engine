@@ -1,8 +1,18 @@
 # Decision Brief Engine
 
-Decision Brief Engine is an AI-native decision brief engine for turning messy notes into structured Capture Layers and decision-ready Markdown briefs.
+Decision Brief Engine is an AI-native product experiment for turning messy notes into structured decision briefs.
 
-Instead of simply summarizing text, it captures the underlying intent, decisions, risks, constraints, and unresolved questions before generating executive-ready output.
+Instead of simply summarizing text, it captures underlying intent, decisions, risks, constraints, and unresolved questions before generating executive-ready output. The **Capture Layer** is the user-facing “show your work” artifact. Raw model thinking, hidden reasoning, and chain-of-thought are not exposed.
+
+## Status
+
+**Current release:** v0.1.0 — Public Demo Milestone  
+**Public demo:** https://decision-brief-engine.vercel.app/  
+**Release notes:** https://github.com/this-side-down/decision-brief-engine/releases/tag/v0.1.0
+
+The hosted demo runs in Mock mode by default for reliability. Local Ollama is the strongest real-generation path for local evaluation. Browser WebGPU remains gated while quality improves.
+
+v0.1.0 is the first portfolio-ready public demo milestone: example gallery, export polish, Local Ollama health check, and generation telemetry. See [Public demo milestone](docs/product/public-demo-milestone.md) for the full write-up.
 
 ## Why
 
@@ -13,14 +23,6 @@ Most AI note takers answer:
 Decision Brief Engine answers:
 
 "What matters?"
-
-## Current product state
-
-- This repository is the Decision Brief Engine product codebase.
-- The public Vercel app is a mocked/static workflow validation demo by default.
-- Local development supports real local inference through Ollama (`qwen3:4b`) when enabled with environment variables; this remains the higher-quality local/dev path.
-- Browser WebGPU inference is implemented but experimental and gated behind `VITE_ENABLE_WEBGPU_INFERENCE=true` at build time; the public demo does not expose it by default.
-- Public hosted inference is not implemented yet and requires a separate deployment and data-handling decision.
 
 ## MVP workflow
 
@@ -36,12 +38,6 @@ Decision Brief Engine answers:
 - The final Decision Brief exports as Markdown.
 - The MVP runtime stack is FOSS-only.
 - Generation can start mocked before local or self-hosted FOSS-compatible inference is wired in.
-
-## Public app status
-
-Production demo: https://decision-brief-engine.vercel.app/
-
-The hosted app is currently deployed on Vercel as a mocked/static workflow demo. It should not be interpreted as a public hosted inference deployment.
 
 ## Local inference (Ollama)
 

@@ -4,6 +4,8 @@ Decision Brief Engine now has a credible public workflow demo: a three-column la
 
 Production demo: https://decision-brief-engine.vercel.app/
 
+GitHub release: https://github.com/this-side-down/decision-brief-engine/releases/tag/v0.1.0
+
 GitHub release target: **`v0.1.0`** — Public Demo Milestone. See [CHANGELOG.md](../../CHANGELOG.md).
 
 ## Summary
