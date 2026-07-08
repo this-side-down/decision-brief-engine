@@ -96,6 +96,7 @@ This is implementation guidance for the current v0 state, not a legal privacy po
 - [Conceptual data model](docs/architecture/data-model.md)
 - [AI prompt contracts](docs/ai/prompt-contracts.md)
 - [Evaluation plan](docs/ai/evaluation-plan.md)
+- [Capture Layer evaluation harness](docs/ai/capture-layer-eval-harness.md)
 - [Browser model quality gate evaluation](docs/ai/browser-model-quality-gate.md)
 - [Browser inference adapter feasibility](docs/ai/browser-inference-adapter-feasibility.md)
 - [Qwen3/Ollama JSON-mode quirk](docs/ai/ollama-qwen3-json-quirk.md)
@@ -113,9 +114,20 @@ This is implementation guidance for the current v0 state, not a legal privacy po
 npm install
 npm run dev
 npm run typecheck
+npm test
 npm run build
 npm run preview
 ```
+
+### Capture Layer evaluation (#72)
+
+```sh
+npm run eval:capture -- --mode=mock
+npm run eval:capture -- --mode=ollama
+npm run eval:capture -- --mode=webgpu
+```
+
+See [Capture Layer evaluation harness](docs/ai/capture-layer-eval-harness.md). WebGPU remains a documented manual browser procedure.
 
 ## Product Lab
 

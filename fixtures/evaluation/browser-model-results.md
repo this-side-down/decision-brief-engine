@@ -4,11 +4,14 @@ Structured results template for [#57](https://github.com/this-side-down/decision
 
 Use this file with:
 
+- [Capture Layer evaluation harness](../../docs/ai/capture-layer-eval-harness.md) (#72)
 - [Browser model quality gate](../../docs/ai/browser-model-quality-gate.md)
 - [Manual scorecard](manual-scorecard.md)
 - Evaluation fixtures in this directory
 
-Do not commit model weights. Do not treat placeholder rows as completed evaluation until manually filled. Do not record a recommendation or overall gate decision until actual model runs are complete.
+First comparable case for mock / Ollama / WebGPU rows: **construction Strategy** (`strategy-tradeoff.md` / built-in example). Use `npm run eval:capture` for mock and Ollama schema + structural gates; record WebGPU manually with the same fields.
+
+Do not commit model weights. Do not treat placeholder rows as completed evaluation until manually filled. Do not record a recommendation or overall gate decision until actual model runs are complete. Issue #73 model/prompt variant evaluation is separate and should not be started from this harness slice alone.
 
 ---
 

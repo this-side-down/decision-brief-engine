@@ -8,6 +8,10 @@ Version comparison links will be added when tags are created.
 
 ## [Unreleased]
 
+### Added
+
+- Capture Layer evaluation harness for mock + local Ollama CLI runs, with a documented manual WebGPU procedure and shared schema/structural pass-fail gates ([#72](docs/ai/capture-layer-eval-harness.md)).
+
 ### Product Lab milestone — browser WebGPU inference (2026-07-08)
 
 After #60, #68, and #69:
