@@ -12,6 +12,8 @@ Version comparison links will be added when tags are created.
 
 - Inference path decision brief comparing public hosted, desktop/local, Ollama, mobile, browser WebGPU, and hybrid rollout options ([ADR 0004](docs/decisions/0004-inference-path-decision-brief.md)).
 - Lightweight pre-1.0 release and versioning policy ([docs/project/release-process.md](docs/project/release-process.md)).
+- Browser model quality gate evaluation for Capture Layer readiness ([#57](docs/ai/browser-model-quality-gate.md)).
+- Browser WebGPU adapter feasibility research and recommended integration shape ([#58](docs/ai/browser-inference-adapter-feasibility.md)).
 
 ## [0.2.0] - TBD
 
