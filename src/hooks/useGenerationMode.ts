@@ -15,6 +15,7 @@ import { getModelAdapter } from "../services/generation/getModelAdapter";
 import type { ModelAdapter } from "../services/generation/types";
 import {
   cancelWebGpuGeneration,
+  cancelWebGpuLoad,
   getLoadedWebGpuEngine,
   isWebGpuModelCached,
   loadWebGpuEngine,
@@ -22,6 +23,7 @@ import {
 import {
   ModelDownloadFailedError,
   ModelLoadCancelledError,
+  ModelLoadTimeoutError,
 } from "../services/generation/webGpuErrors";
 import {
   runWebGpuPreflight,
@@ -138,16 +140,19 @@ export function useGenerationMode() {
   const selectMockDemo = useCallback(() => {
     loadAbortRef.current?.abort();
     generationAbortRef.current?.abort();
+    void cancelWebGpuLoad();
+    void cancelWebGpuGeneration(engine);
     persistPreference("mock");
     setIsDisclosureOpen(false);
     setDownloadProgress(null);
     setInferenceUiState("fallback_to_mock");
     setStatusMessage("Switched to Mock demo.");
-  }, [persistPreference]);
+  }, [engine, persistPreference]);
 
   const cancelModelDownload = useCallback(() => {
     loadAbortRef.current?.abort();
     loadAbortRef.current = null;
+    void cancelWebGpuLoad();
     setDownloadProgress(null);
     setIsDisclosureOpen(false);
     setInferenceUiState("download_cancelled");
@@ -202,6 +207,12 @@ export function useGenerationMode() {
       if (error instanceof ModelLoadCancelledError) {
         setInferenceUiState("download_cancelled");
         setStatusMessage("Model download cancelled. Live in browser is not ready.");
+        return;
+      }
+
+      if (error instanceof ModelLoadTimeoutError) {
+        setInferenceUiState("download_failed");
+        setStatusMessage(error.message);
         return;
       }
 

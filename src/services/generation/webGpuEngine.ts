@@ -20,9 +20,25 @@ type LoadEngineOptions = {
 let cachedEngine: MLCEngineInterface | null = null;
 let cachedModelId: string | null = null;
 let activeLoadPromise: Promise<MLCEngineInterface> | null = null;
+let activeLoadEngine: MLCEngineInterface | null = null;
+let activeLoadGeneration = 0;
 
 async function importWebLlm() {
   return import("@mlc-ai/web-llm");
+}
+
+function isLoadStale(loadGeneration: number): boolean {
+  return loadGeneration !== activeLoadGeneration;
+}
+
+async function abortInFlightLoadEngine(
+  engine: MLCEngineInterface | null,
+): Promise<void> {
+  if (!engine) {
+    return;
+  }
+
+  await engine.unload().catch(() => undefined);
 }
 
 export async function isWebGpuModelCached(modelId?: string): Promise<boolean> {
@@ -35,6 +51,13 @@ export async function isWebGpuModelCached(modelId?: string): Promise<boolean> {
 
 export function getLoadedWebGpuEngine(): MLCEngineInterface | null {
   return cachedEngine;
+}
+
+export async function cancelWebGpuLoad(): Promise<void> {
+  activeLoadGeneration += 1;
+  const engine = activeLoadEngine;
+  activeLoadEngine = null;
+  await abortInFlightLoadEngine(engine);
 }
 
 export async function loadWebGpuEngine(
@@ -54,7 +77,11 @@ export async function loadWebGpuEngine(
     return activeLoadPromise;
   }
 
-  activeLoadPromise = loadWebGpuEngineInternal(config.modelId, config.timeoutMs, options);
+  activeLoadPromise = loadWebGpuEngineInternal(
+    config.modelId,
+    config.timeoutMs,
+    options,
+  );
 
   try {
     return await activeLoadPromise;
@@ -72,48 +99,76 @@ async function loadWebGpuEngineInternal(
     throw new ModelLoadCancelledError();
   }
 
+  activeLoadGeneration += 1;
+  const loadGeneration = activeLoadGeneration;
+  const previousEngine = activeLoadEngine;
+  activeLoadEngine = null;
+  await abortInFlightLoadEngine(previousEngine);
+
   const webllm = await importWebLlm();
-  let timedOut = false;
-  const timeout = window.setTimeout(() => {
-    timedOut = true;
-  }, timeoutMs);
+  const engine = new webllm.MLCEngine({
+    initProgressCallback: (report: InitProgressReport) => {
+      if (isLoadStale(loadGeneration) || options.signal?.aborted) {
+        return;
+      }
 
-  const handleProgress = (report: InitProgressReport) => {
-    if (options.signal?.aborted) {
-      return;
-    }
+      options.onProgress?.({
+        progress: report.progress,
+        text: report.text,
+      });
+    },
+  });
 
-    options.onProgress?.({
-      progress: report.progress,
-      text: report.text,
-    });
+  activeLoadEngine = engine;
+
+  const handleExternalAbort = () => {
+    void cancelWebGpuLoad();
   };
 
+  options.signal?.addEventListener("abort", handleExternalAbort);
+
+  let timeoutId: number | undefined;
+
   try {
-    const engine = await webllm.CreateMLCEngine(modelId, {
-      initProgressCallback: handleProgress,
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = window.setTimeout(() => {
+        void cancelWebGpuLoad();
+        reject(new ModelLoadTimeoutError());
+      }, timeoutMs);
     });
 
-    if (options.signal?.aborted) {
-      await engine.unload().catch(() => undefined);
-      throw new ModelLoadCancelledError();
-    }
+    const reloadPromise = engine.reload(modelId).then(() => {
+      if (isLoadStale(loadGeneration)) {
+        throw new ModelLoadCancelledError();
+      }
 
-    if (timedOut) {
-      await engine.unload().catch(() => undefined);
-      throw new ModelLoadTimeoutError();
+      if (options.signal?.aborted) {
+        throw new ModelLoadCancelledError();
+      }
+    });
+
+    await Promise.race([reloadPromise, timeoutPromise]);
+
+    if (isLoadStale(loadGeneration) || options.signal?.aborted) {
+      throw new ModelLoadCancelledError();
     }
 
     cachedEngine = engine;
     cachedModelId = modelId;
+    activeLoadEngine = null;
     return engine;
   } catch (error) {
-    if (options.signal?.aborted || error instanceof ModelLoadCancelledError) {
+    if (
+      isLoadStale(loadGeneration) ||
+      options.signal?.aborted ||
+      error instanceof ModelLoadCancelledError ||
+      (error instanceof DOMException && error.name === "AbortError")
+    ) {
       throw new ModelLoadCancelledError();
     }
 
-    if (timedOut) {
-      throw new ModelLoadTimeoutError();
+    if (error instanceof ModelLoadTimeoutError) {
+      throw error;
     }
 
     if (error instanceof Error && /memory|oom|device lost/i.test(error.message)) {
@@ -128,7 +183,15 @@ async function loadWebGpuEngineInternal(
         : "Model download failed. Check your connection and try again.",
     );
   } finally {
-    window.clearTimeout(timeout);
+    if (timeoutId !== undefined) {
+      window.clearTimeout(timeoutId);
+    }
+
+    options.signal?.removeEventListener("abort", handleExternalAbort);
+
+    if (activeLoadEngine === engine) {
+      activeLoadEngine = null;
+    }
   }
 }
 
@@ -143,6 +206,8 @@ export async function cancelWebGpuGeneration(
 }
 
 export async function unloadWebGpuEngine(): Promise<void> {
+  await cancelWebGpuLoad();
+
   if (cachedEngine) {
     await cachedEngine.unload().catch(() => undefined);
   }
