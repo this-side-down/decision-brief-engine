@@ -98,6 +98,7 @@ This is implementation guidance for the current v0 state, not a legal privacy po
 - [Capture Layer contract](docs/product/capture-layer.md)
 - [MVP brief types](docs/product/brief-types.md)
 - [Live browser inference UX](docs/product/live-browser-inference-ux.md)
+- [Public demo milestone](docs/product/public-demo-milestone.md)
 - [MVP architecture](docs/architecture/mvp-architecture.md)
 - [Conceptual data model](docs/architecture/data-model.md)
 - [AI prompt contracts](docs/ai/prompt-contracts.md)
