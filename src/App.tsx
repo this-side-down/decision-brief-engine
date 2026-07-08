@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { WorkflowSetupBar } from "./components/WorkflowSetupBar";
 import { BrowserInferenceStatus } from "./components/generation/BrowserInferenceStatus";
 import { DownloadDisclosureDialog } from "./components/generation/DownloadDisclosureDialog";
+import { GenerationRunStatus } from "./components/generation/GenerationRunStatus";
 import {
   DEFAULT_DEMO_EXAMPLE_ID,
   DEMO_EXAMPLES,
@@ -11,11 +12,13 @@ import {
 } from "./data/demoExamples";
 import { BRIEF_TYPES } from "./data/briefTypes";
 import { useGenerationMode } from "./hooks/useGenerationMode";
+import { useGenerationRunTelemetry } from "./hooks/useGenerationRunTelemetry";
 import { useTimedStatusMessage } from "./hooks/useTimedStatusMessage";
 import { generateCaptureLayerForSession } from "./services/generation/generateCaptureLayer";
 import { generateDecisionBriefForSession } from "./services/generation/generateDecisionBrief";
+import { getOllamaConfig } from "./services/generation/ollamaConfig";
 import { GenerationCancelledError } from "./services/generation/webGpuErrors";
-import type { BriefSession, BriefTypeId } from "./types/brief";
+import type { BriefSession, BriefType, BriefTypeId } from "./types/brief";
 import type { CaptureLayer } from "./types/captureLayer";
 import {
   copyMarkdownToClipboard,
@@ -33,6 +36,22 @@ const BRIEF_TYPE_HINTS = {
   execution:
     "Execution focuses the brief on rollout, resourcing, ownership, sequencing, and delivery.",
 } satisfies Record<BriefTypeId, string>;
+
+type PendingCaptureGenerate = {
+  action: "capture";
+  rawInputText: string;
+  briefType: BriefType;
+  sourceLabel?: string;
+};
+
+type PendingBriefGenerate = {
+  action: "brief";
+  captureLayer: CaptureLayer;
+  briefType: BriefType;
+  sourceLabel?: string;
+};
+
+type PendingGenerate = PendingCaptureGenerate | PendingBriefGenerate;
 
 function createInitialSession(): BriefSession {
   const now = new Date().toISOString();
@@ -200,9 +219,15 @@ export function App() {
     notifyBriefGenerationStarted,
     notifyBriefFailed,
     notifyGenerationComplete,
+    lastModelLoadDurationMs,
   } = generation;
   const isOllamaMode = effectiveMode === "ollama";
   const isWebGpuMode = effectiveMode === "webgpu";
+  const ollamaTimeoutMs = isOllamaMode ? getOllamaConfig().timeoutMs : undefined;
+  const telemetry = useGenerationRunTelemetry({
+    runtimeMode: effectiveMode,
+    configuredTimeoutMs: ollamaTimeoutMs,
+  });
   const [briefSession, setBriefSession] = useState<BriefSession>(() =>
     createInitialSession(),
   );
@@ -212,6 +237,11 @@ export function App() {
     useState<boolean>(false);
   const [selectedDemoExampleId, setSelectedDemoExampleId] =
     useState<DemoExampleId>(DEFAULT_DEMO_EXAMPLE_ID);
+  const [pendingGenerate, setPendingGenerate] = useState<PendingGenerate | null>(
+    null,
+  );
+  const pendingGenerateRef = useRef<PendingGenerate | null>(null);
+  const lastModelLoadDurationRef = useRef<number | null>(null);
 
   const selectedBriefTypeId = useMemo(
     () => briefSession.briefType?.id ?? "",
@@ -225,6 +255,12 @@ export function App() {
   const canGenerateDecisionBrief = briefSession.captureLayer !== null;
   const isGeneratingDecisionBrief =
     briefSession.status === "generating_brief";
+  const isWorkflowLocked =
+    pendingGenerate !== null ||
+    isGeneratingCaptureLayer ||
+    isGeneratingDecisionBrief ||
+    inferenceUiState === "downloading_model" ||
+    isDisclosureOpen;
   const currentMarkdown = briefSession.decisionBrief?.markdown ?? "";
   const hasMarkdown = currentMarkdown.trim().length > 0;
   const selectedBriefTypeHint = briefSession.briefType
@@ -248,9 +284,46 @@ export function App() {
       : briefSession.status === "error"
         ? "Waiting"
         : "Waiting";
+  const generationStatusMessage =
+    telemetry.liveStatusMessage ||
+    (isWebGpuMode ? statusMessage : "");
+  const showRunDetails =
+    telemetry.enabled &&
+    !isGeneratingCaptureLayer &&
+    !isGeneratingDecisionBrief &&
+    telemetry.currentStep === "idle";
+
+  function updatePendingGenerate(next: PendingGenerate | null) {
+    pendingGenerateRef.current = next;
+    setPendingGenerate(next);
+  }
+
+  useEffect(() => {
+    if (
+      inferenceUiState === "download_cancelled" ||
+      inferenceUiState === "download_failed"
+    ) {
+      updatePendingGenerate(null);
+    }
+  }, [inferenceUiState]);
+
+  useEffect(() => {
+    if (
+      lastModelLoadDurationMs !== null &&
+      lastModelLoadDurationMs !== lastModelLoadDurationRef.current
+    ) {
+      lastModelLoadDurationRef.current = lastModelLoadDurationMs;
+      telemetry.completeModelLoad(lastModelLoadDurationMs);
+    }
+  }, [lastModelLoadDurationMs, telemetry]);
 
   function updateRawInput(text: string) {
+    if (isWorkflowLocked) {
+      return;
+    }
+
     clearExportMessage();
+    telemetry.resetRun();
     setBriefSession((currentSession) => ({
       ...currentSession,
       rawInput: {
@@ -266,6 +339,10 @@ export function App() {
   }
 
   function handleLoadDemoExample(exampleId: DemoExampleId = selectedDemoExampleId) {
+    if (isWorkflowLocked) {
+      return;
+    }
+
     const example = getDemoExample(exampleId);
     if (!example) {
       return;
@@ -274,6 +351,7 @@ export function App() {
     const now = new Date().toISOString();
 
     clearExportMessage();
+    telemetry.resetRun();
     setSelectedDemoExampleId(example.id);
     setBriefSession((currentSession) => ({
       ...currentSession,
@@ -291,16 +369,7 @@ export function App() {
     }));
   }
 
-  async function handleGenerateCaptureLayer() {
-    if (!briefSession.briefType || !canGenerateCaptureLayer) {
-      return;
-    }
-
-    if (isWebGpuMode && !isEngineReady) {
-      openDownloadDisclosure();
-      return;
-    }
-
+  async function runCaptureGeneration(snapshot: PendingCaptureGenerate) {
     const abortController = isWebGpuMode ? beginGenerationAbort() : null;
 
     setBriefSession((currentSession) => ({
@@ -309,18 +378,23 @@ export function App() {
       errors: [],
       updatedAt: new Date().toISOString(),
     }));
+    telemetry.startCapture();
     notifyCaptureGenerationStarted();
 
     try {
       const captureLayer = await generateCaptureLayerForSession({
-        rawInputText: briefSession.rawInput.text,
-        briefType: briefSession.briefType,
-        sourceLabel: briefSession.rawInput.sourceLabel,
-        adapter: getAdapterForGeneration(
-          abortController?.signal,
-          notifyCaptureRetry,
-        ),
+        rawInputText: snapshot.rawInputText,
+        briefType: snapshot.briefType,
+        sourceLabel: snapshot.sourceLabel,
+        adapter: getAdapterForGeneration(abortController?.signal, {
+          onCaptureRetry: () => {
+            telemetry.recordCaptureRetry();
+            notifyCaptureRetry();
+          },
+        }),
       });
+
+      telemetry.completeCapture(null);
 
       setBriefSession((currentSession) => ({
         ...currentSession,
@@ -333,6 +407,7 @@ export function App() {
       notifyCaptureReady();
     } catch (error) {
       if (error instanceof GenerationCancelledError) {
+        telemetry.completeCapture(error);
         setBriefSession((currentSession) => ({
           ...currentSession,
           status: "draft",
@@ -347,6 +422,10 @@ export function App() {
         error instanceof Error
           ? error.message
           : "Unable to generate Capture Layer.";
+
+      telemetry.completeCapture(
+        error instanceof Error ? error : new Error(message),
+      );
 
       setBriefSession((currentSession) => ({
         ...currentSession,
@@ -366,21 +445,7 @@ export function App() {
     }
   }
 
-  async function handleGenerateDecisionBrief() {
-    if (
-      !briefSession.captureLayer ||
-      !briefSession.briefType ||
-      !canGenerateDecisionBrief
-    ) {
-      return;
-    }
-
-    if (isWebGpuMode && !isEngineReady) {
-      openDownloadDisclosure();
-      return;
-    }
-
-    const selectedBriefType = briefSession.briefType;
+  async function runBriefGeneration(snapshot: PendingBriefGenerate) {
     const abortController = isWebGpuMode ? beginGenerationAbort() : null;
 
     setBriefSession((currentSession) => ({
@@ -389,14 +454,19 @@ export function App() {
       errors: [],
       updatedAt: new Date().toISOString(),
     }));
+    telemetry.startBrief();
     notifyBriefGenerationStarted();
 
     try {
       const markdown = await generateDecisionBriefForSession({
-        captureLayer: briefSession.captureLayer,
-        briefType: selectedBriefType,
-        sourceLabel: briefSession.rawInput.sourceLabel,
-        adapter: getAdapterForGeneration(abortController?.signal),
+        captureLayer: snapshot.captureLayer,
+        briefType: snapshot.briefType,
+        sourceLabel: snapshot.sourceLabel,
+        adapter: getAdapterForGeneration(abortController?.signal, {
+          onBriefRetry: () => {
+            telemetry.recordBriefRetry();
+          },
+        }),
       });
 
       if (!markdown.trim()) {
@@ -405,12 +475,14 @@ export function App() {
 
       const now = new Date().toISOString();
 
+      telemetry.completeBrief(null);
+
       setBriefSession((currentSession) => ({
         ...currentSession,
         decisionBrief: {
           markdown,
           generatedFromCaptureLayer: currentSession.id,
-          briefType: selectedBriefType,
+          briefType: snapshot.briefType,
           editedByUser: false,
           createdAt: now,
           updatedAt: now,
@@ -422,6 +494,7 @@ export function App() {
       notifyGenerationComplete();
     } catch (error) {
       if (error instanceof GenerationCancelledError) {
+        telemetry.completeBrief(error);
         setBriefSession((currentSession) => ({
           ...currentSession,
           status: "capture_ready",
@@ -436,6 +509,10 @@ export function App() {
         error instanceof Error
           ? error.message
           : "Unable to generate Decision Brief.";
+
+      telemetry.completeBrief(
+        error instanceof Error ? error : new Error(message),
+      );
 
       setBriefSession((currentSession) => ({
         ...currentSession,
@@ -454,6 +531,70 @@ export function App() {
       }
     }
   }
+
+  async function handleGenerateCaptureLayer() {
+    if (!briefSession.briefType || !canGenerateCaptureLayer) {
+      return;
+    }
+
+    const snapshot: PendingCaptureGenerate = {
+      action: "capture",
+      rawInputText: briefSession.rawInput.text,
+      briefType: briefSession.briefType,
+      sourceLabel: briefSession.rawInput.sourceLabel,
+    };
+
+    if (isWebGpuMode && !isEngineReady) {
+      updatePendingGenerate(snapshot);
+      telemetry.startModelLoad();
+      openDownloadDisclosure();
+      return;
+    }
+
+    await runCaptureGeneration(snapshot);
+  }
+
+  async function handleGenerateDecisionBrief() {
+    if (
+      !briefSession.captureLayer ||
+      !briefSession.briefType ||
+      !canGenerateDecisionBrief
+    ) {
+      return;
+    }
+
+    const snapshot: PendingBriefGenerate = {
+      action: "brief",
+      captureLayer: briefSession.captureLayer,
+      briefType: briefSession.briefType,
+      sourceLabel: briefSession.rawInput.sourceLabel,
+    };
+
+    if (isWebGpuMode && !isEngineReady) {
+      updatePendingGenerate(snapshot);
+      telemetry.startModelLoad();
+      openDownloadDisclosure();
+      return;
+    }
+
+    await runBriefGeneration(snapshot);
+  }
+
+  useEffect(() => {
+    if (!pendingGenerate || !isEngineReady || isDisclosureOpen) {
+      return;
+    }
+
+    const nextPending = pendingGenerate;
+    updatePendingGenerate(null);
+
+    if (nextPending.action === "capture") {
+      void runCaptureGeneration(nextPending);
+      return;
+    }
+
+    void runBriefGeneration(nextPending);
+  }, [pendingGenerate, isEngineReady, isDisclosureOpen]);
 
   function updateDecisionBriefMarkdown(markdown: string) {
     clearExportMessage();
@@ -509,6 +650,10 @@ export function App() {
   }
 
   function updateBriefType(briefTypeId: BriefTypeId) {
+    if (isWorkflowLocked) {
+      return;
+    }
+
     const nextBriefType =
       BRIEF_TYPES.find((briefType) => briefType.id === briefTypeId) ?? null;
     const examplesForType = getDemoExamplesForBriefType(briefTypeId);
@@ -519,6 +664,7 @@ export function App() {
       : (examplesForType[0]?.id ?? selectedDemoExampleId);
 
     setSelectedDemoExampleId(nextExampleId);
+    telemetry.resetRun();
 
     setBriefSession((currentSession) => ({
       ...currentSession,
@@ -592,7 +738,8 @@ export function App() {
             </div>
             <textarea
               aria-describedby="raw-input-help"
-              className="min-h-0 flex-1 resize-none border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
+              className="min-h-0 flex-1 resize-none border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500"
+              disabled={isWorkflowLocked}
               onChange={(event) => updateRawInput(event.target.value)}
               placeholder="Paste meeting notes or brainstorms..."
               value={briefSession.rawInput.text}
@@ -635,11 +782,12 @@ export function App() {
                 <EmptyPanel
                   label={
                     isGeneratingCaptureLayer
-                      ? isOllamaMode
-                        ? "Generating Capture Layer via Ollama..."
-                        : isWebGpuMode
-                          ? "Generating Capture Layer in your browser..."
-                          : "Generating mocked Capture Layer..."
+                      ? generationStatusMessage ||
+                        (isOllamaMode
+                          ? "Generating Capture Layer via Ollama..."
+                          : isWebGpuMode
+                            ? "Generating Capture Layer in your browser..."
+                            : "Generating mocked Capture Layer...")
                       : "Capture Layer will appear here"
                   }
                 />
@@ -675,11 +823,12 @@ export function App() {
                 <EmptyPanel
                   label={
                     isGeneratingDecisionBrief
-                      ? isOllamaMode
-                        ? "Generating Decision Brief via Ollama..."
-                        : isWebGpuMode
-                          ? "Generating Decision Brief in your browser..."
-                          : "Generating mocked Decision Brief..."
+                      ? generationStatusMessage ||
+                        (isOllamaMode
+                          ? "Generating Decision Brief via Ollama..."
+                          : isWebGpuMode
+                            ? "Generating Decision Brief in your browser..."
+                            : "Generating mocked Decision Brief...")
                       : "Decision Brief will appear here"
                   }
                 />
@@ -766,6 +915,13 @@ export function App() {
             </button>
           </div>
         </footer>
+        <GenerationRunStatus
+          failureMessage={showRunDetails ? telemetry.failureMessage : ""}
+          liveStatusMessage={
+            isOllamaMode ? telemetry.liveStatusMessage : ""
+          }
+          runDetails={showRunDetails ? telemetry.runDetails : null}
+        />
         <BrowserInferenceStatus
           downloadProgress={downloadProgress}
           inferenceUiState={inferenceUiState}
@@ -781,7 +937,11 @@ export function App() {
                 : undefined
           }
           onUseMockDemo={fallbackToMockDemo}
-          statusMessage={statusMessage}
+          statusMessage={
+            telemetry.liveStatusMessage
+              ? telemetry.liveStatusMessage
+              : statusMessage
+          }
         />
         <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-5 py-2 text-xs text-slate-600">
           {modeDescription}
@@ -798,6 +958,8 @@ export function App() {
         <DownloadDisclosureDialog
           isOpen={isDisclosureOpen}
           onCancel={() => {
+            updatePendingGenerate(null);
+            telemetry.cancelModelLoad();
             closeDownloadDisclosure();
             if (!isEngineReady) {
               selectMockDemo();

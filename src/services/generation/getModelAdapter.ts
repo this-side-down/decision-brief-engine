@@ -14,6 +14,7 @@ type GetModelAdapterOptions = {
   engine?: MLCEngineInterface | null;
   signal?: AbortSignal;
   onCaptureRetry?: () => void;
+  onBriefRetry?: () => void;
 };
 
 export function getModelAdapter(options: GetModelAdapterOptions = {}): ModelAdapter {
@@ -32,6 +33,7 @@ export function getModelAdapter(options: GetModelAdapterOptions = {}): ModelAdap
       engine: options.engine,
       signal: options.signal,
       onCaptureRetry: options.onCaptureRetry,
+      onBriefRetry: options.onBriefRetry,
     });
   }
 
