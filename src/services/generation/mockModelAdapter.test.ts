@@ -26,7 +26,7 @@ const MOCK_STRUCTURAL_EXPECTATIONS = {
 };
 
 const BRIEF_TYPE_BY_EXAMPLE_ID = {
-  "specialty-trades-expansion": STRATEGY_DECISION_BRIEF,
+  "q4-workforce-allocation": STRATEGY_DECISION_BRIEF,
   "local-inference-setup-flow": PRODUCT_DECISION_BRIEF,
   "household-move-planning": EXECUTION_DECISION_BRIEF,
 } satisfies Record<string, BriefType>;
@@ -118,29 +118,30 @@ describe("mockModelAdapter demo examples", () => {
     expect(execution.recommendation_candidate.toLowerCase()).toContain("owner");
 
     const strategy = await mockModelAdapter.generateCaptureLayer({
-      rawInputText: "specialty trades and gc workforce planning notes",
+      rawInputText:
+        "workforce allocation for Q4 — hospital project needs senior superintendent",
       briefType: STRATEGY_DECISION_BRIEF,
       briefTypeGuidance: STRATEGY_DECISION_BRIEF.guidance,
       captureLayerFields: [...CAPTURE_LAYER_FIELDS],
-      sourceLabel: demoExampleSourceLabel("specialty-trades-expansion"),
+      sourceLabel: demoExampleSourceLabel("q4-workforce-allocation"),
     });
 
     expect(strategy.options_considered.length).toBeGreaterThanOrEqual(3);
-    expect(strategy.recommendation_candidate).toContain("discovery pilot");
+    expect(strategy.recommendation_candidate).toContain("Marcus");
   });
 
   it("returns example-specific decision brief markdown for demo source labels", async () => {
-    const strategyFixture = getExampleFixture("specialty-trades-expansion");
+    const strategyFixture = getExampleFixture("q4-workforce-allocation");
     const strategyBrief = await mockModelAdapter.generateDecisionBrief({
       captureLayer: strategyFixture!.expectedCaptureLayer,
       briefType: STRATEGY_DECISION_BRIEF,
       briefTypeGuidance: STRATEGY_DECISION_BRIEF.guidance,
       markdownStructure: [],
-      sourceLabel: demoExampleSourceLabel("specialty-trades-expansion"),
+      sourceLabel: demoExampleSourceLabel("q4-workforce-allocation"),
     });
 
-    expect(strategyBrief.toLowerCase()).toContain("specialty trade");
-    expect(strategyBrief).toContain("discovery pilot");
+    expect(strategyBrief.toLowerCase()).toContain("hospital");
+    expect(strategyBrief).toContain("Marcus");
 
     const productFixture = getExampleFixture("local-inference-setup-flow");
     const productBrief = await mockModelAdapter.generateDecisionBrief({

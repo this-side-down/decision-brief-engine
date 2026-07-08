@@ -8,13 +8,13 @@ import localInferenceCaptureLayer from "../../fixtures/examples/local-inference-
 import localInferenceBrief from "../../fixtures/examples/local-inference-setup-flow/expected-decision-brief.md?raw";
 import localInferenceMetadata from "../../fixtures/examples/local-inference-setup-flow/metadata.json";
 import localInferenceNotes from "../../fixtures/examples/local-inference-setup-flow/messy-notes.md?raw";
-import specialtyTradesCaptureLayer from "../../fixtures/examples/specialty-trades-expansion/expected-capture-layer.json";
-import specialtyTradesBrief from "../../fixtures/examples/specialty-trades-expansion/expected-decision-brief.md?raw";
-import specialtyTradesMetadata from "../../fixtures/examples/specialty-trades-expansion/metadata.json";
-import specialtyTradesNotes from "../../fixtures/examples/specialty-trades-expansion/messy-notes.md?raw";
+import q4WorkforceCaptureLayer from "../../fixtures/examples/q4-workforce-allocation/expected-capture-layer.json";
+import q4WorkforceBrief from "../../fixtures/examples/q4-workforce-allocation/expected-decision-brief.md?raw";
+import q4WorkforceMetadata from "../../fixtures/examples/q4-workforce-allocation/metadata.json";
+import q4WorkforceNotes from "../../fixtures/examples/q4-workforce-allocation/messy-notes.md?raw";
 
 export type DemoExampleId =
-  | "specialty-trades-expansion"
+  | "q4-workforce-allocation"
   | "local-inference-setup-flow"
   | "household-move-planning";
 
@@ -35,10 +35,10 @@ export type ExampleFixture = {
 
 const EXAMPLE_FIXTURE_ENTRIES: ExampleFixture[] = [
   {
-    metadata: specialtyTradesMetadata as ExampleFixtureMetadata,
-    rawNotes: specialtyTradesNotes.trim(),
-    expectedCaptureLayer: specialtyTradesCaptureLayer as CaptureLayer,
-    expectedDecisionBrief: specialtyTradesBrief.trim(),
+    metadata: q4WorkforceMetadata as ExampleFixtureMetadata,
+    rawNotes: q4WorkforceNotes.trim(),
+    expectedCaptureLayer: q4WorkforceCaptureLayer as CaptureLayer,
+    expectedDecisionBrief: q4WorkforceBrief.trim(),
   },
   {
     metadata: localInferenceMetadata as ExampleFixtureMetadata,

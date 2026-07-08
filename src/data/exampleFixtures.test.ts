@@ -21,7 +21,7 @@ describe("exampleFixtures", () => {
       [
         "household-move-planning",
         "local-inference-setup-flow",
-        "specialty-trades-expansion",
+        "q4-workforce-allocation",
       ],
     );
   });

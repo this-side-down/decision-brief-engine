@@ -17,8 +17,8 @@ Each example lives under `fixtures/examples/<example-id>/`:
 
 | ID | Brief type | Title |
 |----|------------|-------|
-| `specialty-trades-expansion` | Strategy | Specialty Trades Expansion |
+| `q4-workforce-allocation` | Strategy | Q4 Workforce Allocation |
 | `local-inference-setup-flow` | Product | Local Inference Setup Flow |
 | `household-move-planning` | Execution | Household Move Planning |
 
-The evaluation harness (`construction-strategy`) still uses the Strategy messy notes; content matches `specialty-trades-expansion/messy-notes.md`.
+The evaluation harness (`construction-strategy`) reads the Strategy messy notes from `q4-workforce-allocation/messy-notes.md`.

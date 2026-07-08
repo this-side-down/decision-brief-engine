@@ -1,10 +1,10 @@
 import type { CaptureLayerEvalCase } from "./types";
 
-/** Default Capture Layer evaluation case: built-in construction Strategy example. */
+/** Default Capture Layer evaluation case: Q4 GC workforce allocation Strategy example. */
 export const CONSTRUCTION_STRATEGY_EVAL_CASE: CaptureLayerEvalCase = {
   id: "construction-strategy",
-  name: "Construction workforce planning (Strategy)",
-  rawInputPath: "fixtures/examples/specialty-trades-expansion/messy-notes.md",
+  name: "Q4 workforce allocation (Strategy)",
+  rawInputPath: "fixtures/examples/q4-workforce-allocation/messy-notes.md",
   briefTypeId: "strategy",
   sourceLabel: "Construction workforce planning example",
   fixtureDocPath: "fixtures/evaluation/strategy-tradeoff.md",

@@ -14,7 +14,7 @@ describe("demoExamples", () => {
     expect(DEMO_EXAMPLES.map((example) => example.title).sort()).toEqual([
       "Household Move Planning",
       "Local Inference Setup Flow",
-      "Specialty Trades Expansion",
+      "Q4 Workforce Allocation",
     ]);
     expect(DEMO_EXAMPLES.map((example) => example.briefTypeId).sort()).toEqual([
       "execution",
@@ -24,7 +24,7 @@ describe("demoExamples", () => {
   });
 
   it("defaults to the Strategy hero example", () => {
-    expect(DEFAULT_DEMO_EXAMPLE_ID).toBe("specialty-trades-expansion");
+    expect(DEFAULT_DEMO_EXAMPLE_ID).toBe("q4-workforce-allocation");
   });
 
   it("loads non-empty raw notes for each example", () => {
@@ -53,10 +53,11 @@ describe("demoExamples", () => {
     }
   });
 
-  it("includes specialty trades strategy example content", () => {
-    const example = getDemoExample("specialty-trades-expansion");
+  it("includes customer-side Q4 workforce allocation strategy content", () => {
+    const example = getDemoExample("q4-workforce-allocation");
     expect(example?.briefTypeId).toBe("strategy");
-    expect(example?.rawNotes.toLowerCase()).toContain("specialty trades");
-    expect(example?.rawNotes.toLowerCase()).toContain("gc workforce planning");
+    expect(example?.rawNotes.toLowerCase()).toContain("workforce allocation");
+    expect(example?.rawNotes.toLowerCase()).toContain("hospital project");
+    expect(example?.rawNotes.toLowerCase()).toContain("superintendent");
   });
 });

@@ -21,7 +21,7 @@ function summarizeSource(rawInputText: string) {
 }
 
 function buildConstructionKeywordCaptureLayer(): CaptureLayer {
-  return MOCK_CAPTURE_LAYERS_BY_EXAMPLE_ID["specialty-trades-expansion"];
+  return MOCK_CAPTURE_LAYERS_BY_EXAMPLE_ID["q4-workforce-allocation"];
 }
 
 function buildMockCaptureLayer(
@@ -38,8 +38,8 @@ function buildMockCaptureLayer(
 
   if (
     input.briefType.id === "strategy" &&
-    normalizedInput.includes("specialty trades") &&
-    normalizedInput.includes("gc workforce planning")
+    normalizedInput.includes("workforce allocation") &&
+    normalizedInput.includes("hospital project")
   ) {
     return buildConstructionKeywordCaptureLayer();
   }

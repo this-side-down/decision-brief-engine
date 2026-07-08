@@ -65,7 +65,7 @@ function toDemoExample(fixture: (typeof EXAMPLE_FIXTURES)[number]): DemoExample 
 
 export const DEMO_EXAMPLES: DemoExample[] = EXAMPLE_FIXTURES.map(toDemoExample);
 
-export const DEFAULT_DEMO_EXAMPLE_ID: DemoExampleId = "specialty-trades-expansion";
+export const DEFAULT_DEMO_EXAMPLE_ID: DemoExampleId = "q4-workforce-allocation";
 
 export function getDemoExample(
   exampleId: DemoExampleId,
