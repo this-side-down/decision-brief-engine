@@ -18,7 +18,8 @@ Decision Brief Engine answers:
 
 - This repository is the Decision Brief Engine product codebase.
 - The public Vercel app is a mocked/static workflow validation demo by default.
-- Local development supports real local inference through Ollama (`qwen3:4b`) when enabled with environment variables.
+- Local development supports real local inference through Ollama (`qwen3:4b`) when enabled with environment variables; this remains the higher-quality local/dev path.
+- Browser WebGPU inference is implemented but experimental and gated behind `VITE_ENABLE_WEBGPU_INFERENCE=true` at build time; the public demo does not expose it by default.
 - Public hosted inference is not implemented yet and requires a separate deployment and data-handling decision.
 
 ## MVP workflow

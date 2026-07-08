@@ -27,8 +27,8 @@ Pre-1.0 versions describe product milestones, not strict mature semver guarantee
 Each release should make clear which inference and deployment states exist:
 
 - mocked/static public Vercel demo
-- local Ollama + `qwen3:4b` inference for development and evaluation
-- future opt-in browser WebGPU inference
+- local Ollama + `qwen3:4b` inference for development and evaluation (higher-quality local path)
+- experimental gated browser WebGPU inference (`VITE_ENABLE_WEBGPU_INFERENCE=true`; not public by default)
 - deferred public hosted inference
 
 Do not describe the public demo as hosted inference. Do not describe local Ollama mode as a general-user default for the public app.
@@ -42,7 +42,7 @@ Use the following milestone map unless a later ADR or issue explicitly changes i
 | `v0.1.0` | Mocked public workflow baseline |
 | `v0.2.0` | Local Ollama inference and v0 readiness documentation |
 | `v0.3.0` | Browser inference decision and quality gate |
-| `v0.4.0` | Opt-in browser inference, if shipped |
+| `v0.4.0` | Opt-in browser inference, if ungated for general use (currently experimental behind build flag) |
 
 Intermediate `0.x.y` releases should note whether they change product behavior or docs only.
 
@@ -69,6 +69,7 @@ Do not tag for:
 3. Run validation:
    - `npm run typecheck`
    - `npm run build`
+   - For inference-mode changes, run manual smoke checks for mock default, optional WebGPU flag, and Ollama locked mode; record browser model results in `fixtures/evaluation/` when relevant.
 4. Create an annotated Git tag matching the version, for example `v0.2.0`.
 5. Create a GitHub Release from that tag.
 6. Copy the corresponding `CHANGELOG.md` section into the GitHub Release description.
