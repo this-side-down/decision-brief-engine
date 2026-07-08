@@ -97,6 +97,7 @@ This is implementation guidance for the current v0 state, not a legal privacy po
 - [AI prompt contracts](docs/ai/prompt-contracts.md)
 - [Evaluation plan](docs/ai/evaluation-plan.md)
 - [Capture Layer evaluation harness](docs/ai/capture-layer-eval-harness.md)
+- [Browser model / prompt variant eval](docs/ai/browser-model-prompt-variant-eval.md)
 - [Browser model quality gate evaluation](docs/ai/browser-model-quality-gate.md)
 - [Browser inference adapter feasibility](docs/ai/browser-inference-adapter-feasibility.md)
 - [Qwen3/Ollama JSON-mode quirk](docs/ai/ollama-qwen3-json-quirk.md)
@@ -127,7 +128,7 @@ npm run eval:capture -- --mode=ollama
 npm run eval:capture -- --mode=webgpu
 ```
 
-See [Capture Layer evaluation harness](docs/ai/capture-layer-eval-harness.md). WebGPU remains a documented manual browser procedure.
+See [Capture Layer evaluation harness](docs/ai/capture-layer-eval-harness.md). WebGPU remains a documented manual browser procedure. Prompt variant comparison: [browser-model-prompt-variant-eval.md](docs/ai/browser-model-prompt-variant-eval.md).
 
 ## Product Lab
 

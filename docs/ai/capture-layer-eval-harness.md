@@ -10,7 +10,7 @@ Provide a repeatable way to judge Capture Layer quality across:
 
 This harness exists so model or prompt changes in later work (for example #73) can be compared against the same Capture Layer gate instead of one-off impressions.
 
-It does **not** ungate public WebGPU, tune prompts, add model variants, or certify production quality by itself.
+It does **not** ungate public WebGPU or certify production quality by itself. Prompt/model variant comparison for the gated browser path is documented in [`browser-model-prompt-variant-eval.md`](browser-model-prompt-variant-eval.md) (#73).
 
 ## Pass / fail criteria
 
@@ -121,19 +121,21 @@ npm run eval:capture -- --mode=webgpu
 #### Manual WebGPU procedure (same case + same gates)
 
 1. Set `VITE_ENABLE_WEBGPU_INFERENCE=true` in `.env.local` (or the preview build env).
-2. Run `npm run dev` (or `npm run build` + `npm run preview`).
-3. Opt into **Live in browser**, accept download disclosure, wait until the model is ready.
-4. Click **Load example notes** (construction Strategy) or paste `fixtures/construction-workforce-planning/messy-transcript.md` and select Strategy.
-5. Generate Capture Layer.
-6. Record:
+2. For #73 prompt comparison, optionally set `VITE_CAPTURE_PROMPT_VARIANT=schema_skeleton` (omit for the default prompt baseline). See [`browser-model-prompt-variant-eval.md`](browser-model-prompt-variant-eval.md).
+3. Run `npm run dev` (or `npm run build` + `npm run preview`). Restart after changing Vite env.
+4. Opt into **Live in browser**, accept download disclosure, wait until the model is ready.
+5. Click **Load example notes** (construction Strategy) or paste `fixtures/construction-workforce-planning/messy-transcript.md` and select Strategy.
+6. Generate Capture Layer.
+7. Record:
+   - Config ID (W1 default prompt / W2 schema_skeleton / optional W3 model ID)
    - Valid JSON: yes/no (after the built-in one-retry path)
    - Schema pass: yes/no
    - Latency roughly to success or final failure
    - Schema/parse error text if any
-7. If schema + structural readiness would pass (non-empty decision, options, risks, open questions, missing context, recommendation), generate the Decision Brief and complete `manual-scorecard.md`.
-8. Paste a result row into [`fixtures/evaluation/browser-model-results.md`](../../fixtures/evaluation/browser-model-results.md) using the CLI markdown table row shape (see Output format below).
+8. If schema + structural readiness would pass (non-empty decision, options, risks, open questions, missing context, recommendation), generate the Decision Brief and complete `manual-scorecard.md`.
+9. Paste a result row into [`fixtures/evaluation/browser-model-results.md`](../../fixtures/evaluation/browser-model-results.md) using the CLI markdown table row shape (see Output format below).
 
-Known baseline: Qwen2.5-1.5B failed schema on this construction case in the 2026-07-07 smoke (`stated_decision` missing). WebGPU remains gated.
+Known baseline: Qwen2.5-1.5B + default prompt failed schema on this construction case in the 2026-07-07 smoke (`stated_decision` missing). WebGPU remains gated.
 
 ## Output format
 
@@ -158,6 +160,7 @@ Covers schema parsing helpers, structural readiness, and the mock construction S
 
 ## Related documents
 
+- [Browser model / prompt variant eval (#73)](browser-model-prompt-variant-eval.md)
 - [Browser model quality gate](browser-model-quality-gate.md)
 - [Evaluation plan](evaluation-plan.md)
 - [Manual scorecard](../../fixtures/evaluation/manual-scorecard.md)
