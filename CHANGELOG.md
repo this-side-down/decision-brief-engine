@@ -8,12 +8,30 @@ Version comparison links will be added when tags are created.
 
 ## [Unreleased]
 
+### Product Lab milestone — browser WebGPU inference (2026-07-08)
+
+After #60, #68, and #69:
+
+- WebGPU browser inference is implemented but remains **experimental**.
+- Public demo default: **Mock demo** (no model download, no external inference call).
+- Browser inference is hidden unless `VITE_ENABLE_WEBGPU_INFERENCE=true` at build time.
+- Local Ollama (`VITE_GENERATION_MODE=ollama`) remains the higher-quality local/dev inference path.
+- Smoke validation ([#68](fixtures/evaluation/browser-model-results.md)): model download, cache reuse, and cancel paths work; `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` failed Capture Layer schema validation on the built-in construction example (Strategy).
+- Recommended next work: evaluate prompt strategy and alternate browser model candidates before ungating public opt-in.
+
 ### Added
 
+- Opt-in WebGPU browser inference path (#60) with disclosure, download progress, cancel handling, and mock fallback.
+- Feature flag `VITE_ENABLE_WEBGPU_INFERENCE` to keep experimental browser inference off public builds (#69).
 - Inference path decision brief comparing public hosted, desktop/local, Ollama, mobile, browser WebGPU, and hybrid rollout options ([ADR 0004](docs/decisions/0004-inference-path-decision-brief.md)).
 - Lightweight pre-1.0 release and versioning policy ([docs/project/release-process.md](docs/project/release-process.md)).
 - Browser model quality gate evaluation for Capture Layer readiness ([#57](docs/ai/browser-model-quality-gate.md)).
 - Browser WebGPU adapter feasibility research and recommended integration shape ([#58](docs/ai/browser-inference-adapter-feasibility.md)).
+- Post-merge WebGPU smoke results in [fixtures/evaluation/browser-model-results.md](fixtures/evaluation/browser-model-results.md) (#68).
+
+### Changed
+
+- Public-safe default remains Mock demo; **Live in browser** is hidden unless `VITE_ENABLE_WEBGPU_INFERENCE=true` at build time (#69).
 
 ## [0.2.0] - TBD
 
