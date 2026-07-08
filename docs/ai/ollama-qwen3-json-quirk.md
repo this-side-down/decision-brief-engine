@@ -39,6 +39,8 @@ Decision Brief generation does not use `format: "json"`. The same `response` →
 
 ## Operational notes
 
+- Run `npm run health:ollama` to verify endpoint reachability, model availability, and a short generation smoke test before debugging app flows.
+- Setup and troubleshooting: [ollama-local-setup.md](./ollama-local-setup.md).
 - Default browser base URL is `VITE_OLLAMA_BASE_URL=/ollama`. The Vite dev server proxies `/ollama` to the Ollama host configured by `VITE_OLLAMA_HOST`.
 - Default proxy target is `http://127.0.0.1:11434` when `VITE_OLLAMA_HOST` is unset.
 - Windows local dev usually uses `http://127.0.0.1:11434`.
