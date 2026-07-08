@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
+import { WorkflowSetupBar } from "./components/WorkflowSetupBar";
 import { BrowserInferenceStatus } from "./components/generation/BrowserInferenceStatus";
 import { DownloadDisclosureDialog } from "./components/generation/DownloadDisclosureDialog";
-import { GenerationModeControl } from "./components/generation/GenerationModeControl";
 import { BRIEF_TYPES, STRATEGY_DECISION_BRIEF } from "./data/briefTypes";
 import { useGenerationMode } from "./hooks/useGenerationMode";
 import { generateCaptureLayerForSession } from "./services/generation/generateCaptureLayer";
@@ -50,15 +50,6 @@ next steps would be: identify three design partners, define success criteria bef
 
 i think we need exec alignment on the sales language too because if this gets positioned wrong we’ll end up with expectations we can’t meet.`;
 
-const BRIEF_TYPE_CONTEXT = {
-  product:
-    "Product: Feature, workflow, service, packaging, or customer-problem decisions.",
-  strategy:
-    "Strategy: Market, ICP, positioning, investment, or bet/no-bet decisions.",
-  execution:
-    "Execution: Rollout, resourcing, ownership, sequencing, or delivery-plan decisions.",
-} satisfies Record<BriefTypeId, string>;
-
 const BRIEF_TYPE_HINTS = {
   product:
     "Product focuses the brief on customer problems, workflows, features, and offering scope.",
@@ -66,12 +57,6 @@ const BRIEF_TYPE_HINTS = {
     "Strategy focuses the brief on markets, positioning, investments, and tradeoffs.",
   execution:
     "Execution focuses the brief on rollout, resourcing, ownership, sequencing, and delivery.",
-} satisfies Record<BriefTypeId, string>;
-
-const BRIEF_TYPE_LABELS = {
-  product: "Product",
-  strategy: "Strategy",
-  execution: "Execution",
 } satisfies Record<BriefTypeId, string>;
 
 function createInitialSession(): BriefSession {
@@ -572,121 +557,57 @@ export function App() {
           </div>
         </header>
 
+        <WorkflowSetupBar
+          canSelectBrowserInference={canSelectBrowserInference}
+          inferenceUiState={inferenceUiState}
+          isBriefTypeHelpOpen={isBriefTypeHelpOpen}
+          modePreference={modePreference}
+          onBriefTypeChange={updateBriefType}
+          onBriefTypeHelpToggle={() =>
+            setIsBriefTypeHelpOpen((isOpen) => !isOpen)
+          }
+          onLoadExampleNotes={handleLoadExampleNotes}
+          onSelectLiveInBrowser={selectLiveInBrowser}
+          onSelectMockDemo={selectMockDemo}
+          preflightReason={preflight.reason}
+          preflightSupported={preflight.supported}
+          selectedBriefTypeHint={selectedBriefTypeHint}
+          selectedBriefTypeId={selectedBriefTypeId}
+        />
+
         <div className="grid min-h-0 flex-1 grid-cols-[minmax(12rem,1fr)_minmax(12rem,0.95fr)_minmax(18rem,2fr)] divide-x divide-slate-200 overflow-hidden xl:grid-cols-[minmax(16rem,1fr)_minmax(16rem,0.95fr)_minmax(24rem,2fr)]">
           <section
             aria-labelledby="input-workspace-heading"
             className="flex min-h-0 min-w-0 flex-col overflow-hidden p-5"
           >
-            <div className="shrink-0 space-y-5">
-              <div>
-                <h2
-                  className="text-[11px] font-bold uppercase tracking-wide text-slate-500"
-                  id="input-workspace-heading"
-                >
-                  Input Workspace
-                </h2>
-                <p className="mt-2 text-xs text-slate-500">
-                  Paste notes or load the construction workforce planning example,
-                  then choose brief type and generation mode before generating.
-                </p>
-              </div>
-
-              <fieldset className="min-w-0">
-                <div className="relative flex items-center gap-2">
-                  <legend className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                    Brief Type
-                  </legend>
-                  <button
-                    aria-expanded={isBriefTypeHelpOpen}
-                    aria-label="Show brief type guidance"
-                    className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-300 text-[11px] font-bold text-slate-500 hover:border-neutral-950 hover:text-neutral-950 focus:outline-none focus:ring-2 focus:ring-neutral-950/20"
-                    onClick={() =>
-                      setIsBriefTypeHelpOpen((isOpen) => !isOpen)
-                    }
-                    type="button"
-                  >
-                    ?
-                  </button>
-                  {isBriefTypeHelpOpen ? (
-                    <div className="absolute left-0 top-7 z-10 w-80 max-w-[calc(100vw-4rem)] rounded border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-700 shadow-lg">
-                      <ul className="space-y-2">
-                        {BRIEF_TYPES.map((briefType) => (
-                          <li key={briefType.id}>
-                            {BRIEF_TYPE_CONTEXT[briefType.id]}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
-                </div>
-                <div className="mt-3 space-y-2">
-                  {BRIEF_TYPES.map((briefType) => (
-                    <label
-                      className={`flex min-w-0 cursor-pointer items-center justify-between gap-3 rounded border px-3 py-2 text-sm ${
-                        selectedBriefTypeId === briefType.id
-                          ? "border-neutral-950 bg-neutral-950 text-white"
-                          : "border-slate-200 bg-white text-slate-700"
-                      }`}
-                      key={briefType.id}
-                    >
-                      <span className="min-w-0 break-words">
-                        {BRIEF_TYPE_LABELS[briefType.id]}
-                      </span>
-                      <input
-                        checked={selectedBriefTypeId === briefType.id}
-                        className="h-4 w-4 shrink-0 border-slate-300 text-neutral-950"
-                        name="brief-type"
-                        onChange={() => updateBriefType(briefType.id)}
-                        type="radio"
-                      />
-                    </label>
-                  ))}
-                </div>
-                <p className="mt-3 text-xs text-slate-500">
-                  {selectedBriefTypeHint}
-                </p>
-              </fieldset>
-
-              <GenerationModeControl
-                canSelectBrowserInference={canSelectBrowserInference}
-                inferenceUiState={inferenceUiState}
-                modePreference={modePreference}
-                onSelectLiveInBrowser={selectLiveInBrowser}
-                onSelectMockDemo={selectMockDemo}
-                preflightReason={preflight.reason}
-                preflightSupported={preflight.supported}
-              />
-            </div>
-
-            <div className="mt-5 flex min-h-0 min-w-0 flex-1 flex-col">
-              <div className="mb-3 flex shrink-0 items-center justify-between gap-3">
-                <p className="text-xs text-slate-500">Raw notes</p>
-                <button
-                  className="shrink-0 rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-neutral-950 hover:text-neutral-950"
-                  onClick={handleLoadExampleNotes}
-                  type="button"
-                >
-                  Load example notes
-                </button>
-              </div>
-              <textarea
-                aria-describedby="raw-input-help"
-                className="min-h-0 flex-1 resize-none border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
-                onChange={(event) => updateRawInput(event.target.value)}
-                placeholder="Paste meeting notes or brainstorms..."
-                value={briefSession.rawInput.text}
-              />
-              <p
-                className={`mt-2 shrink-0 text-xs ${
-                  hasRawInput ? "text-slate-500" : "text-amber-700"
-                }`}
-                id="raw-input-help"
+            <div className="mb-3 shrink-0">
+              <h2
+                className="text-[11px] font-bold uppercase tracking-wide text-slate-500"
+                id="input-workspace-heading"
               >
-                {hasRawInput
-                  ? "Raw notes are stored locally for this session."
-                  : "Paste messy notes before generating a Capture Layer."}
+                Input Workspace
+              </h2>
+              <p className="mt-2 text-xs text-slate-500">
+                Paste messy meeting notes for Capture Layer generation.
               </p>
             </div>
+            <textarea
+              aria-describedby="raw-input-help"
+              className="min-h-0 flex-1 resize-none border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
+              onChange={(event) => updateRawInput(event.target.value)}
+              placeholder="Paste meeting notes or brainstorms..."
+              value={briefSession.rawInput.text}
+            />
+            <p
+              className={`mt-2 shrink-0 text-xs ${
+                hasRawInput ? "text-slate-500" : "text-amber-700"
+              }`}
+              id="raw-input-help"
+            >
+              {hasRawInput
+                ? "Raw notes are stored locally for this session."
+                : "Paste messy notes before generating a Capture Layer."}
+            </p>
           </section>
 
           <section
