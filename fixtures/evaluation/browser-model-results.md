@@ -103,6 +103,10 @@ Manual validation on production build (`VITE_GENERATION_MODE=mock`, preview `:41
 - **Score gates:** Not evaluated (fixtures not scored).
 - **UX gates:** Progress, cancel-download, cancel-generation, cache reuse, and mock fallback behave as designed; Capture Layer failure messaging is clear.
 
+### Current decision (2026-07-08)
+
+Browser WebGPU inference remains gated behind `VITE_ENABLE_WEBGPU_INFERENCE=true` for experimental/local validation. Public builds stay on **Mock demo** until Capture Layer quality passes on evaluation fixtures.
+
 ---
 
 ## WebLLM + Qwen2.5-0.5B-Instruct q4f16

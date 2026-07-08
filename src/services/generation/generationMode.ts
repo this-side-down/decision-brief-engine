@@ -11,11 +11,19 @@ export function isOllamaLocked(): boolean {
   return import.meta.env.VITE_GENERATION_MODE === "ollama";
 }
 
+export function isWebGpuInferenceEnabled(): boolean {
+  return import.meta.env.VITE_ENABLE_WEBGPU_INFERENCE === "true";
+}
+
 export function resolveEffectiveMode(
   preference: UserGenerationModePreference = getGenerationModePreference(),
 ): GenerationMode {
   if (isOllamaLocked()) {
     return "ollama";
+  }
+
+  if (preference === "webgpu" && !isWebGpuInferenceEnabled()) {
+    return "mock";
   }
 
   return preference;
@@ -61,7 +69,7 @@ export function getGenerationModeDescription(
 }
 
 export function canSelectBrowserInference(): boolean {
-  return !isOllamaLocked();
+  return !isOllamaLocked() && isWebGpuInferenceEnabled();
 }
 
 export { getGenerationModePreference, setGenerationModePreference };
