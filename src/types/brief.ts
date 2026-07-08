@@ -50,6 +50,7 @@ export type BriefSession = {
   decisionBrief: DecisionBrief | null;
   status: BriefSessionStatus;
   errors: string[];
+  errorStep: "capture" | "brief" | null;
   createdAt: string;
   updatedAt: string;
 };

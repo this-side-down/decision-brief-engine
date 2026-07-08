@@ -20,6 +20,7 @@ type WebGpuAdapterOptions = {
   engine: MLCEngineInterface;
   signal?: AbortSignal;
   onCaptureRetry?: () => void;
+  onBriefRetry?: () => void;
 };
 
 async function completePrompt(
@@ -58,6 +59,7 @@ export function createWebGpuModelAdapter({
   engine,
   signal,
   onCaptureRetry,
+  onBriefRetry,
 }: WebGpuAdapterOptions): ModelAdapter {
   getWebGpuConfig();
 
@@ -89,6 +91,7 @@ export function createWebGpuModelAdapter({
       let markdown = await completePrompt(engine, prompt, signal);
 
       if (!markdown) {
+        onBriefRetry?.();
         markdown = await completePrompt(engine, prompt, signal);
       }
 

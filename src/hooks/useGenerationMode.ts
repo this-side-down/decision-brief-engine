@@ -66,6 +66,9 @@ export function useGenerationMode() {
     getLoadedWebGpuEngine(),
   );
   const [statusMessage, setStatusMessage] = useState<string>("");
+  const [lastModelLoadDurationMs, setLastModelLoadDurationMs] = useState<
+    number | null
+  >(null);
   const loadAbortRef = useRef<AbortController | null>(null);
   const generationAbortRef = useRef<AbortController | null>(null);
 
@@ -179,6 +182,7 @@ export function useGenerationMode() {
     setInferenceUiState("downloading_model");
     setStatusMessage("Downloading model for live browser generation…");
     setDownloadProgress({ progress: 0, text: "Starting download…" });
+    const loadStartedAt = Date.now();
 
     try {
       const loadedEngine = await loadWebGpuEngine({
@@ -197,6 +201,7 @@ export function useGenerationMode() {
 
       setEngine(loadedEngine);
       setDownloadProgress(null);
+      setLastModelLoadDurationMs(Date.now() - loadStartedAt);
       setInferenceUiState("model_ready");
       setStatusMessage(
         "Live in browser is ready. Generation runs locally on your device.",
@@ -257,7 +262,10 @@ export function useGenerationMode() {
     const cached = await isWebGpuModelCached();
 
     if (cached) {
-      await confirmModelDownload();
+      setInferenceUiState("ready_to_opt_in");
+      setStatusMessage(
+        "Run real generation in your browser. Click Generate to download or load the cached model.",
+      );
       return;
     }
 
@@ -265,7 +273,7 @@ export function useGenerationMode() {
     setStatusMessage(
       "Run real generation in your browser. Requires a one-time model download.",
     );
-  }, [confirmModelDownload, engine, persistPreference, refreshPreflight]);
+  }, [engine, persistPreference, refreshPreflight]);
 
   const openDownloadDisclosure = useCallback(async () => {
     const result = await refreshPreflight(true);
@@ -311,12 +319,19 @@ export function useGenerationMode() {
   }, []);
 
   const getAdapterForGeneration = useCallback(
-    (signal?: AbortSignal, onCaptureRetry?: () => void): ModelAdapter => {
+    (
+      signal?: AbortSignal,
+      callbacks?: {
+        onCaptureRetry?: () => void;
+        onBriefRetry?: () => void;
+      },
+    ): ModelAdapter => {
       return getModelAdapter({
         mode: effectiveMode,
         engine,
         signal,
-        onCaptureRetry,
+        onCaptureRetry: callbacks?.onCaptureRetry,
+        onBriefRetry: callbacks?.onBriefRetry,
       });
     },
     [effectiveMode, engine],
@@ -411,6 +426,7 @@ export function useGenerationMode() {
     preflight,
     inferenceUiState,
     statusMessage,
+    lastModelLoadDurationMs,
     downloadProgress,
     isDisclosureOpen,
     isEngineReady,
