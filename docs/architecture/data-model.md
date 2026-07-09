@@ -119,6 +119,52 @@ Notes:
 - It should preserve ambiguity, identify missing context, and support traceability back to the raw source material.
 - It should remain structured JSON so it can be validated before brief generation.
 
+## DecisionTrace
+
+Represents the structured rationale artifact that makes the judgment step auditable. Decision Trace is generated from the Capture Layer and binds each recommendation and next step back to the intent, evidence, assumptions, risks, constraints, tradeoffs, alternatives, and missing context it depends on.
+
+`docs/architecture/decision-trace-schema.md` is the source of truth for `DecisionTrace` typing. Implementation types, prompt output validation, mocked fixtures, and evaluation fixtures should reference that schema instead of redefining field types elsewhere.
+
+Canonical TypeScript-friendly schema:
+
+```ts
+type DecisionTraceEntryKind = "recommendation" | "next_step";
+
+type DecisionTraceBasis = {
+  intent: string;
+  supporting_evidence: string[];
+  assumptions_relied_on: string[];
+  risks_addressed: string[];
+  risks_accepted: string[];
+  constraints_respected: string[];
+  tradeoffs: string[];
+  alternatives_considered: string[];
+  missing_context_caveats: string[];
+};
+
+type DecisionTraceEntry = {
+  statement: string;
+  kind: DecisionTraceEntryKind;
+  basis: DecisionTraceBasis;
+  confidence: Confidence;
+  would_change_if: string[];
+};
+
+type DecisionTrace = {
+  entries: DecisionTraceEntry[];
+  created_at: string;
+};
+```
+
+Notes:
+
+- Decision Trace is not raw model thinking, hidden reasoning, scratchpad output, or chain-of-thought.
+- Decision Trace is a user-facing contract output in the same sense as the Capture Layer.
+- One `DecisionTraceEntry` should exist for each recommendation and each next step in the Decision Brief.
+- `basis` fields are grounded in the Capture Layer. The schema field mapping is documented in `docs/architecture/decision-trace-schema.md`.
+- `confidence` and `would_change_if` are per-entry. They are not inherited from the Capture Layer's top-level `confidence` field.
+- `BriefSession` will be extended with a `decisionTrace` field in a future issue (#90). This entity definition establishes the target shape independently.
+
 ## DecisionBrief
 
 Represents the final Markdown artifact generated from the Capture Layer and reviewed or edited by the user.
@@ -162,8 +208,10 @@ Notes:
 - A `BriefSession` has one `RawInput`.
 - A `BriefSession` has one selected `BriefType`.
 - A `BriefSession` may have one generated `CaptureLayer`.
+- A `BriefSession` may have one generated `DecisionTrace` (planned for issue #90).
 - A `BriefSession` may have one generated and edited `DecisionBrief`.
-- A `DecisionBrief` is generated from one `CaptureLayer`.
+- A `DecisionTrace` is generated from one `CaptureLayer`.
+- A `DecisionBrief` is generated from one `CaptureLayer` (and, in v0.2, from one `DecisionTrace`).
 - An `EvaluationCase` contains example `RawInput` and a target `BriefType`.
 
 ## MVP constraints

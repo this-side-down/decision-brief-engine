@@ -107,6 +107,7 @@ This is implementation guidance for the current v0 state, not a legal privacy po
 - [Live browser inference UX](docs/product/live-browser-inference-ux.md)
 - [Public demo milestone](docs/product/public-demo-milestone.md)
 - [v0.2 Decision Trace direction](docs/product/v0.2-decision-trace-direction.md)
+- [Decision Trace schema](docs/architecture/decision-trace-schema.md)
 - [MVP architecture](docs/architecture/mvp-architecture.md)
 - [ADR: Traceable recommendation rationale](docs/architecture/adr-traceable-recommendation-rationale.md)
 - [Conceptual data model](docs/architecture/data-model.md)
