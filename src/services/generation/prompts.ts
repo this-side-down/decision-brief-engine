@@ -104,22 +104,78 @@ export function buildCaptureLayerPrompt(
   ].join("\n");
 }
 
+const DECISION_BRIEF_RESULT_SCHEMA = JSON.stringify(
+  {
+    markdown: "# Decision Brief\n[full Markdown brief here — newlines as \\n]",
+    decisionTrace: {
+      entries: [
+        {
+          statement: "The recommendation or next step, verbatim from the brief.",
+          kind: "recommendation",
+          basis: {
+            intent: "Which goal from the Capture Layer this serves.",
+            supporting_evidence: ["Evidence item from the Capture Layer."],
+            assumptions_relied_on: ["Assumption from the Capture Layer this depends on."],
+            risks_addressed: ["Risk from the Capture Layer this mitigates."],
+            risks_accepted: ["Risk from the Capture Layer this accepts or defers."],
+            constraints_respected: ["Constraint from the Capture Layer this stays within."],
+            tradeoffs: ["Tradeoff or tension from the Capture Layer this navigates."],
+            alternatives_considered: ["Alternative considered and why not selected."],
+            missing_context_caveats: [
+              "Missing context item that qualifies this entry's reliability.",
+            ],
+          },
+          confidence: "Medium",
+          would_change_if: ["Specific condition that would lead to a different outcome."],
+        },
+      ],
+      created_at: new Date(0).toISOString(),
+    },
+  },
+  null,
+  2,
+);
+
 export function buildDecisionBriefPrompt(input: GenerateDecisionBriefInput): string {
   const tone = input.toneGuidance ?? "Concise, executive-ready, direct, and decision-oriented.";
 
   return [
-    "You are a decision brief writer. Your job is to turn a structured Capture Layer into a concise Markdown Decision Brief that makes the decision, tradeoffs, risks, assumptions, open questions, recommendation, and next actions explicit. Do not reinterpret unsupported facts beyond the Capture Layer.",
+    "You are a decision brief writer and rationale analyst. Your job is to turn a structured Capture Layer into two artifacts returned together in a single JSON object:",
+    "1. A concise Markdown Decision Brief.",
+    "2. A structured Decision Trace that makes each recommendation and next step traceable to the Capture Layer.",
+    "",
+    "Decision Trace is a user-facing structured rationale artifact. It is NOT raw model thinking, hidden reasoning, scratchpad output, or chain-of-thought.",
     "",
     `Brief type: ${input.briefType.id}`,
     "Brief type guidance:",
     formatGuidance(input.briefTypeGuidance),
     "",
-    "Use these Markdown sections:",
+    "Decision Brief sections to include:",
     input.markdownStructure.map((section) => `- ${section}`).join("\n"),
     "",
     `Tone: ${tone}`,
     "",
-    "Return Markdown only. Start with # Decision Brief. Use the Capture Layer as the source of truth.",
+    "Return a single JSON object with exactly this shape:",
+    DECISION_BRIEF_RESULT_SCHEMA,
+    "",
+    "Decision Brief rules:",
+    "- The markdown field must contain the complete Decision Brief Markdown as a JSON string value.",
+    "- Start the markdown with # Decision Brief.",
+    "- Use the Capture Layer as the source of truth. Do not reinterpret unsupported facts.",
+    "",
+    "Decision Trace rules:",
+    "- Create one entry for each recommendation in the Decision Brief (kind: recommendation).",
+    "- Create one entry for each suggested next step in the Decision Brief (kind: next_step).",
+    '- kind must be exactly "recommendation" or "next_step".',
+    '- confidence must be exactly "High", "Medium", or "Low".',
+    "- statement must match the corresponding recommendation or next step.",
+    "- basis.intent must name the specific goal from the Capture Layer this entry serves. Must not be empty.",
+    "- All basis fields must be present. At least one basis array must be non-empty.",
+    "- Basis fields must be grounded in the Capture Layer. Do not invent facts not present in the Capture Layer.",
+    "- would_change_if must contain at least one specific named condition per entry.",
+    "- would_change_if must not contain generic placeholders such as 'if the situation changes', 'if new information becomes available', 'if circumstances change', or similar empty conditions.",
+    "- If a recommendation cannot be fully supported from the Capture Layer, state that explicitly in missing_context_caveats.",
+    NO_REASONING_INSTRUCTION,
     "",
     "Capture Layer JSON:",
     JSON.stringify(input.captureLayer, null, 2),

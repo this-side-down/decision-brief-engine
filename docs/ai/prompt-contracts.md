@@ -10,7 +10,7 @@ The contracts are implementation-ready enough to support a mocked adapter first,
 
 - Capture Layer generation and Decision Brief generation must remain separate.
 - The Capture Layer must be structured JSON.
-- The Decision Brief must be Markdown.
+- Contract 2 returns a single JSON envelope containing both the Markdown Decision Brief and the structured Decision Trace. Decision Trace is a user-facing rationale artifact; it is not raw model thinking, hidden reasoning, scratchpad output, or chain-of-thought.
 - The model must distinguish stated facts from inference.
 - The model must preserve ambiguity and missing context instead of flattening it.
 - The model must avoid unsupported facts.
@@ -128,33 +128,71 @@ Use the field types defined in `docs/architecture/data-model.md`.
 - Do not rely on proprietary response-format features; the contract should work with any FOSS-compatible inference path that can produce text.
 - For Ollama + Qwen3 JSON mode, valid JSON may appear in the `thinking` field while `response` is empty. See [Ollama Qwen3 JSON quirk](ollama-qwen3-json-quirk.md).
 
-## MVP Contract 2: Generate Decision Brief
+## v0.2 Contract 2: Generate Decision Brief with Decision Trace
 
 ### Purpose
 
-Convert a validated Capture Layer and selected brief type into a Markdown Decision Brief for user review and editing.
+Convert a validated Capture Layer and selected brief type into a single JSON envelope containing both the Markdown Decision Brief and a structured Decision Trace. This is a single model call, not two separate calls.
 
-### When used in the MVP workflow
+Pipeline position:
 
-Used after structured Capture Layer JSON is generated and validated.
+```
+Raw Input → Capture Layer → [Single Generation Call] → { markdown, decisionTrace }
+```
+
+### When used in the workflow
+
+Used after structured Capture Layer JSON is generated and validated. Both artifacts are produced together in the same call so the Decision Brief and Decision Trace share the same model context.
 
 ### System role
 
-You are a decision brief writer. Your job is to turn a structured Capture Layer into a concise Markdown Decision Brief that makes the decision, tradeoffs, risks, assumptions, open questions, recommendation, and next actions explicit. Do not reinterpret unsupported facts beyond the Capture Layer.
+You are a decision brief writer and rationale analyst. Your job is to turn a structured Capture Layer into two artifacts returned together in a single JSON object: a concise Markdown Decision Brief and a structured Decision Trace that makes each recommendation and next step traceable to the Capture Layer.
+
+### What Decision Trace is not
+
+Decision Trace is a user-facing structured rationale artifact. It is not raw model thinking, hidden reasoning, scratchpad output, or chain-of-thought. The prompt must instruct the model to produce only the structured output, not its reasoning process.
 
 ### Input variables
 
-- `capture_layer_json`: The structured Capture Layer JSON matching the canonical `CaptureLayer` type in `docs/architecture/data-model.md`.
+- `capture_layer_json`: The structured Capture Layer JSON matching the canonical `CaptureLayer` type in `docs/architecture/data-model.md`. Decision Trace entries must be grounded only in this artifact.
 - `brief_type`: One of `product`, `strategy`, or `execution`.
 - `brief_type_guidance`: The selected brief type's output emphasis.
-- `markdown_structure`: Required or preferred Markdown headings for the MVP.
+- `markdown_structure`: Required or preferred Markdown headings.
 - `tone_guidance`: Optional guidance such as concise, executive-ready, direct, and decision-oriented.
 
 ### Output format
 
-Return Markdown only.
+Return a single JSON object with this shape:
 
-Recommended MVP sections:
+```json
+{
+  "markdown": "# Decision Brief\n...",
+  "decisionTrace": {
+    "entries": [
+      {
+        "statement": "The recommendation or next step, verbatim from the brief.",
+        "kind": "recommendation",
+        "basis": {
+          "intent": "Which goal from the Capture Layer this serves.",
+          "supporting_evidence": [],
+          "assumptions_relied_on": [],
+          "risks_addressed": [],
+          "risks_accepted": [],
+          "constraints_respected": [],
+          "tradeoffs": [],
+          "alternatives_considered": [],
+          "missing_context_caveats": []
+        },
+        "confidence": "Medium",
+        "would_change_if": ["Specific condition that would lead to a different outcome."]
+      }
+    ],
+    "created_at": "..."
+  }
+}
+```
+
+Recommended Markdown sections for the Decision Brief:
 
 - `# Decision Brief`
 - `## Summary`
@@ -169,35 +207,73 @@ Recommended MVP sections:
 - `## Next Steps`
 - `## Confidence`
 
-Sections may be concise, but the output should remain complete enough to export as a durable Markdown artifact.
+Decision Trace rules:
+- One entry per recommendation in the Decision Brief (`kind: "recommendation"`).
+- One entry per suggested next step in the Decision Brief (`kind: "next_step"`).
+- `kind` must be exactly `"recommendation"` or `"next_step"`.
+- `confidence` must be exactly `"High"`, `"Medium"`, or `"Low"`.
+- `statement` must match the corresponding recommendation or next step and must not be empty.
+- `basis.intent` must name the specific goal from the Capture Layer this entry serves. Must not be empty.
+- All `basis` fields must be present. At least one basis array must be non-empty.
+- `would_change_if` must contain at least one specific named condition per entry. Generic conditions such as "if the situation changes", "if new information becomes available", or "if circumstances change" are not acceptable.
+- If a recommendation cannot be supported from the Capture Layer, state that explicitly in `missing_context_caveats` rather than inventing support.
+- Do not include reasoning. Return only the final JSON object.
 
 ### Failure behavior
 
+**Decision Brief:**
 - If the Capture Layer has `Low` confidence, state that limitation plainly in the brief.
-- If key fields are empty, include brief placeholders or notes under the relevant sections rather than inventing content.
+- If key fields are empty, include brief placeholders rather than inventing content.
 - If the Capture Layer does not support a recommendation, say so and focus on decision criteria or next steps.
 - If the Capture Layer contains contradictory signals, include the contradiction under tradeoffs, tensions, risks, or open questions.
 
+**Decision Trace:**
+- If the brief has no clear recommendations or next steps, return an empty `entries` array.
+- If parsing or validation of the `decisionTrace` field fails in a real adapter, fall back to `{ entries: [], created_at: "..." }` so brief generation still succeeds. The `markdown` field failure causes the whole call to fail.
+
 ### Quality requirements
 
-- Produce an executive-readable Markdown artifact.
+- Produce an executive-readable Markdown Decision Brief.
 - Keep the brief decision-oriented rather than transcript-like.
 - Reflect the selected brief type's output emphasis.
-- Preserve the two-step chain from raw input to Capture Layer to final brief.
 - Make next actions practical and grounded in captured context.
+- Trace entries should be specific enough that a reviewer can evaluate whether the basis is complete.
+- `would_change_if` conditions should name specific facts, assumptions, or risks — not generic placeholders.
+- `confidence` should reflect how strongly the Capture Layer supports the recommendation or next step.
 
 ### Grounding requirements
 
+**Decision Brief:**
 - Use the Capture Layer as the source of truth.
 - Do not add unsupported facts, metrics, commitments, stakeholders, or recommendations.
 - Keep inference visible through assumptions, open questions, confidence, and recommendation wording.
 - Preserve ambiguity instead of resolving it without evidence.
 
+**Decision Trace:**
+- Entries must be grounded only in the Capture Layer. Do not invent facts, evidence, assumptions, or alternatives not present in the Capture Layer.
+- `basis.intent` must correspond to a goal or intent from the Capture Layer's `goals` field.
+- `basis.supporting_evidence` must correspond to items from the Capture Layer's `evidence` field.
+- `basis.assumptions_relied_on` must correspond to items from the Capture Layer's `assumptions` field.
+- `basis.risks_addressed` and `basis.risks_accepted` must correspond to items from the Capture Layer's `risks` field.
+- `basis.constraints_respected` must correspond to items from the Capture Layer's `constraints` field.
+- `basis.tradeoffs` must correspond to items from the Capture Layer's `tensions` field.
+- `basis.alternatives_considered` must correspond to items from the Capture Layer's `options_considered` field.
+- `basis.missing_context_caveats` must correspond to items from the Capture Layer's `missing_context` field.
+
+See `docs/architecture/decision-trace-schema.md` for the full field-to-Capture-Layer mapping.
+
 ### FOSS/provider-neutral implementation notes
 
-- The mocked adapter can generate deterministic Markdown from fixture Capture Layer JSON.
-- The real adapter should accept text prompts and return Markdown without relying on provider-specific formatting features.
-- Prompt inputs should remain plain JSON and text so they can be routed through local or self-hosted FOSS-compatible inference.
+- The mocked adapter generates both the Markdown brief and Decision Trace deterministically from the Capture Layer, without a model call.
+- The real adapter (Ollama, WebGPU) makes a single call with `format: "json"` where supported, and parses the combined `{ markdown, decisionTrace }` envelope.
+- If trace validation fails, the adapter falls back to an empty trace rather than failing the brief generation step.
+- The combined call must not expose raw model thinking, hidden reasoning, scratchpad output, or chain-of-thought.
+
+### Related
+
+- [Decision Trace schema](../architecture/decision-trace-schema.md)
+- [ADR: Traceable recommendation rationale](../architecture/adr-traceable-recommendation-rationale.md)
+- #90 — Extend Decision Brief contract with traceable rationale
 
 ## Post-MVP prompt contracts
 

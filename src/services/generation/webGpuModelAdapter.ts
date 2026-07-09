@@ -1,10 +1,12 @@
 import type { MLCEngineInterface } from "@mlc-ai/web-llm";
 import type {
+  DecisionBriefResult,
   GenerateCaptureLayerInput,
   GenerateDecisionBriefInput,
   ModelAdapter,
 } from "./types";
 import { parseCaptureLayerJson } from "./parseCaptureLayer";
+import { parseDecisionBriefResultJson } from "./parseDecisionBriefResult";
 import { buildCaptureLayerPrompt, buildDecisionBriefPrompt } from "./prompts";
 import {
   assertGenerationNotCancelled,
@@ -86,22 +88,21 @@ export function createWebGpuModelAdapter({
       }
     },
 
-    async generateDecisionBrief(input: GenerateDecisionBriefInput) {
+    async generateDecisionBrief(input: GenerateDecisionBriefInput): Promise<DecisionBriefResult> {
       const prompt = buildDecisionBriefPrompt(input);
-      let markdown = await completePrompt(engine, prompt, signal);
+      const rawText = await completePrompt(engine, prompt, signal);
 
-      if (!markdown) {
+      try {
+        return parseDecisionBriefResultJson(rawText);
+      } catch (firstError) {
+        if (firstError instanceof GenerationCancelledError) {
+          throw firstError;
+        }
+
         onBriefRetry?.();
-        markdown = await completePrompt(engine, prompt, signal);
+        const retryText = await completePrompt(engine, `${prompt}${JSON_RETRY_SUFFIX}`, signal);
+        return parseDecisionBriefResultJson(retryText);
       }
-
-      if (!markdown) {
-        throw new Error(
-          "Browser Decision Brief generation returned empty Markdown.",
-        );
-      }
-
-      return markdown;
     },
   };
 }

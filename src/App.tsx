@@ -65,6 +65,7 @@ function createInitialSession(): BriefSession {
     },
     briefType: null,
     captureLayer: null,
+    decisionTrace: null,
     decisionBrief: null,
     status: "draft",
     errors: [],
@@ -337,6 +338,7 @@ export function App() {
         text,
       },
       captureLayer: null,
+      decisionTrace: null,
       decisionBrief: null,
       status: "draft",
       errors: [],
@@ -369,6 +371,7 @@ export function App() {
       },
       briefType: example.briefType,
       captureLayer: null,
+      decisionTrace: null,
       decisionBrief: null,
       status: "draft",
       errors: [],
@@ -408,6 +411,7 @@ export function App() {
       setBriefSession((currentSession) => ({
         ...currentSession,
         captureLayer,
+        decisionTrace: null,
         decisionBrief: null,
         status: "capture_ready",
         errors: [],
@@ -471,7 +475,7 @@ export function App() {
     notifyBriefGenerationStarted();
 
     try {
-      const markdown = await generateDecisionBriefForSession({
+      const { markdown, decisionTrace } = await generateDecisionBriefForSession({
         captureLayer: snapshot.captureLayer,
         briefType: snapshot.briefType,
         sourceLabel: snapshot.sourceLabel,
@@ -492,6 +496,7 @@ export function App() {
 
       setBriefSession((currentSession) => ({
         ...currentSession,
+        decisionTrace,
         decisionBrief: {
           markdown,
           generatedFromCaptureLayer: currentSession.id,
@@ -686,6 +691,7 @@ export function App() {
       ...currentSession,
       briefType: nextBriefType,
       captureLayer: null,
+      decisionTrace: null,
       decisionBrief: null,
       status: "draft",
       errors: [],

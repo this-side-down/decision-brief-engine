@@ -1,10 +1,12 @@
 import type {
+  DecisionBriefResult,
   GenerateCaptureLayerInput,
   GenerateDecisionBriefInput,
   ModelAdapter,
 } from "./types";
 import { ollamaGenerate } from "./ollamaClient";
 import { parseCaptureLayerJson } from "./parseCaptureLayer";
+import { parseDecisionBriefResultJson } from "./parseDecisionBriefResult";
 import { buildCaptureLayerPrompt, buildDecisionBriefPrompt } from "./prompts";
 
 export const ollamaModelAdapter: ModelAdapter = {
@@ -19,14 +21,10 @@ export const ollamaModelAdapter: ModelAdapter = {
     return parseCaptureLayerJson(modelText);
   },
 
-  async generateDecisionBrief(input: GenerateDecisionBriefInput) {
+  async generateDecisionBrief(input: GenerateDecisionBriefInput): Promise<DecisionBriefResult> {
     const prompt = buildDecisionBriefPrompt(input);
-    const markdown = (await ollamaGenerate({ prompt })).trim();
+    const rawText = await ollamaGenerate({ prompt, format: "json" });
 
-    if (!markdown) {
-      throw new Error("Ollama Decision Brief generation returned empty Markdown.");
-    }
-
-    return markdown;
+    return parseDecisionBriefResultJson(rawText);
   },
 };

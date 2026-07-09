@@ -1,4 +1,5 @@
 import type { CaptureLayer } from "./captureLayer";
+import type { DecisionTrace } from "./decisionTrace";
 
 export type BriefTypeId = "product" | "strategy" | "execution";
 
@@ -47,6 +48,7 @@ export type BriefSession = {
   rawInput: RawInput;
   briefType: BriefType | null;
   captureLayer: CaptureLayer | null;
+  decisionTrace: DecisionTrace | null;
   decisionBrief: DecisionBrief | null;
   status: BriefSessionStatus;
   errors: string[];
