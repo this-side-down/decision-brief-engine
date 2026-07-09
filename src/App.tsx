@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatAppVersionLabel } from "./appVersion";
 import { WorkflowSetupBar } from "./components/WorkflowSetupBar";
+import { DecisionTraceBasis } from "./components/DecisionTraceBasis";
 import { BrowserInferenceStatus } from "./components/generation/BrowserInferenceStatus";
 import { DownloadDisclosureDialog } from "./components/generation/DownloadDisclosureDialog";
 import { GenerationRunStatus } from "./components/generation/GenerationRunStatus";
@@ -842,10 +843,13 @@ export function App() {
             </div>
             <div className="flex min-h-0 flex-1 flex-col">
               {briefSession.decisionBrief ? (
-                <DecisionBriefEditor
-                  markdown={briefSession.decisionBrief.markdown}
-                  onChange={updateDecisionBriefMarkdown}
-                />
+                <>
+                  <DecisionBriefEditor
+                    markdown={briefSession.decisionBrief.markdown}
+                    onChange={updateDecisionBriefMarkdown}
+                  />
+                  <DecisionTraceBasis decisionTrace={briefSession.decisionTrace} />
+                </>
               ) : (
                 <EmptyPanel
                   label={
