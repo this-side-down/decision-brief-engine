@@ -14,6 +14,17 @@ The hosted demo runs in Mock mode by default for reliability. Local Ollama is th
 
 v0.1.0 is the first portfolio-ready public demo milestone: example gallery, export polish, Local Ollama health check, and generation telemetry. See [Public demo milestone](docs/product/public-demo-milestone.md) for the full write-up.
 
+## v0.2 planning
+
+v0.2 planning is focused on closing the recommendation transparency gap by adding a structured Decision Trace between the Capture Layer and Decision Brief.
+
+The goal is to make recommendations and next steps traceable to captured intent, evidence, assumptions, risks, constraints, alternatives, and missing context without exposing raw model thinking or chain-of-thought.
+
+See:
+
+- [v0.2 Decision Trace direction](docs/product/v0.2-decision-trace-direction.md)
+- [ADR: Traceable recommendation rationale](docs/architecture/adr-traceable-recommendation-rationale.md)
+
 ## Why
 
 Most AI note takers answer:
@@ -95,7 +106,9 @@ This is implementation guidance for the current v0 state, not a legal privacy po
 - [MVP brief types](docs/product/brief-types.md)
 - [Live browser inference UX](docs/product/live-browser-inference-ux.md)
 - [Public demo milestone](docs/product/public-demo-milestone.md)
+- [v0.2 Decision Trace direction](docs/product/v0.2-decision-trace-direction.md)
 - [MVP architecture](docs/architecture/mvp-architecture.md)
+- [ADR: Traceable recommendation rationale](docs/architecture/adr-traceable-recommendation-rationale.md)
 - [Conceptual data model](docs/architecture/data-model.md)
 - [AI prompt contracts](docs/ai/prompt-contracts.md)
 - [Evaluation plan](docs/ai/evaluation-plan.md)
