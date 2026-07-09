@@ -76,6 +76,27 @@ describe("evaluateDecisionTraceReadiness — coverage", () => {
     expect(result.pass).toBe(false);
   });
 
+  it("fails recommendation_coverage when a recommendation entry exists but its statement does not correspond to recommendation_candidate", () => {
+    const mismatched = baseEntry({ statement: "Do something completely unrelated" });
+    const result = evaluateDecisionTraceReadiness(
+      BASE_CAPTURE_LAYER,
+      trace([mismatched, baseNextStepEntry()]),
+    );
+    const check = result.checks.find((c) => c.id === "recommendation_coverage");
+    expect(check?.pass).toBe(false);
+    expect(check?.detail).toContain("no recommendation entry statement corresponds");
+    expect(result.pass).toBe(false);
+  });
+
+  it("passes recommendation_coverage when a recommendation entry statement corresponds to recommendation_candidate", () => {
+    const result = evaluateDecisionTraceReadiness(
+      BASE_CAPTURE_LAYER,
+      trace([baseEntry(), baseNextStepEntry()]),
+    );
+    const check = result.checks.find((c) => c.id === "recommendation_coverage");
+    expect(check?.pass).toBe(true);
+  });
+
   it("skips recommendation_coverage when recommendation_candidate is empty", () => {
     const captureLayer = { ...BASE_CAPTURE_LAYER, recommendation_candidate: "" };
     const result = evaluateDecisionTraceReadiness(captureLayer, trace([baseNextStepEntry()]));
@@ -83,20 +104,47 @@ describe("evaluateDecisionTraceReadiness — coverage", () => {
     expect(check?.pass).toBe(true);
   });
 
-  it("fails next_step_coverage when the next_step entry count does not match suggested_next_steps", () => {
+  it("fails next_step_count when the next_step entry count does not match suggested_next_steps", () => {
     const captureLayer = {
       ...BASE_CAPTURE_LAYER,
       suggested_next_steps: ["Step one", "Step two"],
     };
     const result = evaluateDecisionTraceReadiness(captureLayer, trace([baseEntry(), baseNextStepEntry()]));
-    const check = result.checks.find((c) => c.id === "next_step_coverage");
+    const check = result.checks.find((c) => c.id === "next_step_count");
     expect(check?.pass).toBe(false);
   });
 
-  it("passes next_step_coverage when there are zero suggested next steps and zero entries", () => {
+  it("passes next_step_count when there are zero suggested next steps and zero next_step entries", () => {
     const captureLayer = { ...BASE_CAPTURE_LAYER, suggested_next_steps: [] };
     const result = evaluateDecisionTraceReadiness(captureLayer, trace([baseEntry()]));
-    const check = result.checks.find((c) => c.id === "next_step_coverage");
+    const check = result.checks.find((c) => c.id === "next_step_count");
+    expect(check?.pass).toBe(true);
+  });
+
+  it("fails next_step_statement_coverage when the count matches but a next-step statement does not correspond to any suggested_next_steps item", () => {
+    const captureLayer = {
+      ...BASE_CAPTURE_LAYER,
+      suggested_next_steps: ["Confirm budget with finance", "Notify the team lead"],
+    };
+    const mismatched = baseNextStepEntry({ statement: "Confirm budget with finance" });
+    const unrelated = baseNextStepEntry({ statement: "Order new office chairs" });
+    const result = evaluateDecisionTraceReadiness(
+      captureLayer,
+      trace([baseEntry(), mismatched, unrelated]),
+    );
+
+    const countCheck = result.checks.find((c) => c.id === "next_step_count");
+    expect(countCheck?.pass).toBe(true);
+
+    const coverageCheck = result.checks.find((c) => c.id === "next_step_statement_coverage");
+    expect(coverageCheck?.pass).toBe(false);
+    expect(coverageCheck?.detail).toContain("Notify the team lead");
+    expect(result.pass).toBe(false);
+  });
+
+  it("passes next_step_statement_coverage when every suggested_next_steps item has a corresponding entry statement", () => {
+    const result = evaluateDecisionTraceReadiness(BASE_CAPTURE_LAYER, trace([baseEntry(), baseNextStepEntry()]));
+    const check = result.checks.find((c) => c.id === "next_step_statement_coverage");
     expect(check?.pass).toBe(true);
   });
 });

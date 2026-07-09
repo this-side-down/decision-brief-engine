@@ -62,3 +62,12 @@ We do not have usage data by segment yet. Also not sure if enterprise and mid-ma
 - Missing segments.
 - Confusing stated requests with underlying needs.
 - Treating buyer reporting as the same as end-user activation.
+
+## Expected Decision Trace qualities (v0.2)
+
+If Decision Trace is generated for this case (see [`decision-trace-eval-gates.md`](../../docs/ai/decision-trace-eval-gates.md)):
+
+- The recommendation entry's basis cites specific interview evidence (for example, Customer B's trust concern or Customer E's ownership gap), not a generalized "customers want this."
+- `risks_accepted` or `risks_addressed` names the overgeneralization-from-anecdotes risk explicitly, since only five interviews are available.
+- `would_change_if` names a concrete signal, such as segment usage data showing a different priority, not a generic "if new information becomes available."
+- The next-step entry for pulling usage data is grounded in `missing_context` (usage data by segment), not invented as a standalone idea.

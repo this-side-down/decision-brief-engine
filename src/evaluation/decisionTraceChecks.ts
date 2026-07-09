@@ -58,6 +58,27 @@ function isIntentGrounded(intent: string, captureLayer: CaptureLayer): boolean {
 }
 
 /**
+ * Practical statement-correspondence check: normalized exact match, or one
+ * string contains the other. This is intentionally simple (no fuzzy/edit-distance
+ * matching) so a trace entry's statement can be verified against the Decision
+ * Brief item it is supposed to trace, without overengineering matching logic.
+ */
+function correspondsToText(statement: string, reference: string): boolean {
+  const normalizedStatement = normalize(statement);
+  const normalizedReference = normalize(reference);
+
+  if (!normalizedStatement || !normalizedReference) {
+    return false;
+  }
+
+  return (
+    normalizedStatement === normalizedReference ||
+    normalizedStatement.includes(normalizedReference) ||
+    normalizedReference.includes(normalizedStatement)
+  );
+}
+
+/**
  * Checks a single entry's basis fields against the corresponding Capture Layer
  * fields. Returns the ungrounded items found, grouped by basis field, so
  * failures are easy to diagnose.
@@ -123,13 +144,19 @@ export function evaluateDecisionTraceReadiness(
   const hasRecommendationCandidate =
     captureLayer.recommendation_candidate.trim().length > 0;
 
+  const hasCorrespondingRecommendationEntry = recommendationEntries.some((entry) =>
+    correspondsToText(entry.statement, captureLayer.recommendation_candidate),
+  );
+
   checks.push(
     check(
       "recommendation_coverage",
-      !hasRecommendationCandidate || recommendationEntries.length >= 1,
-      hasRecommendationCandidate
-        ? `${recommendationEntries.length} recommendation entr${recommendationEntries.length === 1 ? "y" : "ies"} for a non-empty recommendation_candidate`
-        : "recommendation_candidate is empty; recommendation coverage not required",
+      !hasRecommendationCandidate || hasCorrespondingRecommendationEntry,
+      !hasRecommendationCandidate
+        ? "recommendation_candidate is empty; recommendation coverage not required"
+        : hasCorrespondingRecommendationEntry
+          ? "a recommendation entry statement corresponds to recommendation_candidate"
+          : `no recommendation entry statement corresponds to recommendation_candidate: "${captureLayer.recommendation_candidate}"`,
     ),
   );
 
@@ -137,9 +164,26 @@ export function evaluateDecisionTraceReadiness(
 
   checks.push(
     check(
-      "next_step_coverage",
+      "next_step_count",
       nextStepEntries.length === expectedNextStepCount,
       `${nextStepEntries.length} next_step entries for ${expectedNextStepCount} suggested_next_steps`,
+    ),
+  );
+
+  const uncoveredNextSteps = captureLayer.suggested_next_steps.filter(
+    (step) => !nextStepEntries.some((entry) => correspondsToText(entry.statement, step)),
+  );
+
+  checks.push(
+    check(
+      "next_step_statement_coverage",
+      uncoveredNextSteps.length === 0,
+      uncoveredNextSteps.length === 0
+        ? "every suggested_next_steps item has a corresponding next_step entry statement"
+        : `${uncoveredNextSteps.length} suggested_next_steps item(s) without a corresponding next_step entry: ${uncoveredNextSteps
+            .slice(0, 3)
+            .map((step) => `"${step}"`)
+            .join("; ")}`,
     ),
   );
 

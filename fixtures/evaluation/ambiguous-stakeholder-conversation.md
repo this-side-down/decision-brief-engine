@@ -61,3 +61,12 @@ My read: the real decision is whether partner-led growth is an actual near-term 
 - Failing to surface missing context.
 - Treating sponsor enthusiasm as committed strategy.
 - Turning an implicit strategy question into a detailed execution plan.
+
+## Expected Decision Trace qualities (v0.2)
+
+If Decision Trace is generated for this case (see [`decision-trace-eval-gates.md`](../../docs/ai/decision-trace-eval-gates.md)):
+
+- The recommendation entry's `basis.intent` reflects clarifying ownership and intent, not a premature commitment to the GTM experiment.
+- `risks_addressed` or `risks_accepted` names the risk of Sales treating sponsor enthusiasm as approval, since that ambiguity is central to this scenario.
+- `missing_context_caveats` cites the unresolved owner, target segment, and revenue expectation rather than omitting them.
+- `would_change_if` names a specific resolving event, such as the sponsor naming an owner or confirming a revenue target, not a generic "if circumstances change."
