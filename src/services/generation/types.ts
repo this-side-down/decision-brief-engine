@@ -19,13 +19,6 @@ export type GenerateDecisionBriefInput = {
   sourceLabel?: string;
 };
 
-export type GenerateDecisionTraceInput = {
-  captureLayer: CaptureLayer;
-  briefMarkdown: string;
-  briefType: BriefType;
-  sourceLabel?: string;
-};
-
 export type DecisionBriefResult = {
   markdown: string;
   decisionTrace: DecisionTrace;

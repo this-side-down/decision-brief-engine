@@ -20,7 +20,28 @@ const BASIS_ARRAY_FIELDS = [
   "missing_context_caveats",
 ] as const;
 
-function stripJsonFences(text: string): string {
+/**
+ * Patterns that indicate a would_change_if condition is too generic to be useful.
+ * Conditions matching any of these are rejected by validation.
+ */
+const GENERIC_WOULD_CHANGE_IF_PATTERNS: RegExp[] = [
+  /^if (the )?situation changes?\.?$/i,
+  /^if new information (becomes?|is) available\.?$/i,
+  /^if circumstances? changes?\.?$/i,
+  /^if (the )?context changes?\.?$/i,
+  /^if (anything|something) changes?\.?$/i,
+  /^if (the )?facts? changes?\.?$/i,
+  /^circumstances? changes?\.?$/i,
+  /^new information becomes? available\.?$/i,
+  /^if (the )?(situation|context|circumstances?) (is|are) different\.?$/i,
+];
+
+function isGenericWouldChangeIf(value: string): boolean {
+  const trimmed = value.trim();
+  return GENERIC_WOULD_CHANGE_IF_PATTERNS.some((p) => p.test(trimmed));
+}
+
+export function stripDecisionTraceJsonFences(text: string): string {
   const trimmed = text.trim();
   const fenceMatch = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
   return fenceMatch ? fenceMatch[1].trim() : trimmed;
@@ -30,7 +51,7 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
 
-function parseBasis(raw: unknown, entryIndex: number): DecisionTraceBasis {
+function validateBasis(raw: unknown, entryIndex: number): DecisionTraceBasis {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
     throw new Error(`Decision Trace entry[${entryIndex}].basis must be an object.`);
   }
@@ -41,12 +62,28 @@ function parseBasis(raw: unknown, entryIndex: number): DecisionTraceBasis {
     throw new Error(`Decision Trace entry[${entryIndex}].basis.intent must be a string.`);
   }
 
+  if (!record.intent.trim()) {
+    throw new Error(
+      `Decision Trace entry[${entryIndex}].basis.intent must not be empty.`,
+    );
+  }
+
   for (const field of BASIS_ARRAY_FIELDS) {
     if (!isStringArray(record[field])) {
       throw new Error(
         `Decision Trace entry[${entryIndex}].basis.${field} must be an array of strings.`,
       );
     }
+  }
+
+  const allArraysEmpty = BASIS_ARRAY_FIELDS.every(
+    (field) => (record[field] as string[]).length === 0,
+  );
+
+  if (allArraysEmpty) {
+    throw new Error(
+      `Decision Trace entry[${entryIndex}].basis must have at least one non-empty array field.`,
+    );
   }
 
   return {
@@ -62,7 +99,7 @@ function parseBasis(raw: unknown, entryIndex: number): DecisionTraceBasis {
   };
 }
 
-function parseEntry(raw: unknown, index: number): DecisionTraceEntry {
+function validateEntry(raw: unknown, index: number): DecisionTraceEntry {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
     throw new Error(`Decision Trace entries[${index}] must be an object.`);
   }
@@ -73,13 +110,17 @@ function parseEntry(raw: unknown, index: number): DecisionTraceEntry {
     throw new Error(`Decision Trace entries[${index}].statement must be a string.`);
   }
 
+  if (!record.statement.trim()) {
+    throw new Error(`Decision Trace entries[${index}].statement must not be empty.`);
+  }
+
   if (!ENTRY_KIND_VALUES.has(record.kind as DecisionTraceEntryKind)) {
     throw new Error(
       `Decision Trace entries[${index}].kind must be "recommendation" or "next_step".`,
     );
   }
 
-  const basis = parseBasis(record.basis, index);
+  const basis = validateBasis(record.basis, index);
 
   if (!CONFIDENCE_VALUES.has(record.confidence as Confidence)) {
     throw new Error(
@@ -93,17 +134,70 @@ function parseEntry(raw: unknown, index: number): DecisionTraceEntry {
     );
   }
 
+  const wouldChangeIf = record.would_change_if as string[];
+
+  if (wouldChangeIf.length === 0) {
+    throw new Error(
+      `Decision Trace entries[${index}].would_change_if must not be empty.`,
+    );
+  }
+
+  const emptyCondition = wouldChangeIf.find((v) => !v.trim());
+  if (emptyCondition !== undefined) {
+    throw new Error(
+      `Decision Trace entries[${index}].would_change_if contains an empty condition.`,
+    );
+  }
+
+  const genericCondition = wouldChangeIf.find((v) => isGenericWouldChangeIf(v));
+  if (genericCondition !== undefined) {
+    throw new Error(
+      `Decision Trace entries[${index}].would_change_if contains a generic or useless condition: "${genericCondition}".`,
+    );
+  }
+
   return {
     statement: record.statement,
     kind: record.kind as DecisionTraceEntryKind,
     basis,
     confidence: record.confidence as Confidence,
-    would_change_if: record.would_change_if,
+    would_change_if: wouldChangeIf,
   };
 }
 
+/**
+ * Validates a plain JS value as a DecisionTrace object.
+ * Used when the outer JSON has already been parsed (e.g. from a combined brief envelope).
+ */
+export function validateDecisionTraceObject(obj: unknown): DecisionTrace {
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) {
+    throw new Error("Decision Trace must be a JSON object.");
+  }
+
+  const record = obj as Record<string, unknown>;
+
+  if (!Array.isArray(record.entries)) {
+    throw new Error("Decision Trace JSON is missing required field: entries");
+  }
+
+  const entries = (record.entries as unknown[]).map((entry, index) =>
+    validateEntry(entry, index),
+  );
+
+  const createdAt =
+    typeof record.created_at === "string" && record.created_at
+      ? record.created_at
+      : new Date().toISOString();
+
+  return { entries, created_at: createdAt };
+}
+
+/**
+ * Parses and validates a Decision Trace from a raw JSON string.
+ * Strips markdown code fences before parsing.
+ */
 export function parseDecisionTraceJson(jsonText: string): DecisionTrace {
-  const stripped = stripJsonFences(jsonText.trim());
+  const stripped = stripDecisionTraceJsonFences(jsonText.trim());
 
   let parsed: unknown;
 
@@ -113,24 +207,5 @@ export function parseDecisionTraceJson(jsonText: string): DecisionTrace {
     throw new Error("Decision Trace response was not valid JSON.");
   }
 
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-    throw new Error("Decision Trace response must be a JSON object.");
-  }
-
-  const record = parsed as Record<string, unknown>;
-
-  if (!isStringArray([]) || !Array.isArray(record.entries)) {
-    throw new Error("Decision Trace JSON is missing required field: entries");
-  }
-
-  const entries = (record.entries as unknown[]).map((entry, index) =>
-    parseEntry(entry, index),
-  );
-
-  const createdAt =
-    typeof record.created_at === "string" && record.created_at
-      ? record.created_at
-      : new Date().toISOString();
-
-  return { entries, created_at: createdAt };
+  return validateDecisionTraceObject(parsed);
 }
