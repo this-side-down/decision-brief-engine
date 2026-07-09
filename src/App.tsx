@@ -29,6 +29,7 @@ import {
   formatDownloadSuccessMessage,
   resolveDecisionBriefFilename,
 } from "./utils/decisionBriefExport";
+import { appendDecisionTraceToMarkdown } from "./utils/decisionTraceMarkdownExport";
 
 const BRIEF_TYPE_HINTS = {
   product:
@@ -267,6 +268,10 @@ export function App() {
     isDisclosureOpen;
   const currentMarkdown = briefSession.decisionBrief?.markdown ?? "";
   const hasMarkdown = currentMarkdown.trim().length > 0;
+  const exportMarkdown = appendDecisionTraceToMarkdown(
+    currentMarkdown,
+    briefSession.decisionTrace,
+  );
   const selectedBriefTypeHint = briefSession.briefType
     ? BRIEF_TYPE_HINTS[briefSession.briefType.id]
     : "Select Product, Strategy, or Execution to shape the Capture Layer.";
@@ -643,7 +648,7 @@ export function App() {
       return;
     }
 
-    const result = await copyMarkdownToClipboard(currentMarkdown);
+    const result = await copyMarkdownToClipboard(exportMarkdown);
     if (result.ok) {
       showExportMessage(formatCopySuccessMessage(result.method));
       return;
@@ -661,7 +666,7 @@ export function App() {
       sourceLabel: briefSession.rawInput.sourceLabel,
       briefTypeId: selectedBriefTypeId,
     });
-    const result = downloadMarkdownFile(currentMarkdown, filename);
+    const result = downloadMarkdownFile(exportMarkdown, filename);
 
     if (result.ok) {
       showExportMessage(formatDownloadSuccessMessage(result.filename));
