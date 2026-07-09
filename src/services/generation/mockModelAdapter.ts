@@ -1,10 +1,15 @@
 import type { CaptureLayer } from "../../types/captureLayer";
+import type {
+  DecisionTrace,
+  DecisionTraceEntry,
+} from "../../types/decisionTrace";
 import { parseDemoExampleId } from "../../data/demoExamples";
 import {
   MOCK_CAPTURE_LAYERS_BY_EXAMPLE_ID,
   MOCK_DECISION_BRIEFS_BY_EXAMPLE_ID,
 } from "../../data/exampleFixtures";
 import type {
+  DecisionBriefResult,
   GenerateCaptureLayerInput,
   GenerateDecisionBriefInput,
   ModelAdapter,
@@ -85,6 +90,70 @@ function buildMockCaptureLayer(
   };
 }
 
+function buildMockDecisionTrace(captureLayer: CaptureLayer): DecisionTrace {
+  const now = new Date().toISOString();
+  const entries: DecisionTraceEntry[] = [];
+
+  const openQuestionsForWouldChange = captureLayer.open_questions.slice(0, 2);
+
+  function wouldChangeIfFromOpenQuestions(fallback: string): string[] {
+    if (openQuestionsForWouldChange.length > 0) {
+      return openQuestionsForWouldChange.map((q) => `If resolved differently: "${q}"`);
+    }
+    return [fallback];
+  }
+
+  if (captureLayer.recommendation_candidate) {
+    entries.push({
+      statement: captureLayer.recommendation_candidate,
+      kind: "recommendation",
+      basis: {
+        intent: captureLayer.goals[0] ?? "",
+        supporting_evidence: captureLayer.evidence.slice(0, 3),
+        assumptions_relied_on: captureLayer.assumptions,
+        risks_addressed: captureLayer.risks.slice(0, 2),
+        risks_accepted: captureLayer.risks.slice(2),
+        constraints_respected: captureLayer.constraints,
+        tradeoffs: captureLayer.tensions,
+        alternatives_considered: captureLayer.options_considered.slice(0, 3),
+        missing_context_caveats: captureLayer.missing_context,
+      },
+      confidence: captureLayer.confidence,
+      would_change_if: wouldChangeIfFromOpenQuestions(
+        "If the supporting evidence or assumptions change materially.",
+      ),
+    });
+  }
+
+  for (const step of captureLayer.suggested_next_steps) {
+    const wouldChangeIf =
+      captureLayer.missing_context.slice(0, 1).map((mc) => `If "${mc}" becomes available.`);
+
+    entries.push({
+      statement: step,
+      kind: "next_step",
+      basis: {
+        intent: captureLayer.goals[0] ?? "",
+        supporting_evidence: captureLayer.evidence.slice(0, 1),
+        assumptions_relied_on: captureLayer.assumptions.slice(0, 1),
+        risks_addressed: [],
+        risks_accepted: [],
+        constraints_respected: captureLayer.constraints.slice(0, 1),
+        tradeoffs: [],
+        alternatives_considered: [],
+        missing_context_caveats: captureLayer.missing_context.slice(0, 1),
+      },
+      confidence: "Low",
+      would_change_if:
+        wouldChangeIf.length > 0
+          ? wouldChangeIf
+          : ["If the missing context is resolved."],
+    });
+  }
+
+  return { entries, created_at: now };
+}
+
 function formatList(items: string[]) {
   if (items.length === 0) {
     return "- Not captured yet.";
@@ -149,13 +218,16 @@ export const mockModelAdapter: ModelAdapter = {
 
     return buildMockCaptureLayer(input);
   },
-  async generateDecisionBrief(input: GenerateDecisionBriefInput) {
+
+  async generateDecisionBrief(input: GenerateDecisionBriefInput): Promise<DecisionBriefResult> {
     const markdown = buildMockDecisionBrief(input);
 
     if (!markdown.trim()) {
       throw new Error("Mock Decision Brief generation returned empty Markdown.");
     }
 
-    return markdown;
+    const decisionTrace = buildMockDecisionTrace(input.captureLayer);
+
+    return { markdown, decisionTrace };
   },
 };

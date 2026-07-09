@@ -1,11 +1,22 @@
+import type { DecisionTrace } from "../../types/decisionTrace";
 import type {
+  DecisionBriefResult,
   GenerateCaptureLayerInput,
   GenerateDecisionBriefInput,
   ModelAdapter,
 } from "./types";
 import { ollamaGenerate } from "./ollamaClient";
 import { parseCaptureLayerJson } from "./parseCaptureLayer";
-import { buildCaptureLayerPrompt, buildDecisionBriefPrompt } from "./prompts";
+import { parseDecisionTraceJson } from "./parseDecisionTrace";
+import {
+  buildCaptureLayerPrompt,
+  buildDecisionBriefPrompt,
+  buildDecisionTracePrompt,
+} from "./prompts";
+
+function emptyDecisionTrace(): DecisionTrace {
+  return { entries: [], created_at: new Date().toISOString() };
+}
 
 export const ollamaModelAdapter: ModelAdapter = {
   async generateCaptureLayer(input: GenerateCaptureLayerInput) {
@@ -19,14 +30,28 @@ export const ollamaModelAdapter: ModelAdapter = {
     return parseCaptureLayerJson(modelText);
   },
 
-  async generateDecisionBrief(input: GenerateDecisionBriefInput) {
-    const prompt = buildDecisionBriefPrompt(input);
-    const markdown = (await ollamaGenerate({ prompt })).trim();
+  async generateDecisionBrief(input: GenerateDecisionBriefInput): Promise<DecisionBriefResult> {
+    const briefPrompt = buildDecisionBriefPrompt(input);
+    const markdown = (await ollamaGenerate({ prompt: briefPrompt })).trim();
 
     if (!markdown) {
       throw new Error("Ollama Decision Brief generation returned empty Markdown.");
     }
 
-    return markdown;
+    let decisionTrace: DecisionTrace;
+    try {
+      const tracePrompt = buildDecisionTracePrompt({
+        captureLayer: input.captureLayer,
+        briefMarkdown: markdown,
+        briefType: input.briefType,
+        sourceLabel: input.sourceLabel,
+      });
+      const traceJson = await ollamaGenerate({ prompt: tracePrompt, format: "json" });
+      decisionTrace = parseDecisionTraceJson(traceJson);
+    } catch {
+      decisionTrace = emptyDecisionTrace();
+    }
+
+    return { markdown, decisionTrace };
   },
 };

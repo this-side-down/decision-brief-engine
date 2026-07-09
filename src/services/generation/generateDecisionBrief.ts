@@ -3,6 +3,7 @@ import type { CaptureLayer } from "../../types/captureLayer";
 import { getModelAdapter } from "./getModelAdapter";
 import {
   DECISION_BRIEF_MARKDOWN_STRUCTURE,
+  type DecisionBriefResult,
   type ModelAdapter,
 } from "./types";
 
@@ -18,7 +19,7 @@ export async function generateDecisionBriefForSession({
   briefType,
   captureLayer,
   sourceLabel,
-}: GenerateDecisionBriefForSessionInput): Promise<string> {
+}: GenerateDecisionBriefForSessionInput): Promise<DecisionBriefResult> {
   return adapter.generateDecisionBrief({
     captureLayer,
     briefType,

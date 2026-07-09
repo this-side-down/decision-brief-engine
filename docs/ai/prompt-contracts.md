@@ -199,6 +199,117 @@ Sections may be concise, but the output should remain complete enough to export 
 - The real adapter should accept text prompts and return Markdown without relying on provider-specific formatting features.
 - Prompt inputs should remain plain JSON and text so they can be routed through local or self-hosted FOSS-compatible inference.
 
+## v0.2 Contract 3: Generate Decision Trace
+
+### Purpose
+
+Generate a structured Decision Trace artifact that makes the judgment step auditable by binding each recommendation and next step in the Decision Brief back to the Capture Layer elements it depends on.
+
+### When used in the pipeline
+
+Used after Decision Brief Markdown is generated, in the same brief-generation step. The Decision Brief Markdown and Capture Layer are both available at this point.
+
+Pipeline position:
+
+```
+Raw Input → Capture Layer → [Generate Brief + Generate Trace] → Decision Brief + Decision Trace
+```
+
+### System role
+
+You are a decision rationale analyst. Your job is to produce a structured Decision Trace artifact that makes each recommendation and next step in the Decision Brief traceable to the Capture Layer.
+
+### What Decision Trace is not
+
+Decision Trace is a user-facing structured rationale artifact. It is not raw model thinking, hidden reasoning, scratchpad output, or chain-of-thought. The prompt must instruct the model to produce only the structured output, not its reasoning process.
+
+### Input variables
+
+- `capture_layer_json`: The structured Capture Layer JSON used to generate the brief. Decision Trace entries must be grounded only in this artifact.
+- `brief_markdown`: The generated Decision Brief Markdown. Used to identify which recommendations and next steps need trace entries.
+- `brief_type`: One of `product`, `strategy`, or `execution`.
+- `source_label`: Optional user-facing label for the source material.
+
+### Output format
+
+Return only valid JSON matching the canonical `DecisionTrace` type in `docs/architecture/decision-trace-schema.md`. That schema document is the source of truth for field names, types, confidence values, kind values, and absence conventions.
+
+Required shape:
+
+```json
+{
+  "entries": [
+    {
+      "statement": "...",
+      "kind": "recommendation",
+      "basis": {
+        "intent": "...",
+        "supporting_evidence": [],
+        "assumptions_relied_on": [],
+        "risks_addressed": [],
+        "risks_accepted": [],
+        "constraints_respected": [],
+        "tradeoffs": [],
+        "alternatives_considered": [],
+        "missing_context_caveats": []
+      },
+      "confidence": "Medium",
+      "would_change_if": ["..."]
+    }
+  ],
+  "created_at": "..."
+}
+```
+
+Rules:
+- One entry per recommendation in the Decision Brief (`kind: "recommendation"`).
+- One entry per suggested next step in the Decision Brief (`kind: "next_step"`).
+- `kind` must be exactly `"recommendation"` or `"next_step"`.
+- `confidence` must be exactly `"High"`, `"Medium"`, or `"Low"`.
+- `would_change_if` must contain at least one specific condition per entry. Generic conditions are not acceptable.
+- All `basis` fields must be present. Use empty arrays only when the Capture Layer genuinely has no relevant content for that field.
+- `statement` must match the corresponding recommendation or next step from the Decision Brief.
+- Do not include reasoning. Return only the final JSON object.
+
+### Failure behavior
+
+- If a recommendation cannot be supported from the Capture Layer, state that explicitly in `missing_context_caveats` rather than inventing support.
+- If the brief markdown has no clear recommendations or next steps, return an empty `entries` array rather than inventing entries.
+- If parsing or validation fails in a real adapter, fall back to `{ entries: [], created_at: "..." }` so brief generation still succeeds.
+
+### Grounding requirements
+
+- Entries must be grounded only in the Capture Layer. Do not invent facts, evidence, assumptions, or alternatives not present in the Capture Layer.
+- `basis.intent` must correspond to a goal or intent from the Capture Layer's `goals` field.
+- `basis.supporting_evidence` must correspond to items from the Capture Layer's `evidence` field.
+- `basis.assumptions_relied_on` must correspond to items from the Capture Layer's `assumptions` field.
+- `basis.risks_addressed` and `basis.risks_accepted` must correspond to items from the Capture Layer's `risks` field.
+- `basis.constraints_respected` must correspond to items from the Capture Layer's `constraints` field.
+- `basis.tradeoffs` must correspond to items from the Capture Layer's `tensions` field.
+- `basis.alternatives_considered` must correspond to items from the Capture Layer's `options_considered` field.
+- `basis.missing_context_caveats` must correspond to items from the Capture Layer's `missing_context` field.
+
+See `docs/architecture/decision-trace-schema.md` for the full field-to-Capture-Layer mapping.
+
+### Quality requirements
+
+- Entries should be specific enough that a reviewer can evaluate whether the basis is complete.
+- `would_change_if` conditions should name specific facts, assumptions, or risks — not generic placeholders.
+- `confidence` should reflect how strongly the Capture Layer supports the recommendation or next step.
+
+### FOSS/provider-neutral implementation notes
+
+- The mocked adapter generates Decision Trace deterministically from the Capture Layer without a model call.
+- The real adapter (Ollama, WebGPU) makes a second call after generating the brief Markdown, using `format: "json"` where the inference path supports it.
+- If trace generation fails, the adapter falls back to an empty trace rather than failing the brief generation step.
+- Trace generation must not expose raw model thinking, hidden reasoning, scratchpad output, or chain-of-thought.
+
+### Related
+
+- [Decision Trace schema](../architecture/decision-trace-schema.md)
+- [ADR: Traceable recommendation rationale](../architecture/adr-traceable-recommendation-rationale.md)
+- #90 — Extend Decision Brief contract with traceable rationale
+
 ## Post-MVP prompt contracts
 
 MVP implementation should not build critique or section regeneration unless a later issue explicitly pulls them into scope. These contracts are retained as future design notes, not first-build requirements.

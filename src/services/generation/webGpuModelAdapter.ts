@@ -1,17 +1,28 @@
 import type { MLCEngineInterface } from "@mlc-ai/web-llm";
+import type { DecisionTrace } from "../../types/decisionTrace";
 import type {
+  DecisionBriefResult,
   GenerateCaptureLayerInput,
   GenerateDecisionBriefInput,
   ModelAdapter,
 } from "./types";
 import { parseCaptureLayerJson } from "./parseCaptureLayer";
-import { buildCaptureLayerPrompt, buildDecisionBriefPrompt } from "./prompts";
+import { parseDecisionTraceJson } from "./parseDecisionTrace";
+import {
+  buildCaptureLayerPrompt,
+  buildDecisionBriefPrompt,
+  buildDecisionTracePrompt,
+} from "./prompts";
 import {
   assertGenerationNotCancelled,
   cancelWebGpuGeneration,
 } from "./webGpuEngine";
 import { GenerationCancelledError } from "./webGpuErrors";
 import { getWebGpuConfig } from "./webGpuConfig";
+
+function emptyDecisionTrace(): DecisionTrace {
+  return { entries: [], created_at: new Date().toISOString() };
+}
 
 const JSON_RETRY_SUFFIX =
   "\n\nReturn ONLY valid JSON. No markdown fences, no commentary, no reasoning.";
@@ -86,7 +97,7 @@ export function createWebGpuModelAdapter({
       }
     },
 
-    async generateDecisionBrief(input: GenerateDecisionBriefInput) {
+    async generateDecisionBrief(input: GenerateDecisionBriefInput): Promise<DecisionBriefResult> {
       const prompt = buildDecisionBriefPrompt(input);
       let markdown = await completePrompt(engine, prompt, signal);
 
@@ -101,7 +112,24 @@ export function createWebGpuModelAdapter({
         );
       }
 
-      return markdown;
+      let decisionTrace: DecisionTrace;
+      try {
+        const tracePrompt = buildDecisionTracePrompt({
+          captureLayer: input.captureLayer,
+          briefMarkdown: markdown,
+          briefType: input.briefType,
+          sourceLabel: input.sourceLabel,
+        });
+        const traceJson = await completePrompt(engine, tracePrompt, signal);
+        decisionTrace = parseDecisionTraceJson(traceJson);
+      } catch (traceError) {
+        if (traceError instanceof GenerationCancelledError) {
+          throw traceError;
+        }
+        decisionTrace = emptyDecisionTrace();
+      }
+
+      return { markdown, decisionTrace };
     },
   };
 }

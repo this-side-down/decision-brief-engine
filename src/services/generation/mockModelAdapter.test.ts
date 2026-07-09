@@ -56,7 +56,7 @@ describe("mockModelAdapter demo gallery mock flow", () => {
       );
       expect(structural.pass, JSON.stringify(structural.checks)).toBe(true);
 
-      const decisionBrief = await mockModelAdapter.generateDecisionBrief({
+      const result = await mockModelAdapter.generateDecisionBrief({
         captureLayer,
         briefType,
         briefTypeGuidance: briefType.guidance,
@@ -64,8 +64,11 @@ describe("mockModelAdapter demo gallery mock flow", () => {
         sourceLabel: demoExampleSourceLabel(fixture.metadata.id),
       });
 
-      expect(decisionBrief).toBe(fixture.expectedDecisionBrief);
-      expect(decisionBrief).not.toMatch(/```/);
+      expect(result.markdown).toBe(fixture.expectedDecisionBrief);
+      expect(result.markdown).not.toMatch(/```/);
+
+      expect(Array.isArray(result.decisionTrace.entries)).toBe(true);
+      expect(result.decisionTrace.created_at).toBeTruthy();
     },
   );
 
@@ -132,7 +135,7 @@ describe("mockModelAdapter demo examples", () => {
 
   it("returns example-specific decision brief markdown for demo source labels", async () => {
     const strategyFixture = getExampleFixture("q4-workforce-allocation");
-    const strategyBrief = await mockModelAdapter.generateDecisionBrief({
+    const strategyResult = await mockModelAdapter.generateDecisionBrief({
       captureLayer: strategyFixture!.expectedCaptureLayer,
       briefType: STRATEGY_DECISION_BRIEF,
       briefTypeGuidance: STRATEGY_DECISION_BRIEF.guidance,
@@ -140,11 +143,11 @@ describe("mockModelAdapter demo examples", () => {
       sourceLabel: demoExampleSourceLabel("q4-workforce-allocation"),
     });
 
-    expect(strategyBrief.toLowerCase()).toContain("hospital");
-    expect(strategyBrief).toContain("Marcus");
+    expect(strategyResult.markdown.toLowerCase()).toContain("hospital");
+    expect(strategyResult.markdown).toContain("Marcus");
 
     const productFixture = getExampleFixture("local-inference-setup-flow");
-    const productBrief = await mockModelAdapter.generateDecisionBrief({
+    const productResult = await mockModelAdapter.generateDecisionBrief({
       captureLayer: productFixture!.expectedCaptureLayer,
       briefType: PRODUCT_DECISION_BRIEF,
       briefTypeGuidance: PRODUCT_DECISION_BRIEF.guidance,
@@ -152,7 +155,45 @@ describe("mockModelAdapter demo examples", () => {
       sourceLabel: demoExampleSourceLabel("local-inference-setup-flow"),
     });
 
-    expect(productBrief.toLowerCase()).toContain("health-check");
-    expect(productBrief.toLowerCase()).toContain("mocked generation");
+    expect(productResult.markdown.toLowerCase()).toContain("health-check");
+    expect(productResult.markdown.toLowerCase()).toContain("mocked generation");
+  });
+
+  it("returns a Decision Trace grounded in the Capture Layer for demo examples", async () => {
+    const strategyFixture = getExampleFixture("q4-workforce-allocation");
+    const strategyResult = await mockModelAdapter.generateDecisionBrief({
+      captureLayer: strategyFixture!.expectedCaptureLayer,
+      briefType: STRATEGY_DECISION_BRIEF,
+      briefTypeGuidance: STRATEGY_DECISION_BRIEF.guidance,
+      markdownStructure: [],
+      sourceLabel: demoExampleSourceLabel("q4-workforce-allocation"),
+    });
+
+    const { decisionTrace } = strategyResult;
+    expect(Array.isArray(decisionTrace.entries)).toBe(true);
+    expect(decisionTrace.entries.length).toBeGreaterThan(0);
+
+    const recommendationEntries = decisionTrace.entries.filter(
+      (e) => e.kind === "recommendation",
+    );
+    expect(recommendationEntries.length).toBeGreaterThan(0);
+
+    for (const entry of decisionTrace.entries) {
+      expect(typeof entry.statement).toBe("string");
+      expect(entry.statement.length).toBeGreaterThan(0);
+      expect(["recommendation", "next_step"]).toContain(entry.kind);
+      expect(["High", "Medium", "Low"]).toContain(entry.confidence);
+      expect(Array.isArray(entry.would_change_if)).toBe(true);
+      expect(entry.would_change_if.length).toBeGreaterThan(0);
+      expect(typeof entry.basis.intent).toBe("string");
+      expect(Array.isArray(entry.basis.supporting_evidence)).toBe(true);
+      expect(Array.isArray(entry.basis.assumptions_relied_on)).toBe(true);
+      expect(Array.isArray(entry.basis.risks_addressed)).toBe(true);
+      expect(Array.isArray(entry.basis.risks_accepted)).toBe(true);
+      expect(Array.isArray(entry.basis.constraints_respected)).toBe(true);
+      expect(Array.isArray(entry.basis.tradeoffs)).toBe(true);
+      expect(Array.isArray(entry.basis.alternatives_considered)).toBe(true);
+      expect(Array.isArray(entry.basis.missing_context_caveats)).toBe(true);
+    }
   });
 });

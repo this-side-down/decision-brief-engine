@@ -1,4 +1,4 @@
-import type { GenerateCaptureLayerInput, GenerateDecisionBriefInput } from "./types";
+import type { GenerateCaptureLayerInput, GenerateDecisionBriefInput, GenerateDecisionTraceInput } from "./types";
 
 const NO_REASONING_INSTRUCTION =
   "Do not include reasoning. Return only the final JSON object.";
@@ -123,5 +123,63 @@ export function buildDecisionBriefPrompt(input: GenerateDecisionBriefInput): str
     "",
     "Capture Layer JSON:",
     JSON.stringify(input.captureLayer, null, 2),
+  ].join("\n");
+}
+
+const DECISION_TRACE_SCHEMA_SKELETON = JSON.stringify(
+  {
+    entries: [
+      {
+        statement: "The recommendation or next step, verbatim from the brief.",
+        kind: "recommendation",
+        basis: {
+          intent: "Which goal from the Capture Layer this serves.",
+          supporting_evidence: ["Evidence item from the Capture Layer."],
+          assumptions_relied_on: ["Assumption from the Capture Layer this depends on."],
+          risks_addressed: ["Risk from the Capture Layer this mitigates."],
+          risks_accepted: ["Risk from the Capture Layer this accepts or defers."],
+          constraints_respected: ["Constraint from the Capture Layer this stays within."],
+          tradeoffs: ["Tradeoff or tension from the Capture Layer this navigates."],
+          alternatives_considered: ["Alternative considered and why not selected."],
+          missing_context_caveats: ["Missing context item that qualifies this entry's reliability."],
+        },
+        confidence: "Medium",
+        would_change_if: ["Specific condition that would lead to a different outcome."],
+      },
+    ],
+    created_at: new Date(0).toISOString(),
+  },
+  null,
+  2,
+);
+
+export function buildDecisionTracePrompt(input: GenerateDecisionTraceInput): string {
+  return [
+    "You are a decision rationale analyst. Your job is to produce a structured Decision Trace artifact that makes each recommendation and next step in the Decision Brief traceable to the Capture Layer.",
+    "",
+    "Decision Trace is a user-facing structured rationale artifact. It is not raw model thinking, hidden reasoning, scratchpad output, or chain-of-thought.",
+    "Each entry must be grounded only in the Capture Layer provided. Do not invent facts, evidence, assumptions, or alternatives not present in the Capture Layer.",
+    "If a recommendation cannot be fully supported from the Capture Layer, state that explicitly in missing_context_caveats rather than inventing support.",
+    "",
+    `Brief type: ${input.briefType.id}`,
+    "",
+    "Required output: a single JSON object with this exact shape (replace placeholder values with content derived from the Capture Layer and Decision Brief):",
+    DECISION_TRACE_SCHEMA_SKELETON,
+    "",
+    "Rules:",
+    "- Create one entry for each recommendation in the Decision Brief (kind: recommendation).",
+    "- Create one entry for each suggested next step in the Decision Brief (kind: next_step).",
+    '- kind must be exactly "recommendation" or "next_step".',
+    '- confidence must be exactly "High", "Medium", or "Low".',
+    "- would_change_if must contain at least one specific condition per entry. Generic conditions such as 'if the situation changes' are not acceptable.",
+    "- All basis fields must be present. Use empty arrays only when the Capture Layer genuinely has no relevant content for that field.",
+    "- statement must match the corresponding recommendation or next step from the Decision Brief.",
+    NO_REASONING_INSTRUCTION,
+    "",
+    "Capture Layer JSON:",
+    JSON.stringify(input.captureLayer, null, 2),
+    "",
+    "Decision Brief Markdown:",
+    input.briefMarkdown,
   ].join("\n");
 }
