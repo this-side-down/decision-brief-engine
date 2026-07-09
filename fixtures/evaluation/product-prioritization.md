@@ -53,3 +53,12 @@ My instinct is onboarding first, reporting second, admin controls later, but Sal
 - Missing customer evidence from CS and Support.
 - Treating Sales request as validated customer demand.
 - Overstating confidence without enough data.
+
+## Expected Decision Trace qualities (v0.2)
+
+If Decision Trace is generated for this case (see [`decision-trace-eval-gates.md`](../../docs/ai/decision-trace-eval-gates.md)):
+
+- The recommendation entry's `alternatives_considered` names reporting and admin controls, with brief reasoning for why they were not selected first, not just the chosen option.
+- `risks_accepted` covers the deferred admin-control ticket pressure; `risks_addressed` covers permissions brittleness avoided by deferring that work.
+- The next-step entry for confirming the engineering estimate is grounded in `missing_context` (implementation estimates), not invented as a standalone idea.
+- `would_change_if` names a specific reversal condition, such as the engineering estimate coming back larger than expected, not a generic "if the facts change."

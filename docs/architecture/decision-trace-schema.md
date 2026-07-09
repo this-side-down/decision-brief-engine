@@ -134,7 +134,7 @@ Basis items should be grounded in the Capture Layer where practical. Entries tha
 
 ## Eval gate expectations
 
-Future eval gates (issue #91) should verify:
+Eval gates are implemented in `src/evaluation/decisionTraceChecks.ts` (`evaluateDecisionTraceReadiness`), mirroring the Capture Layer's `evaluateStructuralReadiness` gate. They verify:
 
 - Every recommendation in the Decision Brief has a corresponding `DecisionTraceEntry` with `kind: "recommendation"`.
 - Every next step in the Decision Brief has a corresponding `DecisionTraceEntry` with `kind: "next_step"`.
@@ -143,8 +143,9 @@ Future eval gates (issue #91) should verify:
 - Every entry has at least one `would_change_if` condition.
 - Entries whose `basis` fields are entirely empty are treated as failing the structural gate.
 - `would_change_if` conditions that are generic (for example, "if new information becomes available") are treated as weak or failing.
+- `basis.intent` and basis array items are checked for groundedness against the corresponding Capture Layer fields, where practical.
 
-These gates are documented here for design consistency. They are not implemented in this document.
+See [`docs/ai/decision-trace-eval-gates.md`](../ai/decision-trace-eval-gates.md) for the full gate reference, rationale groundedness definition, and how to run the supporting tests. The three public gallery examples in `fixtures/examples/*/expected-decision-trace.json` are explicit, hand-authored fixtures that pass this gate and are covered by `src/evaluation/decisionTraceChecks.test.ts`.
 
 ## Related
 

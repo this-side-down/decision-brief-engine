@@ -11,6 +11,7 @@ import {
   evaluateStructuralReadiness,
   validateCaptureLayerObject,
 } from "../../evaluation/captureLayerChecks";
+import { evaluateDecisionTraceReadiness } from "../../evaluation/decisionTraceChecks";
 import { CAPTURE_LAYER_FIELDS } from "./types";
 import { mockModelAdapter } from "./mockModelAdapter";
 
@@ -67,8 +68,16 @@ describe("mockModelAdapter demo gallery mock flow", () => {
       expect(result.markdown).toBe(fixture.expectedDecisionBrief);
       expect(result.markdown).not.toMatch(/```/);
 
-      expect(Array.isArray(result.decisionTrace.entries)).toBe(true);
-      expect(result.decisionTrace.created_at).toBeTruthy();
+      expect(result.decisionTrace).toEqual(fixture.expectedDecisionTrace);
+
+      const traceReadiness = evaluateDecisionTraceReadiness(
+        captureLayer,
+        result.decisionTrace,
+      );
+      expect(
+        traceReadiness.pass,
+        JSON.stringify(traceReadiness.checks.filter((c) => !c.pass)),
+      ).toBe(true);
     },
   );
 

@@ -1,0 +1,165 @@
+{
+  "entries": [
+    {
+      "statement": "Assign a single move owner, submit pet paperwork immediately, confirm elevator slot and mover quote, and target a mid-month move with explicit storage plan for the couch only if painter timing slips.",
+      "kind": "recommendation",
+      "basis": {
+        "intent": "Confirm a workable move date window",
+        "supporting_evidence": [
+          "Partner visa renewal appointment is the week before the preferred move",
+          "Overlap rent for 12th–30th is straining the budget"
+        ],
+        "assumptions_relied_on": [
+          "Pet paperwork can clear before move-in if submitted immediately",
+          "Movers will hold a cancellable slot once elevator time is confirmed"
+        ],
+        "risks_addressed": [
+          "Unclear ownership could leave utilities or address changes undone"
+        ],
+        "risks_accepted": [
+          "Painter slip could force storage costs or overlap rent extension"
+        ],
+        "constraints_respected": [
+          "New lease starts the 12th; old lease ends the 30th",
+          "Building requires pet registration before keys"
+        ],
+        "tradeoffs": [
+          "Mid-month move reduces painter risk but increases overlap rent"
+        ],
+        "alternatives_considered": [
+          "Delay move to the 22nd to reduce overlap but risk visa timing and painter slip"
+        ],
+        "missing_context_caveats": [
+          "Painter completion commitment"
+        ]
+      },
+      "confidence": "Medium",
+      "would_change_if": [
+        "If painters confirm they will not finish by the 10th, forcing storage regardless of move date.",
+        "If the visa outcome is delayed past the preferred move window."
+      ]
+    },
+    {
+      "statement": "Name one owner for the move checklist today",
+      "kind": "next_step",
+      "basis": {
+        "intent": "Assign clear owners for utilities, address changes, and mover booking",
+        "supporting_evidence": [],
+        "assumptions_relied_on": [],
+        "risks_addressed": [
+          "Unclear ownership could leave utilities or address changes undone"
+        ],
+        "risks_accepted": [],
+        "constraints_respected": [],
+        "tradeoffs": [],
+        "alternatives_considered": [],
+        "missing_context_caveats": []
+      },
+      "confidence": "Medium",
+      "would_change_if": [
+        "If both partners cannot agree on an owner today."
+      ]
+    },
+    {
+      "statement": "Submit pet records and deposit to building management",
+      "kind": "next_step",
+      "basis": {
+        "intent": "Meet building pet and lease requirements before keys",
+        "supporting_evidence": [
+          "Building stated keys depend on pet deposit and registration"
+        ],
+        "assumptions_relied_on": [
+          "Pet paperwork can clear before move-in if submitted immediately"
+        ],
+        "risks_addressed": [],
+        "risks_accepted": [],
+        "constraints_respected": [
+          "Building requires pet registration before keys"
+        ],
+        "tradeoffs": [],
+        "alternatives_considered": [],
+        "missing_context_caveats": [
+          "Confirmed pet approval timeline from building management"
+        ]
+      },
+      "confidence": "Medium",
+      "would_change_if": [
+        "If building management confirms pet approval will take longer than the move date allows."
+      ]
+    },
+    {
+      "statement": "Request elevator slot and locked mover quote with cancellation terms",
+      "kind": "next_step",
+      "basis": {
+        "intent": "Stay within a $4–5k mover and deposit budget",
+        "supporting_evidence": [
+          "Movers quoted extra if hoist is required for the small freight elevator"
+        ],
+        "assumptions_relied_on": [],
+        "risks_addressed": [
+          "Elevator hoist surcharge could blow the mover budget"
+        ],
+        "risks_accepted": [],
+        "constraints_respected": [
+          "Freight elevator slot must be confirmed before mover booking"
+        ],
+        "tradeoffs": [],
+        "alternatives_considered": [],
+        "missing_context_caveats": [
+          "Final mover quote with elevator constraints"
+        ]
+      },
+      "confidence": "Medium",
+      "would_change_if": [
+        "If the locked mover quote exceeds the $4–5k budget once the hoist surcharge is included."
+      ]
+    },
+    {
+      "statement": "Decide sell-vs-store for the couch once storage cost is known",
+      "kind": "next_step",
+      "basis": {
+        "intent": "Stay within a $4–5k mover and deposit budget",
+        "supporting_evidence": [],
+        "assumptions_relied_on": [],
+        "risks_addressed": [],
+        "risks_accepted": [],
+        "constraints_respected": [],
+        "tradeoffs": [
+          "Selling the couch saves storage cost but removes fallback furniture"
+        ],
+        "alternatives_considered": [],
+        "missing_context_caveats": []
+      },
+      "confidence": "Low",
+      "would_change_if": [
+        "If storage cost comes back low enough to make keeping the couch affordable."
+      ]
+    },
+    {
+      "statement": "Hold a 30-minute sequencing review after visa appointment",
+      "kind": "next_step",
+      "basis": {
+        "intent": "Confirm a workable move date window",
+        "supporting_evidence": [
+          "Partner visa renewal appointment is the week before the preferred move"
+        ],
+        "assumptions_relied_on": [],
+        "risks_addressed": [],
+        "risks_accepted": [
+          "Visa delay could block lease signing in both names and utility setup"
+        ],
+        "constraints_respected": [],
+        "tradeoffs": [],
+        "alternatives_considered": [],
+        "missing_context_caveats": [
+          "Visa renewal outcome date"
+        ]
+      },
+      "confidence": "Low",
+      "would_change_if": [
+        "If the visa appointment outcome is delayed past the planned review date."
+      ]
+    }
+  ],
+  "created_at": "2026-07-09T00:00:00.000Z"
+}

@@ -56,3 +56,12 @@ Current leaning from Product is Option C, but Engineering prefers Option A and P
 - Hiding unresolved dependencies.
 - Turning a sequencing decision into a product strategy decision.
 - Recommending a launch path without naming readiness requirements.
+
+## Expected Decision Trace qualities (v0.2)
+
+If Decision Trace is generated for this case (see [`decision-trace-eval-gates.md`](../../docs/ai/decision-trace-eval-gates.md)):
+
+- The recommendation entry's `alternatives_considered` names Options A and B with brief reasoning for why the limited CS-managed rollout was chosen instead.
+- `risks_accepted` or `risks_addressed` names the ownership-gap and support-load risks directly, since they are the central tension in this scenario.
+- The next-step entry for assigning an owner is grounded in `missing_context` (rollout owner), not invented as a standalone idea.
+- `would_change_if` names a specific condition, such as CSV severity turning out to block all three CS-managed accounts, not a generic "if the situation changes."

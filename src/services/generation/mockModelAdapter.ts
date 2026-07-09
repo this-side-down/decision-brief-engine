@@ -7,6 +7,7 @@ import { parseDemoExampleId } from "../../data/demoExamples";
 import {
   MOCK_CAPTURE_LAYERS_BY_EXAMPLE_ID,
   MOCK_DECISION_BRIEFS_BY_EXAMPLE_ID,
+  MOCK_DECISION_TRACES_BY_EXAMPLE_ID,
 } from "../../data/exampleFixtures";
 import type {
   DecisionBriefResult,
@@ -90,6 +91,13 @@ function buildMockCaptureLayer(
   };
 }
 
+/**
+ * Fallback Decision Trace generator used only for non-demo mock input (arbitrary
+ * pasted notes without a matching gallery fixture). The three public gallery
+ * examples use explicit, hand-authored fixtures in fixtures/examples/*\/expected-decision-trace.json
+ * instead of this generated shape, so expected rationale stays readable and
+ * verifiable rather than opaque generated output.
+ */
 function buildMockDecisionTrace(captureLayer: CaptureLayer): DecisionTrace {
   const now = new Date().toISOString();
   const entries: DecisionTraceEntry[] = [];
@@ -226,7 +234,10 @@ export const mockModelAdapter: ModelAdapter = {
       throw new Error("Mock Decision Brief generation returned empty Markdown.");
     }
 
-    const decisionTrace = buildMockDecisionTrace(input.captureLayer);
+    const demoExampleId = parseDemoExampleId(input.sourceLabel);
+    const decisionTrace = demoExampleId
+      ? MOCK_DECISION_TRACES_BY_EXAMPLE_ID[demoExampleId]
+      : buildMockDecisionTrace(input.captureLayer);
 
     return { markdown, decisionTrace };
   },

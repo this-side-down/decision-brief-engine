@@ -1,0 +1,138 @@
+{
+  "entries": [
+    {
+      "statement": "Ship a lightweight health-check and model status strip—validate endpoint, confirm model availability, run one short generation smoke test, and explain failures in plain language—before investing in a full wizard.",
+      "kind": "recommendation",
+      "basis": {
+        "intent": "Reduce setup confusion and opaque failure states",
+        "supporting_evidence": [
+          "Three support threads in two weeks involved local setup confusion",
+          "An internal demo failed because the required model was not pulled",
+          "Engineering estimates endpoint validation as straightforward and smoke test as medium effort"
+        ],
+        "assumptions_relied_on": [
+          "Most setup failures are endpoint, model, or port mismatches rather than Capture Layer logic bugs",
+          "A short generation smoke test is more trustworthy than endpoint ping alone"
+        ],
+        "risks_addressed": [
+          "Health checks may produce false positives or false negatives"
+        ],
+        "risks_accepted": [
+          "Maintenance burden if local runtime APIs change frequently"
+        ],
+        "constraints_respected": [
+          "Mock demo remains the public default; local runtime is not exposed in visitor UI",
+          "Engineering has limited capacity before the next Capture Layer quality push"
+        ],
+        "tradeoffs": [
+          "Design wants a fast workflow; support wants explicit readiness signals"
+        ],
+        "alternatives_considered": [
+          "Build a guided first-run wizard with install checks, model pull confirmation, and plain-language failures",
+          "Improve documentation and troubleshooting only, with no in-product flow"
+        ],
+        "missing_context_caveats": [
+          "Engineering estimate for status strip vs wizard"
+        ]
+      },
+      "confidence": "Medium",
+      "would_change_if": [
+        "If support volume for setup failures does not drop after the status strip ships.",
+        "If engineering estimates a status strip at wizard-level effort once scoped."
+      ]
+    },
+    {
+      "statement": "Scope a one-sprint status strip with endpoint, model, and smoke-test checks",
+      "kind": "next_step",
+      "basis": {
+        "intent": "Avoid pulling engineering away from Capture Layer quality work",
+        "supporting_evidence": [],
+        "assumptions_relied_on": [],
+        "risks_addressed": [],
+        "risks_accepted": [],
+        "constraints_respected": [
+          "Engineering has limited capacity before the next Capture Layer quality push"
+        ],
+        "tradeoffs": [],
+        "alternatives_considered": [],
+        "missing_context_caveats": [
+          "Engineering estimate for status strip vs wizard"
+        ]
+      },
+      "confidence": "Medium",
+      "would_change_if": [
+        "If engineering scoping reveals the status strip needs more than one sprint."
+      ]
+    },
+    {
+      "statement": "Define plain-language failure copy for the top three setup failure modes",
+      "kind": "next_step",
+      "basis": {
+        "intent": "Reduce setup confusion and opaque failure states",
+        "supporting_evidence": [
+          "A documentation update helped one user but not a port-mismatch case"
+        ],
+        "assumptions_relied_on": [],
+        "risks_addressed": [],
+        "risks_accepted": [],
+        "constraints_respected": [],
+        "tradeoffs": [],
+        "alternatives_considered": [],
+        "missing_context_caveats": [
+          "Support ticket taxonomy for setup vs generation failures"
+        ]
+      },
+      "confidence": "Low",
+      "would_change_if": [
+        "If the support ticket taxonomy shows different top failure modes than assumed."
+      ]
+    },
+    {
+      "statement": "Measure support volume for four weeks after release",
+      "kind": "next_step",
+      "basis": {
+        "intent": "Reduce setup confusion and opaque failure states",
+        "supporting_evidence": [
+          "Three support threads in two weeks involved local setup confusion"
+        ],
+        "assumptions_relied_on": [],
+        "risks_addressed": [],
+        "risks_accepted": [],
+        "constraints_respected": [],
+        "tradeoffs": [],
+        "alternatives_considered": [],
+        "missing_context_caveats": [
+          "Quantified local vs mock usage among active users"
+        ]
+      },
+      "confidence": "Medium",
+      "would_change_if": [
+        "If support volume does not measurably drop within the four-week window."
+      ]
+    },
+    {
+      "statement": "Revisit a guided wizard only if setup-related tickets remain high",
+      "kind": "next_step",
+      "basis": {
+        "intent": "Make the local-first generation path credible for power users",
+        "supporting_evidence": [],
+        "assumptions_relied_on": [],
+        "risks_addressed": [],
+        "risks_accepted": [
+          "Scope could creep into model management and broad local-stack support"
+        ],
+        "constraints_respected": [],
+        "tradeoffs": [],
+        "alternatives_considered": [
+          "Build a guided first-run wizard with install checks, model pull confirmation, and plain-language failures"
+        ],
+        "missing_context_caveats": []
+      },
+      "confidence": "Low",
+      "would_change_if": [
+        "If setup-related tickets remain high after the status strip and failure-copy updates ship."
+      ]
+    }
+  ],
+  "created_at": "2026-07-09T00:00:00.000Z"
+}

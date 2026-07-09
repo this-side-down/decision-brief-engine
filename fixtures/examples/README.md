@@ -12,6 +12,7 @@ Each example lives under `fixtures/examples/<example-id>/`:
 | `messy-notes.md` | Raw input loaded by the gallery |
 | `expected-capture-layer.json` | Structured baseline for mock Capture Layer output and schema tests |
 | `expected-decision-brief.md` | Final mock Decision Brief output for the public demo |
+| `expected-decision-trace.json` | Explicit, hand-authored `DecisionTrace` baseline for mock output and structural readiness tests (see [`decision-trace-eval-gates.md`](../../docs/ai/decision-trace-eval-gates.md)) |
 
 ## Featured examples
 

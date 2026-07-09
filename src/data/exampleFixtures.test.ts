@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { validateCaptureLayerObject } from "../evaluation/captureLayerChecks";
 import { evaluateStructuralReadiness } from "../evaluation/captureLayerChecks";
+import { evaluateDecisionTraceReadiness } from "../evaluation/decisionTraceChecks";
 import { EXAMPLE_FIXTURES } from "./exampleFixtures";
 
 const DEFAULT_STRUCTURAL_EXPECTATIONS = {
@@ -41,6 +42,22 @@ describe("exampleFixtures", () => {
         DEFAULT_STRUCTURAL_EXPECTATIONS,
       );
       expect(structural.pass, JSON.stringify(structural.checks)).toBe(true);
+    }
+  });
+
+  it("has an expected Decision Trace that passes structural readiness for every example", () => {
+    for (const fixture of EXAMPLE_FIXTURES) {
+      expect(fixture.expectedDecisionTrace.entries.length).toBeGreaterThan(0);
+      expect(fixture.expectedDecisionTrace.created_at.trim().length).toBeGreaterThan(0);
+
+      const traceReadiness = evaluateDecisionTraceReadiness(
+        fixture.expectedCaptureLayer,
+        fixture.expectedDecisionTrace,
+      );
+      expect(
+        traceReadiness.pass,
+        JSON.stringify(traceReadiness.checks.filter((check) => !check.pass)),
+      ).toBe(true);
     }
   });
 });

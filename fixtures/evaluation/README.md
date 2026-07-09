@@ -56,6 +56,12 @@ Record comparable rows in `browser-model-results.md`.
 - `customer-interview-synthesis.md`: Product
 - `ambiguous-stakeholder-conversation.md`: Strategy
 
+## Decision Trace fixtures and gates (#91)
+
+The three public gallery examples (`fixtures/examples/*/expected-decision-trace.json`) have explicit, hand-authored `DecisionTrace` fixtures and an automated structural readiness gate. See [`docs/ai/decision-trace-eval-gates.md`](../../docs/ai/decision-trace-eval-gates.md) for rationale groundedness, change-condition usefulness, and recommendation-to-Capture-Layer traceability dimensions, and `src/evaluation/decisionTraceChecks.ts` for the implementation. The manual scorecard above includes optional v0.2 rows for Decision Trace review when a trace is generated for a case.
+
+All five fixture docs in the map above (`product-prioritization.md`, `strategy-tradeoff.md`, `execution-planning.md`, `customer-interview-synthesis.md`, `ambiguous-stakeholder-conversation.md`) include a short "Expected Decision Trace qualities (v0.2)" section describing expected rationale groundedness, risk coverage, and change-condition specificity for that case. These are prose expectations for manual review, not JSON fixtures — the repo's only `DecisionTrace` JSON fixture convention is the gallery examples above, since those are the fixtures actually exercised by `mockModelAdapter` and covered by automated tests. No fixture doc is excluded from this update.
+
 ## Notes
 
 - Mock scores show wiring readiness; Ollama/WebGPU scores are local quality signals, not production certification.

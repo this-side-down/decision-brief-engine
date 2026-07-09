@@ -47,3 +47,12 @@ Use the structured reference for reviewer expectations:
 - Ignoring roadmap risk to the GC product.
 - Treating specialty trade expansion as validated market demand.
 - Omitting sales-language and expectation-setting risk.
+
+## Expected Decision Trace qualities (v0.2)
+
+If Decision Trace is generated for this case (see [`decision-trace-eval-gates.md`](../../docs/ai/decision-trace-eval-gates.md)):
+
+- The pilot recommendation's trace entry cites design-partner and market-signal evidence from the transcript, not invented usage data.
+- Sales-framing and roadmap-slip risks appear in `risks_addressed` or `risks_accepted`, not omitted.
+- `would_change_if` names specific pilot-outcome conditions (for example, a specific design-partner signal or success-criteria miss), not a generic "if the market changes."
+- Next-step entries for design-partner identification and success-criteria definition are grounded in `missing_context` and `open_questions` from the Capture Layer.
