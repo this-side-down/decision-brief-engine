@@ -1,15 +1,19 @@
 import type { CaptureLayer } from "../types/captureLayer";
 import type { BriefTypeId } from "../types/brief";
+import type { DecisionTrace } from "../types/decisionTrace";
 import householdMoveCaptureLayer from "../../fixtures/examples/household-move-planning/expected-capture-layer.json";
 import householdMoveBrief from "../../fixtures/examples/household-move-planning/expected-decision-brief.md?raw";
+import householdMoveDecisionTrace from "../../fixtures/examples/household-move-planning/expected-decision-trace.json";
 import householdMoveMetadata from "../../fixtures/examples/household-move-planning/metadata.json";
 import householdMoveNotes from "../../fixtures/examples/household-move-planning/messy-notes.md?raw";
 import localInferenceCaptureLayer from "../../fixtures/examples/local-inference-setup-flow/expected-capture-layer.json";
 import localInferenceBrief from "../../fixtures/examples/local-inference-setup-flow/expected-decision-brief.md?raw";
+import localInferenceDecisionTrace from "../../fixtures/examples/local-inference-setup-flow/expected-decision-trace.json";
 import localInferenceMetadata from "../../fixtures/examples/local-inference-setup-flow/metadata.json";
 import localInferenceNotes from "../../fixtures/examples/local-inference-setup-flow/messy-notes.md?raw";
 import q4WorkforceCaptureLayer from "../../fixtures/examples/q4-workforce-allocation/expected-capture-layer.json";
 import q4WorkforceBrief from "../../fixtures/examples/q4-workforce-allocation/expected-decision-brief.md?raw";
+import q4WorkforceDecisionTrace from "../../fixtures/examples/q4-workforce-allocation/expected-decision-trace.json";
 import q4WorkforceMetadata from "../../fixtures/examples/q4-workforce-allocation/metadata.json";
 import q4WorkforceNotes from "../../fixtures/examples/q4-workforce-allocation/messy-notes.md?raw";
 
@@ -31,6 +35,7 @@ export type ExampleFixture = {
   rawNotes: string;
   expectedCaptureLayer: CaptureLayer;
   expectedDecisionBrief: string;
+  expectedDecisionTrace: DecisionTrace;
 };
 
 const EXAMPLE_FIXTURE_ENTRIES: ExampleFixture[] = [
@@ -39,18 +44,21 @@ const EXAMPLE_FIXTURE_ENTRIES: ExampleFixture[] = [
     rawNotes: q4WorkforceNotes.trim(),
     expectedCaptureLayer: q4WorkforceCaptureLayer as CaptureLayer,
     expectedDecisionBrief: q4WorkforceBrief.trim(),
+    expectedDecisionTrace: q4WorkforceDecisionTrace as DecisionTrace,
   },
   {
     metadata: localInferenceMetadata as ExampleFixtureMetadata,
     rawNotes: localInferenceNotes.trim(),
     expectedCaptureLayer: localInferenceCaptureLayer as CaptureLayer,
     expectedDecisionBrief: localInferenceBrief.trim(),
+    expectedDecisionTrace: localInferenceDecisionTrace as DecisionTrace,
   },
   {
     metadata: householdMoveMetadata as ExampleFixtureMetadata,
     rawNotes: householdMoveNotes.trim(),
     expectedCaptureLayer: householdMoveCaptureLayer as CaptureLayer,
     expectedDecisionBrief: householdMoveBrief.trim(),
+    expectedDecisionTrace: householdMoveDecisionTrace as DecisionTrace,
   },
 ];
 
@@ -69,6 +77,13 @@ export const MOCK_DECISION_BRIEFS_BY_EXAMPLE_ID = Object.fromEntries(
     fixture.expectedDecisionBrief,
   ]),
 ) as Record<DemoExampleId, string>;
+
+export const MOCK_DECISION_TRACES_BY_EXAMPLE_ID = Object.fromEntries(
+  EXAMPLE_FIXTURE_ENTRIES.map((fixture) => [
+    fixture.metadata.id,
+    fixture.expectedDecisionTrace,
+  ]),
+) as Record<DemoExampleId, DecisionTrace>;
 
 export function getExampleFixture(
   exampleId: DemoExampleId,

@@ -24,6 +24,8 @@ Do not compare these outputs to proprietary hosted models in the repository.
 | Recommendation grounding | 0-2 | Recommendation candidate or final recommendation is grounded in the notes and Capture Layer. |
 | Confidence calibration | 0-2 | Confidence reflects ambiguity, gaps, and source quality. |
 | Brief usefulness | 0-2 | Markdown brief is structured, readable, and useful as an exported artifact. |
+| Decision Trace groundedness (v0.2, if trace was generated) | 0-2 | Each trace entry's basis cites Capture Layer content rather than invented facts; see `src/evaluation/decisionTraceChecks.ts` for the automated version of this check. |
+| Decision Trace change-condition usefulness (v0.2, if trace was generated) | 0-2 | `would_change_if` conditions are specific and named per entry, not generic placeholders. |
 
 ## Review notes
 

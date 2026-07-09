@@ -56,6 +56,10 @@ Record comparable rows in `browser-model-results.md`.
 - `customer-interview-synthesis.md`: Product
 - `ambiguous-stakeholder-conversation.md`: Strategy
 
+## Decision Trace fixtures and gates (#91)
+
+The three public gallery examples (`fixtures/examples/*/expected-decision-trace.json`) have explicit, hand-authored `DecisionTrace` fixtures and an automated structural readiness gate. See [`docs/ai/decision-trace-eval-gates.md`](../../docs/ai/decision-trace-eval-gates.md) for rationale groundedness, change-condition usefulness, and recommendation-to-Capture-Layer traceability dimensions, and `src/evaluation/decisionTraceChecks.ts` for the implementation. The manual scorecard above includes optional v0.2 rows for Decision Trace review when a trace is generated for a case.
+
 ## Notes
 
 - Mock scores show wiring readiness; Ollama/WebGPU scores are local quality signals, not production certification.

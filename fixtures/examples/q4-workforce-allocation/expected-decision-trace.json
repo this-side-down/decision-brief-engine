@@ -1,0 +1,203 @@
+{
+  "entries": [
+    {
+      "statement": "Assign Marcus to the hospital project with an explicit multifamily handoff plan, promote Carlos to assistant superintendent on the school project only with Safety/Training sign-off, and activate an HR backstop hire for superintendent coverage—with warehouse work delayed or concrete scope subcontracted if float cannot be protected.",
+      "kind": "recommendation",
+      "basis": {
+        "intent": "Staff highest-risk projects with qualified field leadership",
+        "supporting_evidence": [
+          "Hospital client is asking for a named senior superintendent with healthcare experience",
+          "Multifamily closeout is slipping and keeping Marcus longer than planned",
+          "HR has two superintendent candidates but neither can start next week"
+        ],
+        "assumptions_relied_on": [
+          "The hospital project carries the highest delivery and client risk",
+          "Promotion candidate Carlos can succeed with support and training",
+          "HR candidates cannot start immediately enough for the hospital date"
+        ],
+        "risks_addressed": [
+          "Overloading senior superintendents such as Marcus",
+          "Client escalation on hospital or school projects"
+        ],
+        "risks_accepted": [
+          "Schedule penalties if experienced field leadership is pulled",
+          "Weak supervision on lower-priority projects during reallocation"
+        ],
+        "constraints_respected": [
+          "Hospital project start is approaching with a client call requiring a named superintendent",
+          "School schedule has minimal float on key milestones"
+        ],
+        "tradeoffs": [
+          "Hospital client urgency versus school penalty exposure if leadership is moved",
+          "Promoting Carlos quickly versus safety/training readiness"
+        ],
+        "alternatives_considered": [
+          "Hire a traveling superintendent or contract superintendent for the hospital start",
+          "Split superintendent coverage across hospital and school critical paths temporarily"
+        ],
+        "missing_context_caveats": [
+          "Confirmed hospital and school start dates and owner commitments",
+          "Certification and training status for promotion and hospital requirements"
+        ]
+      },
+      "confidence": "Medium",
+      "would_change_if": [
+        "If the hospital owner confirms a start date that no longer requires an immediate named superintendent.",
+        "If Safety/Training does not sign off on Carlos's readiness before the school project needs coverage."
+      ]
+    },
+    {
+      "statement": "Finalize a Q4 staffing matrix before the monthly staffing review",
+      "kind": "next_step",
+      "basis": {
+        "intent": "Make promotion and hiring decisions explicit before client-facing commitments",
+        "supporting_evidence": [
+          "HR has two superintendent candidates but neither can start next week"
+        ],
+        "assumptions_relied_on": [],
+        "risks_addressed": [],
+        "risks_accepted": [],
+        "constraints_respected": [
+          "Decision is needed before the monthly staffing review and Thursday client call"
+        ],
+        "tradeoffs": [],
+        "alternatives_considered": [],
+        "missing_context_caveats": [
+          "Candidate availability and hiring timeline from HR"
+        ]
+      },
+      "confidence": "Medium",
+      "would_change_if": [
+        "If HR provides updated candidate availability before the staffing review."
+      ]
+    },
+    {
+      "statement": "Confirm schedule float with project controls on school and hospital work",
+      "kind": "next_step",
+      "basis": {
+        "intent": "Avoid schedule penalties on the school and hospital work",
+        "supporting_evidence": [
+          "School project controls reports minimal float on structural milestones"
+        ],
+        "assumptions_relied_on": [
+          "Core project dates are not fully movable"
+        ],
+        "risks_addressed": [],
+        "risks_accepted": [],
+        "constraints_respected": [
+          "School schedule has minimal float on key milestones"
+        ],
+        "tradeoffs": [],
+        "alternatives_considered": [],
+        "missing_context_caveats": [
+          "Real schedule float on each affected project"
+        ]
+      },
+      "confidence": "Low",
+      "would_change_if": [
+        "If project controls confirms more float than currently assumed on the school milestones."
+      ]
+    },
+    {
+      "statement": "Decide promotion and foreman backfill plan for Carlos with named owners",
+      "kind": "next_step",
+      "basis": {
+        "intent": "Make promotion and hiring decisions explicit before client-facing commitments",
+        "supporting_evidence": [],
+        "assumptions_relied_on": [
+          "Promotion candidate Carlos can succeed with support and training"
+        ],
+        "risks_addressed": [
+          "Safety and compliance gaps if promotion happens before training is complete"
+        ],
+        "risks_accepted": [],
+        "constraints_respected": [],
+        "tradeoffs": [],
+        "alternatives_considered": [
+          "Promote foreman Carlos to assistant superintendent on the school project with a defined training plan"
+        ],
+        "missing_context_caveats": []
+      },
+      "confidence": "Medium",
+      "would_change_if": [
+        "If Carlos declines the promotion or is not ready before the school project needs coverage."
+      ]
+    },
+    {
+      "statement": "Validate safety and training readiness before any promotion or reassignment",
+      "kind": "next_step",
+      "basis": {
+        "intent": "Protect safety and quality across active jobs",
+        "supporting_evidence": [
+          "Safety/training requirements for Carlos promotion are not yet resolved"
+        ],
+        "assumptions_relied_on": [],
+        "risks_addressed": [
+          "Safety and compliance gaps if promotion happens before training is complete"
+        ],
+        "risks_accepted": [],
+        "constraints_respected": [],
+        "tradeoffs": [],
+        "alternatives_considered": [],
+        "missing_context_caveats": [
+          "Certification and training status for promotion and hospital requirements"
+        ]
+      },
+      "confidence": "Low",
+      "would_change_if": [
+        "If Safety/Training confirms Carlos meets readiness requirements ahead of schedule."
+      ]
+    },
+    {
+      "statement": "Assign HR owner for traveling or contract superintendent hiring path",
+      "kind": "next_step",
+      "basis": {
+        "intent": "Staff highest-risk projects with qualified field leadership",
+        "supporting_evidence": [],
+        "assumptions_relied_on": [],
+        "risks_addressed": [],
+        "risks_accepted": [],
+        "constraints_respected": [
+          "HR candidates cannot start immediately and onboarding is slow"
+        ],
+        "tradeoffs": [],
+        "alternatives_considered": [
+          "Hire a traveling superintendent or contract superintendent for the hospital start"
+        ],
+        "missing_context_caveats": [
+          "Candidate availability and hiring timeline from HR"
+        ]
+      },
+      "confidence": "Medium",
+      "would_change_if": [
+        "If a traveling superintendent candidate is not identified before the hospital start date."
+      ]
+    },
+    {
+      "statement": "Revisit allocation decisions at the next workforce planning meeting",
+      "kind": "next_step",
+      "basis": {
+        "intent": "Avoid burnout and attrition among senior field leaders",
+        "supporting_evidence": [],
+        "assumptions_relied_on": [],
+        "risks_addressed": [],
+        "risks_accepted": [
+          "Attrition from travel fatigue and repeated reassignments"
+        ],
+        "constraints_respected": [],
+        "tradeoffs": [
+          "Protecting senior leaders from burnout versus covering every active job strongly"
+        ],
+        "alternatives_considered": [],
+        "missing_context_caveats": [
+          "Client tolerance for superintendent coverage changes"
+        ]
+      },
+      "confidence": "Low",
+      "would_change_if": [
+        "If the client signals rejection of the current superintendent coverage plan before the next meeting."
+      ]
+    }
+  ],
+  "created_at": "2026-07-09T00:00:00.000Z"
+}

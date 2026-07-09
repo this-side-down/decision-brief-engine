@@ -9,7 +9,11 @@ import type {
 const CONFIDENCE_VALUES = new Set<Confidence>(["High", "Medium", "Low"]);
 const ENTRY_KIND_VALUES = new Set<DecisionTraceEntryKind>(["recommendation", "next_step"]);
 
-const BASIS_ARRAY_FIELDS = [
+/**
+ * Exported so evaluation gates can iterate the same set of basis array fields
+ * without redefining them.
+ */
+export const DECISION_TRACE_BASIS_ARRAY_FIELDS = [
   "supporting_evidence",
   "assumptions_relied_on",
   "risks_addressed",
@@ -36,7 +40,11 @@ const GENERIC_WOULD_CHANGE_IF_PATTERNS: RegExp[] = [
   /^if (the )?(situation|context|circumstances?) (is|are) different\.?$/i,
 ];
 
-function isGenericWouldChangeIf(value: string): boolean {
+/**
+ * Exported so evaluation gates (see src/evaluation/decisionTraceChecks.ts) can reuse
+ * the same generic-condition detection as real-time contract validation.
+ */
+export function isGenericWouldChangeIf(value: string): boolean {
   const trimmed = value.trim();
   return GENERIC_WOULD_CHANGE_IF_PATTERNS.some((p) => p.test(trimmed));
 }
@@ -68,7 +76,7 @@ function validateBasis(raw: unknown, entryIndex: number): DecisionTraceBasis {
     );
   }
 
-  for (const field of BASIS_ARRAY_FIELDS) {
+  for (const field of DECISION_TRACE_BASIS_ARRAY_FIELDS) {
     if (!isStringArray(record[field])) {
       throw new Error(
         `Decision Trace entry[${entryIndex}].basis.${field} must be an array of strings.`,
@@ -76,7 +84,7 @@ function validateBasis(raw: unknown, entryIndex: number): DecisionTraceBasis {
     }
   }
 
-  const allArraysEmpty = BASIS_ARRAY_FIELDS.every(
+  const allArraysEmpty = DECISION_TRACE_BASIS_ARRAY_FIELDS.every(
     (field) => (record[field] as string[]).length === 0,
   );
 
