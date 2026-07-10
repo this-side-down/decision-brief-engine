@@ -12,6 +12,48 @@ This project uses pre-1.0 versioning (`v0.x.y`) for capability milestones rather
 - Deeper eval and benchmarking across low- and high-powered device profiles.
 - Public hosted inference (out of scope until separate data-handling and deployment review).
 
+## v0.2.0 — Decision Trace Milestone
+
+Decision Brief Engine v0.2.0 makes recommendations auditable by adding a structured Decision Trace between the Capture Layer and the final Decision Brief, then refining the UI hierarchy so understanding, judgment, and the portable brief do not compete as peer documents.
+
+### Added
+
+- Decision Trace schema and architecture decision record for traceable recommendation rationale.
+- Single-envelope Decision Brief generation contract that returns both Markdown and structured Decision Trace output.
+- Decision Trace parser and validation for trace entries, confidence, basis fields, and non-generic `would_change_if` conditions.
+- Hand-authored Decision Trace fixtures for the three public gallery examples.
+- Structural readiness gates for Decision Trace coverage, groundedness, confidence, basis completeness, and change-condition usefulness.
+- In-app Traceable Basis UI inside the existing Decision Brief column, with compact progressive disclosure for recommendations and next steps.
+- Markdown export support for Decision Trace, so copied and downloaded briefs remain self-contained and auditable.
+
+### Changed
+
+- Traceable Basis is compact by default and no longer repeats full recommendation or next-step statements as collapsed titles.
+- Capture Layer remains fully visible before brief generation, then becomes secondary behind a compact summary once a Decision Brief exists.
+- Decision Brief is more clearly the primary reading surface after generation.
+
+### Runtime posture
+
+- Mock demo remains the public default.
+- Local Ollama remains the strongest real-generation path for local evaluation.
+- Browser WebGPU remains gated pending quality improvements.
+- Hosted inference remains out of scope.
+
+### Product transparency
+
+- Capture Layer remains the source-of-understanding artifact.
+- Decision Trace becomes the source-of-judgment artifact.
+- Decision Brief remains the portable output artifact.
+- Raw model thinking, hidden reasoning, scratchpad output, and chain-of-thought are not exposed.
+
+### Deferred
+
+- Responsive/narrow viewport improvements, tracked separately in #101.
+- Public hosted inference.
+- WebGPU public ungating.
+- Persistence, accounts, collaboration, and long-lived project history.
+- Option scoring matrices, rationale graphs, or argument-tree UI.
+
 ## v0.1.0 — Public Demo Milestone
 
 Decision Brief Engine v0.1.0 establishes the first coherent public demo milestone.

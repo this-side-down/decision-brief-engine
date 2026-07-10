@@ -2,7 +2,7 @@
 
 Decision Brief Engine is an AI-native product experiment for turning messy notes into structured decision briefs.
 
-Instead of simply summarizing text, it captures underlying intent, decisions, risks, constraints, and unresolved questions before generating executive-ready output. The **Capture Layer** is the user-facing “show your work” artifact. Raw model thinking, hidden reasoning, and chain-of-thought are not exposed.
+Instead of simply summarizing text, it captures underlying intent, decisions, risks, constraints, and unresolved questions before generating executive-ready output. The **Capture Layer** is the user-facing “show your work” artifact for understanding, and the **Decision Trace** makes the final recommendation and next steps auditable back to that captured intent, evidence, assumptions, risks, constraints, and alternatives. Raw model thinking, hidden reasoning, and chain-of-thought are not exposed.
 
 ## Status
 
@@ -14,11 +14,11 @@ The hosted demo runs in Mock mode by default for reliability. Local Ollama is th
 
 v0.1.0 is the first portfolio-ready public demo milestone: example gallery, export polish, Local Ollama health check, and generation telemetry. See [Public demo milestone](docs/product/public-demo-milestone.md) for the full write-up.
 
-## v0.2 planning
+## v0.2 Decision Trace
 
-v0.2 planning is focused on closing the recommendation transparency gap by adding a structured Decision Trace between the Capture Layer and Decision Brief.
+v0.2 closes the recommendation transparency gap by adding a structured Decision Trace between the Capture Layer and Decision Brief, then polishing the UI hierarchy so Capture Layer (understanding), Decision Trace (judgment), and Decision Brief (portable output) read as one flow instead of three peer documents.
 
-The goal is to make recommendations and next steps traceable to captured intent, evidence, assumptions, risks, constraints, alternatives, and missing context without exposing raw model thinking or chain-of-thought.
+Recommendations and next steps are traceable to captured intent, evidence, assumptions, risks, constraints, alternatives, and missing context without exposing raw model thinking or chain-of-thought. Traceable Basis stays compact by default, and Capture Layer becomes secondary behind a compact summary once a Decision Brief exists. See [CHANGELOG.md](CHANGELOG.md) for the full v0.2.0 milestone summary.
 
 See:
 
