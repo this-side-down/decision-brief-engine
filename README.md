@@ -6,9 +6,9 @@ Instead of simply summarizing text, it captures underlying intent, decisions, ri
 
 ## Status
 
-**Current release:** v0.1.0 — Public Demo Milestone  
+**Current release:** v0.2.0 — Decision Trace Milestone  
 **Public demo:** https://decision-brief-engine.vercel.app/  
-**Release notes:** https://github.com/this-side-down/decision-brief-engine/releases/tag/v0.1.0
+**Release notes:** https://github.com/this-side-down/decision-brief-engine/releases/tag/v0.2.0
 
 The hosted demo runs in Mock mode by default for reliability. Local Ollama is the strongest real-generation path for local evaluation. Browser WebGPU remains gated while quality improves.
 
