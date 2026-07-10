@@ -49,6 +49,7 @@ Decision Brief Engine v0.2.0 makes recommendations auditable by adding a structu
 ### Deferred
 
 - Responsive/narrow viewport improvements, tracked separately in #101.
+- Generated workflow UI redesign exploration, tracked separately in #105.
 - Public hosted inference.
 - WebGPU public ungating.
 - Persistence, accounts, collaboration, and long-lived project history.
