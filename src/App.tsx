@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatAppVersionLabel } from "./appVersion";
 import { WorkflowSetupBar } from "./components/WorkflowSetupBar";
+import { CaptureLayerSummary } from "./components/CaptureLayerSummary";
 import { DecisionTraceBasis } from "./components/DecisionTraceBasis";
 import { BrowserInferenceStatus } from "./components/generation/BrowserInferenceStatus";
 import { DownloadDisclosureDialog } from "./components/generation/DownloadDisclosureDialog";
@@ -89,86 +90,6 @@ function EmptyPanel({ label }: { label: string }) {
   return (
     <div className="flex min-h-48 flex-1 items-center justify-center border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-400">
       {label}
-    </div>
-  );
-}
-
-function captureCardTextClassName() {
-  return "mt-2 min-w-0 break-words text-sm leading-6 text-slate-700 [overflow-wrap:anywhere]";
-}
-
-function TextSection({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <section className="min-w-0 rounded border border-slate-200 bg-white p-3">
-      <h3 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-        {label}
-      </h3>
-      <p className={captureCardTextClassName()}>
-        {value || "Not captured yet."}
-      </p>
-    </section>
-  );
-}
-
-function ListSection({
-  items,
-  label,
-}: {
-  items: string[];
-  label: string;
-}) {
-  return (
-    <section className="min-w-0 rounded border border-slate-200 bg-white p-3">
-      <h3 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-        {label}
-      </h3>
-      {items.length > 0 ? (
-        <ul className="mt-2 min-w-0 list-disc space-y-1 pl-4 text-sm leading-6 text-slate-700">
-          {items.map((item) => (
-            <li className="break-words [overflow-wrap:anywhere]" key={item}>
-              {item}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="mt-2 text-sm text-slate-400">Not captured yet.</p>
-      )}
-    </section>
-  );
-}
-
-function CaptureLayerSummary({ captureLayer }: { captureLayer: CaptureLayer }) {
-  return (
-    <div className="min-w-0 space-y-3 border border-slate-200 bg-slate-50 p-4">
-      <div className="flex min-w-0 items-center justify-between gap-3 rounded border border-slate-200 bg-white p-3 text-xs text-slate-600">
-        <span className="shrink-0 font-bold uppercase tracking-wide text-slate-500">
-          Confidence
-        </span>
-        <span className="min-w-0 break-words text-right font-semibold text-slate-900 [overflow-wrap:anywhere]">
-          {captureLayer.confidence}
-        </span>
-      </div>
-      <TextSection label="Stated Decision" value={captureLayer.stated_decision} />
-      <TextSection label="Implied Decision" value={captureLayer.implied_decision} />
-      <TextSection
-        label="Recommendation Candidate"
-        value={captureLayer.recommendation_candidate}
-      />
-      <ListSection label="Missing Context" items={captureLayer.missing_context} />
-      <ListSection label="Open Questions" items={captureLayer.open_questions} />
-      <ListSection label="Assumptions" items={captureLayer.assumptions} />
-      <ListSection label="Risks" items={captureLayer.risks} />
-      <ListSection label="Constraints" items={captureLayer.constraints} />
-      <ListSection
-        label="Suggested Next Steps"
-        items={captureLayer.suggested_next_steps}
-      />
     </div>
   );
 }
@@ -810,7 +731,11 @@ export function App() {
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto">
               {briefSession.captureLayer ? (
-                <CaptureLayerSummary captureLayer={briefSession.captureLayer} />
+                <CaptureLayerSummary
+                  briefType={briefSession.briefType}
+                  captureLayer={briefSession.captureLayer}
+                  hasDecisionBrief={briefSession.decisionBrief !== null}
+                />
               ) : (
                 <EmptyPanel
                   label={
