@@ -1,6 +1,9 @@
 import type { Confidence } from "../types/captureLayer";
 import type { DecisionTrace, DecisionTraceEntry } from "../types/decisionTrace";
-import { groupDecisionTraceEntriesByKind } from "../utils/decisionTraceBasisGrouping";
+import {
+  formatTraceableBasisSummary,
+  groupDecisionTraceEntriesByKind,
+} from "../utils/decisionTraceBasisGrouping";
 
 function basisListClassName() {
   return "mt-1 list-disc space-y-0.5 pl-4 text-xs leading-5 text-slate-600 [overflow-wrap:anywhere]";
@@ -57,15 +60,28 @@ function ConfidenceBadge({ confidence }: { confidence: Confidence }) {
  * native disclosure so the Decision Brief stays skimmable. Reuses the
  * Capture Layer's text/list field styling rather than introducing a new
  * visual language.
+ *
+ * The collapsed summary shows a short, positional label (e.g. "Next step
+ * basis 2") rather than the full `entry.statement`, since that statement
+ * already appears verbatim in the Decision Brief above — repeating it here
+ * as a card title is what made this section read like a second brief. The
+ * full statement is still shown first inside the expanded body so nothing
+ * is hidden, just deferred behind a click.
  */
-export function TraceBasisDisclosure({ entry }: { entry: DecisionTraceEntry }) {
+export function TraceBasisDisclosure({
+  entry,
+  label,
+}: {
+  entry: DecisionTraceEntry;
+  label: string;
+}) {
   const { basis } = entry;
 
   return (
     <details className="group min-w-0 rounded border border-slate-200 bg-white p-2">
       <summary className="flex min-w-0 cursor-pointer list-none items-center justify-between gap-2">
         <span className="min-w-0 flex-1 break-words text-xs font-medium leading-5 text-slate-800 [overflow-wrap:anywhere]">
-          {entry.statement}
+          {label}
         </span>
         <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-400 group-open:text-slate-600">
           Basis
@@ -73,6 +89,7 @@ export function TraceBasisDisclosure({ entry }: { entry: DecisionTraceEntry }) {
       </summary>
       <div className="mt-2 min-w-0 space-y-2 border-t border-slate-100 pt-2">
         <ConfidenceBadge confidence={entry.confidence} />
+        <BasisTextField label="Statement" value={entry.statement} />
         <BasisTextField label="Intent Served" value={basis.intent} />
         <BasisListField label="Supporting Evidence" items={basis.supporting_evidence} />
         <BasisListField label="Assumptions Relied On" items={basis.assumptions_relied_on} />
@@ -97,9 +114,11 @@ export function TraceBasisDisclosure({ entry }: { entry: DecisionTraceEntry }) {
 function TraceEntryGroup({
   title,
   entries,
+  formatEntryLabel,
 }: {
   title: string;
   entries: DecisionTraceEntry[];
+  formatEntryLabel: (index: number) => string;
 }) {
   if (entries.length === 0) {
     return null;
@@ -112,7 +131,11 @@ function TraceEntryGroup({
       </h4>
       <div className="space-y-1.5">
         {entries.map((entry, index) => (
-          <TraceBasisDisclosure entry={entry} key={`${entry.kind}-${index}`} />
+          <TraceBasisDisclosure
+            entry={entry}
+            key={`${entry.kind}-${index}`}
+            label={formatEntryLabel(index)}
+          />
         ))}
       </div>
     </div>
@@ -126,6 +149,15 @@ function TraceEntryGroup({
  * since the brief is an editable raw-Markdown textarea and not a parsed
  * document — this avoids brittle Markdown AST matching while still keeping
  * the trace inside the existing Decision Brief column.
+ *
+ * Closed by default behind a native disclosure: the Decision Brief is the
+ * primary output artifact, and the recommendation/next-step statements
+ * this section provides rationale for are already visible above it, so the
+ * collapsed state only needs to communicate that basis exists (via a
+ * count-only summary — no confidence tally) rather than show it. There is
+ * no fixed-height inner scroll region; once expanded, the surrounding
+ * Decision Brief column/page scrolling handles the content like everything
+ * else in that column.
  *
  * Renders nothing when there is no Decision Trace, and a quiet empty-state
  * note when the trace exists but has no entries.
@@ -149,13 +181,30 @@ export function DecisionTraceBasis({
     );
   }
 
+  const summary = formatTraceableBasisSummary(groups);
+
   return (
-    <div className="mt-3 max-h-56 min-w-0 shrink-0 space-y-3 overflow-y-auto rounded border border-slate-200 bg-slate-50 p-3">
-      <h3 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-        Traceable basis
-      </h3>
-      <TraceEntryGroup entries={groups.recommendations} title="Recommendations" />
-      <TraceEntryGroup entries={groups.nextSteps} title="Next steps" />
-    </div>
+    <details className="group mt-3 min-w-0 shrink-0 rounded border border-slate-200 bg-slate-50 p-3">
+      <summary className="flex min-w-0 cursor-pointer list-none items-center justify-between gap-2">
+        <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+          Traceable basis
+        </span>
+        <span className="shrink-0 text-[10px] font-medium text-slate-400 group-open:text-slate-500">
+          {summary}
+        </span>
+      </summary>
+      <div className="mt-3 min-w-0 space-y-3">
+        <TraceEntryGroup
+          entries={groups.recommendations}
+          formatEntryLabel={() => "Recommendation basis"}
+          title="Recommendations"
+        />
+        <TraceEntryGroup
+          entries={groups.nextSteps}
+          formatEntryLabel={(index) => `Next step basis ${index + 1}`}
+          title="Next steps"
+        />
+      </div>
+    </details>
   );
 }

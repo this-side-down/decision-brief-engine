@@ -1,7 +1,30 @@
 import { describe, expect, it } from "vitest";
 import { EXAMPLE_FIXTURES } from "../data/exampleFixtures";
-import type { DecisionTrace } from "../types/decisionTrace";
-import { groupDecisionTraceEntriesByKind } from "./decisionTraceBasisGrouping";
+import type { DecisionTrace, DecisionTraceEntry } from "../types/decisionTrace";
+import {
+  formatTraceableBasisSummary,
+  groupDecisionTraceEntriesByKind,
+} from "./decisionTraceBasisGrouping";
+
+function makeEntry(kind: DecisionTraceEntry["kind"]): DecisionTraceEntry {
+  return {
+    statement: `${kind} statement`,
+    kind,
+    basis: {
+      intent: "intent",
+      supporting_evidence: [],
+      assumptions_relied_on: [],
+      risks_addressed: [],
+      risks_accepted: [],
+      constraints_respected: [],
+      tradeoffs: [],
+      alternatives_considered: [],
+      missing_context_caveats: [],
+    },
+    confidence: "Medium",
+    would_change_if: [],
+  };
+}
 
 describe("groupDecisionTraceEntriesByKind", () => {
   it("returns null when there is no Decision Trace", () => {
@@ -100,5 +123,73 @@ describe("groupDecisionTraceEntriesByKind", () => {
     expect(groups!.recommendations.map((entry) => entry.statement)).toEqual([
       "recommendation A",
     ]);
+  });
+});
+
+describe("formatTraceableBasisSummary", () => {
+  it("returns an empty string when both groups are empty", () => {
+    expect(formatTraceableBasisSummary({ recommendations: [], nextSteps: [] })).toBe("");
+  });
+
+  it("singularizes a single recommendation basis", () => {
+    expect(
+      formatTraceableBasisSummary({
+        recommendations: [makeEntry("recommendation")],
+        nextSteps: [],
+      }),
+    ).toBe("1 recommendation basis");
+  });
+
+  it("pluralizes multiple recommendation bases", () => {
+    expect(
+      formatTraceableBasisSummary({
+        recommendations: [makeEntry("recommendation"), makeEntry("recommendation")],
+        nextSteps: [],
+      }),
+    ).toBe("2 recommendation bases");
+  });
+
+  it("singularizes a single next-step basis", () => {
+    expect(
+      formatTraceableBasisSummary({
+        recommendations: [],
+        nextSteps: [makeEntry("next_step")],
+      }),
+    ).toBe("1 next-step basis");
+  });
+
+  it("pluralizes multiple next-step bases", () => {
+    expect(
+      formatTraceableBasisSummary({
+        recommendations: [],
+        nextSteps: [
+          makeEntry("next_step"),
+          makeEntry("next_step"),
+          makeEntry("next_step"),
+          makeEntry("next_step"),
+          makeEntry("next_step"),
+          makeEntry("next_step"),
+        ],
+      }),
+    ).toBe("6 next-step bases");
+  });
+
+  it("combines both clauses with a comma when both groups are non-empty", () => {
+    expect(
+      formatTraceableBasisSummary({
+        recommendations: [makeEntry("recommendation")],
+        nextSteps: [makeEntry("next_step"), makeEntry("next_step")],
+      }),
+    ).toBe("1 recommendation basis, 2 next-step bases");
+  });
+
+  it("does not include any confidence distribution or tally", () => {
+    const summary = formatTraceableBasisSummary({
+      recommendations: [makeEntry("recommendation")],
+      nextSteps: [makeEntry("next_step")],
+    });
+
+    expect(summary).not.toMatch(/confidence/i);
+    expect(summary).not.toMatch(/high|medium|low/i);
   });
 });
