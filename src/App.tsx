@@ -846,7 +846,7 @@ export function App() {
               </h2>
               <StatusBadge label={decisionBriefStatus} />
             </div>
-            <div className="flex min-h-0 flex-1 flex-col">
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
               {briefSession.decisionBrief ? (
                 <>
                   <DecisionBriefEditor

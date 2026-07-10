@@ -28,3 +28,40 @@ export function groupDecisionTraceEntriesByKind(
 
   return { recommendations, nextSteps };
 }
+
+/**
+ * Formats a single "N recommendation basis / N next-step bases" clause for
+ * the collapsed Traceable Basis summary. Intentionally has no confidence
+ * distribution or tally — counts only.
+ */
+function formatBasisCountClause(count: number, kindLabel: string, pluralKindLabel: string): string {
+  return `${count} ${count === 1 ? kindLabel : pluralKindLabel}`;
+}
+
+/**
+ * Builds the compact, count-only summary text shown on the collapsed
+ * top-level Traceable Basis `<details>` (e.g. "1 recommendation basis, 6
+ * next-step bases"). Returns an empty string when there is nothing to
+ * summarize, so callers can fall back to a quiet empty-state label.
+ */
+export function formatTraceableBasisSummary(groups: DecisionTraceBasisGroups): string {
+  const clauses: string[] = [];
+
+  if (groups.recommendations.length > 0) {
+    clauses.push(
+      formatBasisCountClause(
+        groups.recommendations.length,
+        "recommendation basis",
+        "recommendation bases",
+      ),
+    );
+  }
+
+  if (groups.nextSteps.length > 0) {
+    clauses.push(
+      formatBasisCountClause(groups.nextSteps.length, "next-step basis", "next-step bases"),
+    );
+  }
+
+  return clauses.join(", ");
+}
