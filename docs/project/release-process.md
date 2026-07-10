@@ -40,7 +40,7 @@ Use the following milestone map unless a later ADR or issue explicitly changes i
 | Version | Milestone |
 | --- | --- |
 | `v0.1.0` | Public demo milestone: mock default, example gallery, export polish, Local Ollama dev tools, gated WebGPU, generation telemetry |
-| `v0.2.0` | Reserved for the next capability milestone after `v0.1.0` is tagged |
+| `v0.2.0` | Decision Trace milestone: structured recommendation rationale, trace fixtures/eval gates, in-app traceable basis UI, trace-aware Markdown export, and IA polish for understanding/judgment/output hierarchy |
 
 Intermediate `0.x.y` releases should note whether they change product behavior or docs only.
 
