@@ -6,11 +6,13 @@ Instead of simply summarizing text, it captures underlying intent, decisions, ri
 
 ## Status
 
-**Current release:** v0.2.0 — Decision Trace Milestone  
+**Current release:** v0.2.1 — Decision Brief Workspace and Writing Quality Polish  
 **Public demo:** https://decision-brief-engine.vercel.app/  
-**Release notes:** https://github.com/this-side-down/decision-brief-engine/releases/tag/v0.2.0
+**Release notes:** https://github.com/this-side-down/decision-brief-engine/releases/tag/v0.2.1
 
 The hosted demo runs in Mock mode by default for reliability. Local Ollama is the strongest real-generation path for local evaluation. Browser WebGPU remains gated while quality improves.
+
+v0.2.1 polishes the Decision Brief workspace with a brief-first generated layout, rendered Preview and explicit Edit Markdown mode, contained Preview scrolling, scrollable expanded Traceable Basis, nested disclosure chevrons, and clearer singleton basis fields. Writing quality improves through decision-grade fixtures, deterministic checks, and aligned recommendation wording across Capture Layer, Decision Brief, and Decision Trace.
 
 v0.1.0 is the first portfolio-ready public demo milestone: example gallery, export polish, Local Ollama health check, and generation telemetry. See [Public demo milestone](docs/product/public-demo-milestone.md) for the full write-up.
 
