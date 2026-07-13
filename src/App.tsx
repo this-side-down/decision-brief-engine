@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { formatAppVersionLabel } from "./appVersion";
 import { WorkflowSetupBar } from "./components/WorkflowSetupBar";
 import { CaptureLayerSummary } from "./components/CaptureLayerSummary";
+import { DecisionBriefPreview } from "./components/DecisionBriefPreview";
 import { DecisionTraceBasis } from "./components/DecisionTraceBasis";
 import { DisclosureChevron } from "./components/DisclosureChevron";
 import { BrowserInferenceStatus } from "./components/generation/BrowserInferenceStatus";
@@ -58,6 +59,8 @@ type PendingBriefGenerate = {
 
 type PendingGenerate = PendingCaptureGenerate | PendingBriefGenerate;
 
+type DecisionBriefViewMode = "preview" | "markdown";
+
 function createInitialSession(): BriefSession {
   const now = new Date().toISOString();
 
@@ -109,6 +112,45 @@ function DecisionBriefEditor({
       onChange={(event) => onChange(event.target.value)}
       value={markdown}
     />
+  );
+}
+
+function DecisionBriefViewModeControl({
+  mode,
+  onModeChange,
+}: {
+  mode: DecisionBriefViewMode;
+  onModeChange: (mode: DecisionBriefViewMode) => void;
+}) {
+  function buttonClassName(selected: boolean) {
+    return selected
+      ? "bg-white text-slate-900 shadow-sm"
+      : "text-slate-500 hover:text-slate-700";
+  }
+
+  return (
+    <div
+      aria-label="Decision Brief view mode"
+      className="flex shrink-0 rounded border border-slate-200 bg-slate-50 p-0.5"
+      role="group"
+    >
+      <button
+        aria-pressed={mode === "preview"}
+        className={`rounded px-2.5 py-1 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/10 ${buttonClassName(mode === "preview")}`}
+        onClick={() => onModeChange("preview")}
+        type="button"
+      >
+        Preview
+      </button>
+      <button
+        aria-pressed={mode === "markdown"}
+        className={`rounded px-2.5 py-1 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/10 ${buttonClassName(mode === "markdown")}`}
+        onClick={() => onModeChange("markdown")}
+        type="button"
+      >
+        Markdown
+      </button>
+    </div>
   );
 }
 
@@ -167,6 +209,8 @@ export function App() {
   const [pendingGenerate, setPendingGenerate] = useState<PendingGenerate | null>(
     null,
   );
+  const [decisionBriefViewMode, setDecisionBriefViewMode] =
+    useState<DecisionBriefViewMode>("preview");
   const pendingGenerateRef = useRef<PendingGenerate | null>(null);
   const lastModelLoadDurationRef = useRef<number | null>(null);
 
@@ -440,6 +484,7 @@ export function App() {
         errorStep: null,
         updatedAt: now,
       }));
+      setDecisionBriefViewMode("preview");
       notifyGenerationComplete();
     } catch (error) {
       if (error instanceof GenerationCancelledError) {
@@ -736,20 +781,30 @@ export function App() {
               aria-labelledby="decision-brief-heading"
               className="flex min-h-0 min-w-0 flex-col overflow-hidden p-5"
             >
-              <div className="mb-4 flex shrink-0 items-center justify-between">
-                <h2
-                  className="text-[11px] font-bold uppercase tracking-wide text-slate-500"
-                  id="decision-brief-heading"
-                >
-                  Decision Brief
-                </h2>
+              <div className="mb-4 flex shrink-0 items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <h2
+                    className="text-[11px] font-bold uppercase tracking-wide text-slate-500"
+                    id="decision-brief-heading"
+                  >
+                    Decision Brief
+                  </h2>
+                  <DecisionBriefViewModeControl
+                    mode={decisionBriefViewMode}
+                    onModeChange={setDecisionBriefViewMode}
+                  />
+                </div>
                 <StatusBadge label={decisionBriefStatus} />
               </div>
               <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-                <DecisionBriefEditor
-                  markdown={decisionBrief.markdown}
-                  onChange={updateDecisionBriefMarkdown}
-                />
+                {decisionBriefViewMode === "preview" ? (
+                  <DecisionBriefPreview markdown={decisionBrief.markdown} />
+                ) : (
+                  <DecisionBriefEditor
+                    markdown={decisionBrief.markdown}
+                    onChange={updateDecisionBriefMarkdown}
+                  />
+                )}
                 <DecisionTraceBasis decisionTrace={briefSession.decisionTrace} />
               </div>
               {briefErrorMessage ? (
