@@ -26,7 +26,7 @@ Case: `construction-strategy` (built-in construction workforce planning / Strate
 | O1 | Ollama | `qwen3:4b` | `default` | Yes | Yes | Pass | Yes | ~14 s | Local CLI harness; baseline quality path |
 | W1 | WebGPU | `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` | `default` | No (smoke) | No (after retry) | Not reached | No | ~60 s | 2026-07-07 smoke; missing `stated_decision` |
 | W2 | WebGPU | same 1.5B | `schema_skeleton` | Yes (after retry) | Yes | Fail | No | ~40–60 s CL; ~20 s brief | Manual 2026-07-08; 64 GB / i9 / RTX 3080 Ti; invalid JSON first attempt; retry succeeded; hollow implied decision / assumptions / risks / missing context; open questions present; stated decision + recommendation present; two-click model-ready UX friction ([#78](https://github.com/this-side-down/decision-brief-engine/issues/78)); layout/wrapping issues ([#79](https://github.com/this-side-down/decision-brief-engine/issues/79)) |
-| W3 | WebGPU | same 1.5B | `default` + schema-constrained output ([#116](https://github.com/this-side-down/decision-brief-engine/issues/116)) | **Pending** | **Pending** | **Pending** | **Pending** | **Pending** | Model load not reached: model shard requests returned 403 responses; no schema-constrained generation result recorded ([#123](https://github.com/this-side-down/decision-brief-engine/issues/123)). Manual W3 remains pending until model download succeeds. |
+| W3 | WebGPU | same 1.5B | `default` + schema-constrained output ([#116](https://github.com/this-side-down/decision-brief-engine/issues/116)) | **Pending** | **Pending** | **Pending** | **Pending** | **Pending** | Model load not reached: Hugging Face Xet shard delivery returns 403 after redirect; not a schema-constrained generation failure ([#124](https://github.com/this-side-down/decision-brief-engine/issues/124)). Manual W3 remains pending until upstream shard delivery succeeds. |
 
 ### What was completed in #73
 
@@ -123,6 +123,26 @@ Manual validation on production build (`VITE_GENERATION_MODE=mock`, preview `:41
 | Copy / Download Markdown | Copy failed in embedded browser (`Unable to copy Markdown to clipboard`); Download not exercised in smoke |
 | Hosted inference API for generation | Not observed for inference; only local WebGPU + model-weight CDN fetches (no Ollama / app backend generation calls in browser mode) |
 
+### #124 delivery investigation (2026-07-13)
+
+| Check | Result |
+| --- | --- |
+| Diagnostic command | `npm run diagnose:webgpu-model` |
+| Installed WebLLM | `@mlc-ai/web-llm@0.2.84` (latest npm; unchanged) |
+| Installed model record | Matches upstream prebuilt config for `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` |
+| `model_lib` fetch | HTTP 200 |
+| Small artifacts (`tokenizer.json`, `mlc-chat-config.json`) | HTTP 200/206 |
+| Selected model shard delivery (A) | HTTP 302 → `cas-bridge.xethub.hf.co` → HTTP 403 |
+| Comparison model shard delivery (B: `Llama-3.2-1B-Instruct-q4f16_1-MLC`) | Same 302 → Xet → 403 |
+| Cache backend | Default `cache`; not changed — direct fetch fails before Cache API storage |
+| Root cause category | Environment-wide upstream Hugging Face Xet delivery failure |
+| Production change | None — documented blocker; no model swap, cache-backend change, or WebLLM upgrade |
+| W3 generation result | **Not reached** — blocked before `model_ready` |
+
+Isolation rerun on the benchmark machine (DevTools cache toggle off, site data cleared, time synced, VPN off) reproduced the same Xet 403 chain. W2 succeeded on 2026-07-08 with the same model ID; W3 failed on 2026-07-13, consistent with upstream delivery regression rather than an outdated app model record.
+
+See [WebGPU model delivery diagnostic](../../docs/ai/webgpu-model-delivery-diagnostic.md).
+
 ### #116 prompt variant W3 (schema-constrained default prompt) — manual run pending
 
 | Check | Result |
@@ -131,7 +151,7 @@ Manual validation on production build (`VITE_GENERATION_MODE=mock`, preview `:41
 | Env | `VITE_ENABLE_WEBGPU_INFERENCE=true`; omit `VITE_CAPTURE_PROMPT_VARIANT` |
 | Model | `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` |
 | WebLLM structured output | Capture Layer schema `capture-layer-v1`; Decision Brief envelope schema `decision-brief-result-v1` |
-| Model load | **Failed** — model shard requests returned repeated `403 Forbidden` responses from `cas-bridge.xethub.hf.co`; generation never started |
+| Model load | **Failed** — shard requests redirect to `cas-bridge.xethub.hf.co` and return HTTP 403 before WebLLM can cache weights; generation never started ([#124](https://github.com/this-side-down/decision-brief-engine/issues/124)) |
 | Capture Layer attempt 1 schema | **Not reached** |
 | Built-in one-retry path | **Not reached** |
 | Capture Layer total latency | **Not reached** |
@@ -142,7 +162,7 @@ Manual validation on production build (`VITE_GENERATION_MODE=mock`, preview `:41
 | Decision Brief writing checks | **Not reached** |
 | Mock fallback after browser mode | **Pending** |
 
-This attempt is **not** a Capture Layer schema or quality failure — schema-constrained generation never started because the browser model download did not complete. Repeat W3 after model download succeeds ([#123](https://github.com/this-side-down/decision-brief-engine/issues/123) fixes contradictory download-failure UI observed during this run).
+This attempt is **not** a Capture Layer schema or quality failure — schema-constrained generation never started because upstream Hugging Face Xet shard delivery returned HTTP 403. Repeat W3 after shard delivery succeeds ([#124](https://github.com/this-side-down/decision-brief-engine/issues/124)).
 
 Manual validation checklist for W3:
 

@@ -54,9 +54,20 @@ Same as the harness:
 
 Full five-fixture ungating thresholds remain in [browser-model-quality-gate.md](browser-model-quality-gate.md). Passing construction alone is not enough to ungate.
 
+## Model delivery diagnostic (#124)
+
+If W3 is blocked before generation starts, run the local delivery diagnostic:
+
+```bash
+npm run diagnose:webgpu-model
+```
+
+See [WebGPU model delivery diagnostic](webgpu-model-delivery-diagnostic.md) for the confirmed 2026-07-13 upstream Xet shard 403 root cause, comparison-model matrix, and manual rerun steps after delivery recovers.
+
 ## Related
 
 - [Capture Layer evaluation harness](capture-layer-eval-harness.md)
 - [Browser model quality gate](browser-model-quality-gate.md)
+- [WebGPU model delivery diagnostic](webgpu-model-delivery-diagnostic.md)
 - [Prompt contracts](prompt-contracts.md)
 - Results: [`fixtures/evaluation/browser-model-results.md`](../../fixtures/evaluation/browser-model-results.md)
