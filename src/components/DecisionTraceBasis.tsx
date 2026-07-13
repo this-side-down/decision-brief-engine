@@ -6,6 +6,10 @@ import {
 } from "../utils/decisionTraceBasisGrouping";
 import { DisclosureChevron } from "./DisclosureChevron";
 
+function basisTextClassName() {
+  return "mt-1 min-w-0 break-words text-xs leading-5 text-slate-600 [overflow-wrap:anywhere]";
+}
+
 function basisListClassName() {
   return "mt-1 list-disc space-y-0.5 pl-4 text-xs leading-5 text-slate-600 [overflow-wrap:anywhere]";
 }
@@ -20,14 +24,12 @@ function BasisTextField({ label, value }: { label: string; value: string }) {
       <h5 className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
         {label}
       </h5>
-      <p className="mt-1 min-w-0 break-words text-xs leading-5 text-slate-600 [overflow-wrap:anywhere]">
-        {value}
-      </p>
+      <p className={basisTextClassName()}>{value}</p>
     </div>
   );
 }
 
-function BasisListField({ label, items }: { label: string; items: string[] }) {
+export function BasisListField({ label, items }: { label: string; items: string[] }) {
   if (items.length === 0) {
     return null;
   }
@@ -37,13 +39,17 @@ function BasisListField({ label, items }: { label: string; items: string[] }) {
       <h5 className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
         {label}
       </h5>
-      <ul className={basisListClassName()}>
-        {items.map((item) => (
-          <li className="break-words [overflow-wrap:anywhere]" key={item}>
-            {item}
-          </li>
-        ))}
-      </ul>
+      {items.length === 1 ? (
+        <p className={basisTextClassName()}>{items[0]}</p>
+      ) : (
+        <ul className={basisListClassName()}>
+          {items.map((item) => (
+            <li className="break-words [overflow-wrap:anywhere]" key={item}>
+              {item}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -82,7 +88,7 @@ export function TraceBasisDisclosure({ entry }: { entry: DecisionTraceEntry }) {
         <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-400 group-open/basis:text-slate-600">
           Basis
         </span>
-        <DisclosureChevron groupName="basis" />
+        <DisclosureChevron variant="basis" />
       </summary>
       <div className="mt-2 min-w-0 space-y-2 border-t border-slate-100 pt-2">
         <ConfidenceBadge confidence={entry.confidence} />
