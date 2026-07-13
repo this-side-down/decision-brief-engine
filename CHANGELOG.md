@@ -12,6 +12,38 @@ This project uses pre-1.0 versioning (`v0.x.y`) for capability milestones rather
 - Deeper eval and benchmarking across low- and high-powered device profiles.
 - Public hosted inference (out of scope until separate data-handling and deployment review).
 
+## v0.2.1 — Decision Brief Workspace and Writing Quality Polish
+
+**2026-07-13**
+
+### Added
+
+- Rendered Decision Brief Preview with an explicit Edit Markdown mode.
+- Deterministic writing-quality checks for canonical Decision Brief fixtures.
+
+### Changed
+
+- The generated workflow prioritizes the Decision Brief while keeping Raw Input and Capture Layer accessible.
+- Markdown edits immediately update Preview, copy, and download output.
+- Recommendation wording is aligned across Capture Layer, Decision Brief, and Decision Trace.
+- Fixture writing is more concise, decision-first, and domain-aware.
+- Singleton basis fields render as plain text while multi-item fields retain bullets.
+- Mock conditional wording is clearer and grammatically complete.
+
+### Fixed
+
+- Rendered Preview content remains inside its scrolling surface.
+- Expanded Traceable Basis content can be scrolled while its summary remains visible.
+- Nested Basis disclosure chevrons correctly indicate open and closed state.
+- Canned-language checks avoid obvious substring and legitimate-word false positives.
+
+### Runtime posture
+
+- Mock demo remains the public default.
+- Local Ollama remains the strongest real-generation path.
+- Browser WebGPU remains experimental and gated.
+- Hosted inference remains deferred.
+
 ## v0.2.0 — Decision Trace Milestone
 
 Decision Brief Engine v0.2.0 makes recommendations auditable by adding a structured Decision Trace between the Capture Layer and the final Decision Brief, then refining the UI hierarchy so understanding, judgment, and the portable brief do not compete as peer documents.
