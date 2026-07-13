@@ -2,11 +2,11 @@
 
 ## Summary
 
-Product notes on whether to add guided health checks, model status, endpoint validation, and clearer failure states for users running local inference, while keeping the public demo on mocked generation.
+Ship a lightweight health-check and model status strip before a full wizard. Validate endpoint reachability, confirm model availability, and run one short smoke test. Explain setup failures in plain language. Medium confidence because setup friction severity and strip scope estimates remain unclear.
 
 ## Decision Context
 
-Local inference is the strongest real-generation path, but setup is fragile—wrong endpoints, missing models, and opaque errors create support noise and erode product credibility. Engineering capacity is limited before the next Capture Layer quality push.
+Local inference is the strongest real-generation path, but setup remains fragile. Wrong endpoints, missing models, and opaque errors create support noise and erode product credibility. Engineering capacity is limited before the next Capture Layer quality push.
 
 ## Options Considered
 
@@ -17,7 +17,7 @@ Local inference is the strongest real-generation path, but setup is fragile—wr
 
 ## Recommendation
 
-Ship a lightweight health-check and model status strip—validate endpoint, confirm model availability, run one short generation smoke test, and explain failures in plain language—before investing in a full wizard.
+Ship a lightweight health-check and model status strip before investing in a full wizard. Validate the endpoint, confirm model availability, and run one short generation smoke test. Explain failures in plain language.
 
 ## Risks and Constraints
 
@@ -51,4 +51,4 @@ Ship a lightweight health-check and model status strip—validate endpoint, conf
 
 ## Confidence
 
-Confidence: Medium
+Confidence: Medium. Setup friction severity and engineering scope for the status strip are not fully confirmed.

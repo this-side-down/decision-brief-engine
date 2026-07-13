@@ -57,7 +57,7 @@
     "Design wants a fast workflow; support wants explicit readiness signals",
     "Engineering wants bounded scope; users want comprehensive setup assurance"
   ],
-  "recommendation_candidate": "Ship a lightweight health-check and model status strip—validate endpoint, confirm model availability, run one short generation smoke test, and explain failures in plain language—before investing in a full wizard.",
+  "recommendation_candidate": "Ship a lightweight health-check and model status strip before investing in a full wizard. Validate the endpoint, confirm model availability, and run one short generation smoke test. Explain failures in plain language.",
   "confidence": "Medium",
   "missing_context": [
     "Quantified local vs mock usage among active users",

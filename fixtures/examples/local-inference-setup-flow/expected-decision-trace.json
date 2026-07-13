@@ -1,7 +1,7 @@
 {
   "entries": [
     {
-      "statement": "Ship a lightweight health-check and model status strip—validate endpoint, confirm model availability, run one short generation smoke test, and explain failures in plain language—before investing in a full wizard.",
+      "statement": "Ship a lightweight health-check and model status strip before investing in a full wizard. Validate the endpoint, confirm model availability, and run one short generation smoke test. Explain failures in plain language.",
       "kind": "recommendation",
       "basis": {
         "intent": "Reduce setup confusion and opaque failure states",

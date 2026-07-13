@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import { validateCaptureLayerObject } from "../evaluation/captureLayerChecks";
 import { evaluateStructuralReadiness } from "../evaluation/captureLayerChecks";
 import { evaluateDecisionTraceReadiness } from "../evaluation/decisionTraceChecks";
+import {
+  evaluateDecisionBriefWriting,
+  extractRecommendationSection,
+} from "../evaluation/decisionBriefWritingChecks";
 import { EXAMPLE_FIXTURES } from "./exampleFixtures";
 
 const DEFAULT_STRUCTURAL_EXPECTATIONS = {
@@ -58,6 +62,38 @@ describe("exampleFixtures", () => {
         traceReadiness.pass,
         JSON.stringify(traceReadiness.checks.filter((check) => !check.pass)),
       ).toBe(true);
+    }
+  });
+
+  it("aligns recommendation wording across brief, Capture Layer, and Decision Trace", () => {
+    for (const fixture of EXAMPLE_FIXTURES) {
+      const briefRecommendation = extractRecommendationSection(
+        fixture.expectedDecisionBrief,
+      );
+      const captureRecommendation =
+        fixture.expectedCaptureLayer.recommendation_candidate.trim();
+      const traceRecommendation = fixture.expectedDecisionTrace.entries.find(
+        (entry) => entry.kind === "recommendation",
+      )?.statement.trim();
+
+      expect(traceRecommendation).toBeTruthy();
+      expect(briefRecommendation).toBe(captureRecommendation);
+      expect(briefRecommendation).toBe(traceRecommendation);
+    }
+  });
+
+  it("has expected Decision Brief fixtures that pass writing hard-fail checks", () => {
+    for (const fixture of EXAMPLE_FIXTURES) {
+      const writing = evaluateDecisionBriefWriting(fixture.expectedDecisionBrief, {
+        captureLayer: fixture.expectedCaptureLayer,
+        sourceText: fixture.rawNotes,
+      });
+
+      expect(
+        writing.errors,
+        JSON.stringify(writing.errors, null, 2),
+      ).toHaveLength(0);
+      expect(writing.passed).toBe(true);
     }
   });
 });

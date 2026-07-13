@@ -1,7 +1,7 @@
 {
   "entries": [
     {
-      "statement": "Assign a single move owner, submit pet paperwork immediately, confirm elevator slot and mover quote, and target a mid-month move with explicit storage plan for the couch only if painter timing slips.",
+      "statement": "Assign a single move owner. Submit pet paperwork immediately. Confirm elevator slot and mover quote. Target a mid-month move with a storage plan for the couch only if painter timing slips.",
       "kind": "recommendation",
       "basis": {
         "intent": "Confirm a workable move date window",
