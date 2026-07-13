@@ -2,11 +2,11 @@
 
 ## Summary
 
-Internal GC meeting notes on Q4 workforce allocation—how to staff hospital, school, and multifamily work with limited senior superintendents, slow HR onboarding, safety/training gaps, and schedule/client risk.
+Assign Marcus to the hospital project after a defined multifamily handoff. Promote Carlos on the school project only with Safety/Training sign-off. Open an HR superintendent backstop before the monthly staffing review and Thursday client call. Medium confidence until hospital start date and Carlos training status are confirmed.
 
 ## Decision Context
 
-Portfolio-level workforce allocation under Q4 schedule pressure: a hospital project needs an experienced senior superintendent, a school project faces penalties without strong field leadership, multifamily closeout is holding Marcus longer than planned, HR cannot fill gaps immediately, and promotion/travel/subcontract options each carry safety, cost, and retention tradeoffs.
+Portfolio workforce allocation under Q4 schedule pressure. The hospital project needs an experienced senior superintendent. The school project faces penalties without strong field leadership. Multifamily closeout is holding Marcus longer than planned. HR cannot fill gaps immediately. Promotion, travel, and subcontract options each carry safety, cost, and retention tradeoffs.
 
 ## Options Considered
 
@@ -19,7 +19,7 @@ Portfolio-level workforce allocation under Q4 schedule pressure: a hospital proj
 
 ## Recommendation
 
-Assign Marcus to the hospital project with an explicit multifamily handoff plan, promote Carlos to assistant superintendent on the school project only with Safety/Training sign-off, and activate an HR backstop hire for superintendent coverage—with warehouse work delayed or concrete scope subcontracted if float cannot be protected.
+Assign Marcus to the hospital project with an explicit multifamily handoff plan. Promote Carlos to assistant superintendent on the school project only with Safety/Training sign-off. Activate an HR backstop hire for superintendent coverage. Delay warehouse work or subcontract concrete scope if float cannot be protected.
 
 ## Risks and Constraints
 
@@ -60,4 +60,4 @@ Assign Marcus to the hospital project with an explicit multifamily handoff plan,
 
 ## Confidence
 
-Confidence: Medium
+Confidence: Medium. Hospital start date, Carlos training readiness, and HR candidate timing remain unconfirmed.

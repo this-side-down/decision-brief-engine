@@ -2,7 +2,7 @@
 
 ## Summary
 
-Household move coordination notes covering a 3–4 week window with lease overlap, budget limits, pet requirements, visa timing, furniture decisions, and unclear task ownership.
+Assign one move owner today. Submit pet paperwork immediately. Confirm elevator slot and mover quote. Target a mid-month move with couch storage only if painter timing slips. Medium confidence until visa timing and painter completion are confirmed.
 
 ## Decision Context
 
@@ -17,7 +17,7 @@ The household must sequence move logistics under overlapping leases, building pe
 
 ## Recommendation
 
-Assign a single move owner, submit pet paperwork immediately, confirm elevator slot and mover quote, and target a mid-month move with explicit storage plan for the couch only if painter timing slips.
+Assign a single move owner. Submit pet paperwork immediately. Confirm elevator slot and mover quote. Target a mid-month move with a storage plan for the couch only if painter timing slips.
 
 ## Risks and Constraints
 
@@ -55,4 +55,4 @@ Assign a single move owner, submit pet paperwork immediately, confirm elevator s
 
 ## Confidence
 
-Confidence: Medium
+Confidence: Medium. Visa timing and painter completion remain unconfirmed.

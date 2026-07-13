@@ -165,7 +165,7 @@ describe("mockModelAdapter demo examples", () => {
     });
 
     expect(productResult.markdown.toLowerCase()).toContain("health-check");
-    expect(productResult.markdown.toLowerCase()).toContain("mocked generation");
+    expect(productResult.markdown.toLowerCase()).toContain("mock generation");
   });
 
   it("returns a Decision Trace grounded in the Capture Layer for demo examples", async () => {
