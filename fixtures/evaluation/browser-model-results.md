@@ -26,7 +26,7 @@ Case: `construction-strategy` (built-in construction workforce planning / Strate
 | O1 | Ollama | `qwen3:4b` | `default` | Yes | Yes | Pass | Yes | ~14 s | Local CLI harness; baseline quality path |
 | W1 | WebGPU | `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` | `default` | No (smoke) | No (after retry) | Not reached | No | ~60 s | 2026-07-07 smoke; missing `stated_decision` |
 | W2 | WebGPU | same 1.5B | `schema_skeleton` | Yes (after retry) | Yes | Fail | No | ~40–60 s CL; ~20 s brief | Manual 2026-07-08; 64 GB / i9 / RTX 3080 Ti; invalid JSON first attempt; retry succeeded; hollow implied decision / assumptions / risks / missing context; open questions present; stated decision + recommendation present; two-click model-ready UX friction ([#78](https://github.com/this-side-down/decision-brief-engine/issues/78)); layout/wrapping issues ([#79](https://github.com/this-side-down/decision-brief-engine/issues/79)) |
-| W3 | WebGPU | same 1.5B | `default` + schema-constrained output ([#116](https://github.com/this-side-down/decision-brief-engine/issues/116)) | **Pending** | **Pending** | **Pending** | **Pending** | **Pending** | Manual run pending — same construction Strategy case and machine profile as W2; use default prompt (omit `VITE_CAPTURE_PROMPT_VARIANT`); record first-attempt schema, retry count, structural readiness, Decision Trace readiness, writing checks, and latencies |
+| W3 | WebGPU | same 1.5B | `default` + schema-constrained output ([#116](https://github.com/this-side-down/decision-brief-engine/issues/116)) | **Pending** | **Pending** | **Pending** | **Pending** | **Pending** | Model load not reached: model shard requests returned 403 responses; no schema-constrained generation result recorded ([#123](https://github.com/this-side-down/decision-brief-engine/issues/123)). Manual W3 remains pending until model download succeeds. |
 
 ### What was completed in #73
 
@@ -131,15 +131,18 @@ Manual validation on production build (`VITE_GENERATION_MODE=mock`, preview `:41
 | Env | `VITE_ENABLE_WEBGPU_INFERENCE=true`; omit `VITE_CAPTURE_PROMPT_VARIANT` |
 | Model | `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` |
 | WebLLM structured output | Capture Layer schema `capture-layer-v1`; Decision Brief envelope schema `decision-brief-result-v1` |
-| Capture Layer attempt 1 schema | **Pending** |
-| Built-in one-retry path | **Pending** |
-| Capture Layer total latency | **Pending** |
-| Structural readiness | **Pending** |
-| Proceed to brief (harness gate) | **Pending** |
-| Decision Brief generation | **Pending** (only if gate permits) |
-| Decision Trace readiness | **Pending** |
-| Decision Brief writing checks | **Pending** |
+| Model load | **Failed** — model shard requests returned repeated `403 Forbidden` responses from `cas-bridge.xethub.hf.co`; generation never started |
+| Capture Layer attempt 1 schema | **Not reached** |
+| Built-in one-retry path | **Not reached** |
+| Capture Layer total latency | **Not reached** |
+| Structural readiness | **Not reached** |
+| Proceed to brief (harness gate) | **Not reached** |
+| Decision Brief generation | **Not reached** |
+| Decision Trace readiness | **Not reached** |
+| Decision Brief writing checks | **Not reached** |
 | Mock fallback after browser mode | **Pending** |
+
+This attempt is **not** a Capture Layer schema or quality failure — schema-constrained generation never started because the browser model download did not complete. Repeat W3 after model download succeeds ([#123](https://github.com/this-side-down/decision-brief-engine/issues/123) fixes contradictory download-failure UI observed during this run).
 
 Manual validation checklist for W3:
 

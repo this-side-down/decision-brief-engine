@@ -17,6 +17,7 @@ import {
 } from "./data/demoExamples";
 import { BRIEF_TYPES } from "./data/briefTypes";
 import { useGenerationMode } from "./hooks/useGenerationMode";
+import { resolveBrowserInferenceStatusMessage } from "./hooks/modelLoadAttempt";
 import { useGenerationRunTelemetry } from "./hooks/useGenerationRunTelemetry";
 import { useTimedStatusMessage } from "./hooks/useTimedStatusMessage";
 import { generateCaptureLayerForSession } from "./services/generation/generateCaptureLayer";
@@ -156,7 +157,12 @@ function DecisionBriefViewModeControl({
 }
 
 export function App() {
-  const generation = useGenerationMode();
+  const cancelModelLoadTelemetryRef = useRef<() => void>(() => {});
+  const generation = useGenerationMode({
+    onModelLoadTerminal: () => {
+      cancelModelLoadTelemetryRef.current();
+    },
+  });
   const {
     effectiveMode,
     modePreference,
@@ -198,6 +204,7 @@ export function App() {
     runtimeMode: effectiveMode,
     configuredTimeoutMs: ollamaTimeoutMs,
   });
+  cancelModelLoadTelemetryRef.current = telemetry.cancelModelLoad;
   const [briefSession, setBriefSession] = useState<BriefSession>(() =>
     createInitialSession(),
   );
@@ -1055,11 +1062,11 @@ export function App() {
                 : undefined
           }
           onUseMockDemo={fallbackToMockDemo}
-          statusMessage={
-            telemetry.liveStatusMessage
-              ? telemetry.liveStatusMessage
-              : statusMessage
-          }
+          statusMessage={resolveBrowserInferenceStatusMessage({
+            inferenceUiState,
+            statusMessage,
+            liveModelLoadMessage: telemetry.liveStatusMessage,
+          })}
         />
         <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-5 py-2 text-xs text-slate-600">
           {modeDescription}
