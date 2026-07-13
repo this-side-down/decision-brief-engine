@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "eval:capture": "tsx scripts/eval-capture-layer.ts",
-    "health:ollama": "tsx scripts/ollama-health.ts"
+    "health:ollama": "tsx scripts/ollama-health.ts",
+    "diagnose:webgpu-model": "tsx scripts/diagnose-webgpu-model-delivery.ts"
   },
   "dependencies": {
     "@mlc-ai/web-llm": "^0.2.84",
