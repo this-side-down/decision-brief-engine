@@ -92,6 +92,56 @@ describe("evaluateDecisionBriefWriting hard failures", () => {
     },
   );
 
+  it("fails on canned Overall, sentence opener", () => {
+    const result = evaluateDecisionBriefWriting(
+      BASE_MARKDOWN.replace(
+        "Hospital and school projects need superintendent coverage under Q4 pressure.",
+        "Overall, the team should proceed without waiting for HR.",
+      ),
+    );
+    expect(result.errors.some((finding) => finding.ruleId === "banned-phrase")).toBe(
+      true,
+    );
+  });
+
+  it("fails on canned Ultimately, sentence opener", () => {
+    const result = evaluateDecisionBriefWriting(
+      BASE_MARKDOWN.replace(
+        "Hospital and school projects need superintendent coverage under Q4 pressure.",
+        "Ultimately, Marcus should move to the hospital project.",
+      ),
+    );
+    expect(result.errors.some((finding) => finding.ruleId === "banned-phrase")).toBe(
+      true,
+    );
+  });
+
+  it("allows legitimate overall usage in prose", () => {
+    const result = evaluateDecisionBriefWriting(
+      BASE_MARKDOWN.replace(
+        "Hospital and school projects need superintendent coverage under Q4 pressure.",
+        "The overall schedule risk remains high across hospital and school work.",
+      ),
+    );
+    expect(result.errors.some((finding) => finding.ruleId === "banned-phrase")).toBe(
+      false,
+    );
+    expect(result.passed).toBe(true);
+  });
+
+  it("allows words that merely contain a banned single-word term", () => {
+    const result = evaluateDecisionBriefWriting(
+      BASE_MARKDOWN.replace(
+        "Hospital and school projects need superintendent coverage under Q4 pressure.",
+        "Workforce overallocation is not supported by the source notes.",
+      ),
+    );
+    expect(result.errors.some((finding) => finding.ruleId === "banned-phrase")).toBe(
+      false,
+    );
+    expect(result.passed).toBe(true);
+  });
+
   it("fails when Summary exceeds 60 words", () => {
     const longSummary = Array.from({ length: 65 }, (_, index) => `word${index}`).join(
       " ",

@@ -62,7 +62,7 @@
     "Booking movers early reduces risk but depends on unresolved building answers",
     "Selling the couch saves storage cost but removes fallback furniture"
   ],
-  "recommendation_candidate": "Assign a single move owner, submit pet paperwork immediately, confirm elevator slot and mover quote, and target a mid-month move with explicit storage plan for the couch only if painter timing slips.",
+  "recommendation_candidate": "Assign a single move owner. Submit pet paperwork immediately. Confirm elevator slot and mover quote. Target a mid-month move with a storage plan for the couch only if painter timing slips.",
   "confidence": "Medium",
   "missing_context": [
     "Confirmed pet approval timeline from building management",

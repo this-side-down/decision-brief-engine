@@ -10,13 +10,13 @@ export const BANNED_CANNED_PHRASES = [
   "it is important to note",
   "it is worth noting",
   "in today's",
-  "ultimately",
-  "overall",
   "in conclusion",
   "moving forward",
   "at the end of the day",
   "actionable insights",
 ] as const;
+
+export const BANNED_SENTENCE_OPENERS = ["overall", "ultimately"] as const;
 
 export const BANNED_CONSULTANT_FILLER = [
   "unlock value",

@@ -206,3 +206,82 @@ describe("mockModelAdapter demo examples", () => {
     }
   });
 });
+
+describe("mockModelAdapter fallback would_change_if wording", () => {
+  const briefType = STRATEGY_DECISION_BRIEF;
+
+  async function generateFallbackTrace(captureLayerOverrides: Record<string, unknown>) {
+    const baseCaptureLayer = {
+      source_summary: "Notes about staffing decisions.",
+      decision_context: "Q4 staffing pressure across active projects.",
+      stated_decision: "Allocate superintendent coverage",
+      implied_decision: "",
+      goals: ["Staff highest-risk projects"],
+      stakeholders: ["VP Operations", "HR", "Safety", "Controls"],
+      options_considered: ["Assign Marcus", "Promote Carlos", "Hire contractor"],
+      constraints: ["Decision needed before Thursday client call"],
+      risks: ["Client escalation", "Training gaps", "Schedule penalties"],
+      assumptions: ["Marcus can transition", "Carlos can promote"],
+      evidence: ["Hospital client asked for named superintendent"],
+      open_questions: [] as string[],
+      tensions: ["Hospital urgency versus school penalties"],
+      recommendation_candidate: "Assign Marcus to the hospital project.",
+      confidence: "Medium",
+      missing_context: [] as string[],
+      suggested_next_steps: ["Finalize staffing matrix"],
+      ...captureLayerOverrides,
+    };
+
+    const result = await mockModelAdapter.generateDecisionBrief({
+      captureLayer: baseCaptureLayer,
+      briefType,
+      briefTypeGuidance: briefType.guidance,
+      markdownStructure: [],
+      sourceLabel: "custom-input",
+    });
+
+    return result.decisionTrace;
+  }
+
+  it("uses grammatical wording for open questions", async () => {
+    const trace = await generateFallbackTrace({
+      open_questions: ["What is the confirmed hospital start date?"],
+    });
+
+    expect(trace.entries[0]?.would_change_if[0]).toBe(
+      'The answer to "What is the confirmed hospital start date?" would change this basis.',
+    );
+  });
+
+  it("uses grammatical wording for missing context on next steps", async () => {
+    const trace = await generateFallbackTrace({
+      missing_context: ["Confirmed hospital start date"],
+    });
+
+    const nextStep = trace.entries.find((entry) => entry.kind === "next_step");
+    expect(nextStep?.would_change_if[0]).toBe(
+      'Confirmation of "Confirmed hospital start date" would change this basis.',
+    );
+  });
+
+  it("uses readable fallbacks when no open questions are available", async () => {
+    const trace = await generateFallbackTrace({
+      open_questions: [],
+    });
+
+    expect(trace.entries[0]?.would_change_if[0]).toBe(
+      "Supporting evidence or assumptions changing materially would change this basis.",
+    );
+  });
+
+  it("uses readable fallbacks when no missing context is available", async () => {
+    const trace = await generateFallbackTrace({
+      missing_context: [],
+    });
+
+    const nextStep = trace.entries.find((entry) => entry.kind === "next_step");
+    expect(nextStep?.would_change_if[0]).toBe(
+      "Missing context confirmation would change this basis.",
+    );
+  });
+});

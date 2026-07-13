@@ -3,6 +3,7 @@ import { DECISION_BRIEF_MARKDOWN_STRUCTURE } from "../services/generation/types"
 import {
   BANNED_CANNED_PHRASES,
   BANNED_CONSULTANT_FILLER,
+  BANNED_SENTENCE_OPENERS,
   DECISION_BRIEF_REQUIRED_SECTIONS,
   GENERIC_BUSINESS_TERMS,
   INTENSIFIERS,
@@ -162,23 +163,42 @@ export function splitProseSentences(text: string): string[] {
 }
 
 function containsBannedPhrase(text: string, phrase: string): string | null {
-  const normalizedText = normalizePhrase(
-    text.replace(/[.,!?;:()[\]{}]/g, " "),
+  const pattern = buildBannedPhrasePattern(phrase);
+  const match = text.match(pattern);
+  if (!match) {
+    return null;
+  }
+
+  return match[0].trim();
+}
+
+function buildBannedPhrasePattern(phrase: string): RegExp {
+  const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (phrase.includes(" ")) {
+    return new RegExp(`(?<!\\w)${escaped.replace(/\s+/g, "\\s+")}(?!\\w)`, "i");
+  }
+
+  return new RegExp(`\\b${escaped}\\b`, "i");
+}
+
+function containsBannedSentenceOpener(text: string, opener: string): string | null {
+  const pattern = new RegExp(`(?:^|\\n)\\s*${opener}\\s*,`, "i");
+  const match = text.match(pattern);
+  if (!match) {
+    return null;
+  }
+
+  return match[0].trim();
+}
+
+export function normalizeRecommendationText(text: string): string {
+  return text.trim().replace(/\s+/g, " ");
+}
+
+export function extractRecommendationSection(markdown: string): string {
+  return normalizeRecommendationText(
+    parseDecisionBriefSections(markdown).get("Recommendation") ?? "",
   );
-  const normalizedPhrase = normalizePhrase(phrase);
-
-  if (!normalizedPhrase) {
-    return null;
-  }
-
-  const index = normalizedText.indexOf(normalizedPhrase);
-  if (index === -1) {
-    return null;
-  }
-
-  const start = Math.max(0, index - 20);
-  const end = Math.min(normalizedText.length, index + normalizedPhrase.length + 20);
-  return normalizedText.slice(start, end).trim();
 }
 
 function isSectionEmpty(sectionBody: string): boolean {
@@ -342,6 +362,18 @@ export function evaluateDecisionBriefWriting(
         ruleId: "banned-phrase",
         severity: "error",
         message: `Decision Brief contains banned phrase: "${phrase}".`,
+        excerpt,
+      });
+    }
+  }
+
+  for (const opener of BANNED_SENTENCE_OPENERS) {
+    const excerpt = containsBannedSentenceOpener(fullProse, opener);
+    if (excerpt) {
+      addFinding(errors, {
+        ruleId: "banned-phrase",
+        severity: "error",
+        message: `Decision Brief contains banned sentence opener: "${opener},".`,
         excerpt,
       });
     }

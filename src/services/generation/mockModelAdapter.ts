@@ -107,7 +107,7 @@ function buildMockDecisionTrace(captureLayer: CaptureLayer): DecisionTrace {
   function wouldChangeIfFromOpenQuestions(fallback: string): string[] {
     if (openQuestionsForWouldChange.length > 0) {
       return openQuestionsForWouldChange.map(
-        (question) => `Would change if ${question} is resolved differently.`,
+        (question) => `The answer to "${question}" would change this basis.`,
       );
     }
     return [fallback];
@@ -130,7 +130,7 @@ function buildMockDecisionTrace(captureLayer: CaptureLayer): DecisionTrace {
       },
       confidence: captureLayer.confidence,
       would_change_if: wouldChangeIfFromOpenQuestions(
-        "If the supporting evidence or assumptions change materially.",
+        "Supporting evidence or assumptions changing materially would change this basis.",
       ),
     });
   }
@@ -138,7 +138,10 @@ function buildMockDecisionTrace(captureLayer: CaptureLayer): DecisionTrace {
   for (const step of captureLayer.suggested_next_steps) {
     const wouldChangeIf = captureLayer.missing_context
       .slice(0, 1)
-      .map((missingContext) => `Would change if ${missingContext} is confirmed.`);
+      .map(
+        (missingContext) =>
+          `Confirmation of "${missingContext}" would change this basis.`,
+      );
 
     entries.push({
       statement: step,
@@ -158,7 +161,7 @@ function buildMockDecisionTrace(captureLayer: CaptureLayer): DecisionTrace {
       would_change_if:
         wouldChangeIf.length > 0
           ? wouldChangeIf
-          : ["Would change if the missing context is confirmed."],
+          : ["Missing context confirmation would change this basis."],
     });
   }
 
