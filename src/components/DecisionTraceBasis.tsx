@@ -4,6 +4,7 @@ import {
   formatTraceableBasisSummary,
   groupDecisionTraceEntriesByKind,
 } from "../utils/decisionTraceBasisGrouping";
+import { DisclosureChevron } from "./DisclosureChevron";
 
 function basisListClassName() {
   return "mt-1 list-disc space-y-0.5 pl-4 text-xs leading-5 text-slate-600 [overflow-wrap:anywhere]";
@@ -79,13 +80,16 @@ export function TraceBasisDisclosure({
 
   return (
     <details className="group min-w-0 rounded border border-slate-200 bg-white p-2">
-      <summary className="flex min-w-0 cursor-pointer list-none items-center justify-between gap-2">
-        <span className="min-w-0 flex-1 break-words text-xs font-medium leading-5 text-slate-800 [overflow-wrap:anywhere]">
-          {label}
-        </span>
-        <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-400 group-open:text-slate-600">
-          Basis
-        </span>
+      <summary className="flex min-w-0 cursor-pointer list-none items-center gap-2 rounded transition-colors hover:bg-slate-50 group-open:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/10 [&::-webkit-details-marker]:hidden">
+        <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+          <span className="min-w-0 flex-1 break-words text-xs font-medium leading-5 text-slate-800 [overflow-wrap:anywhere]">
+            {label}
+          </span>
+          <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-400 group-open:text-slate-600">
+            Basis
+          </span>
+        </div>
+        <DisclosureChevron />
       </summary>
       <div className="mt-2 min-w-0 space-y-2 border-t border-slate-100 pt-2">
         <ConfidenceBadge confidence={entry.confidence} />
@@ -185,13 +189,16 @@ export function DecisionTraceBasis({
 
   return (
     <details className="group mt-3 min-w-0 shrink-0 rounded border border-slate-200 bg-slate-50 p-3">
-      <summary className="flex min-w-0 cursor-pointer list-none items-center justify-between gap-2">
-        <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-          Traceable basis
-        </span>
-        <span className="shrink-0 text-[10px] font-medium text-slate-400 group-open:text-slate-500">
-          {summary}
-        </span>
+      <summary className="flex min-w-0 cursor-pointer list-none items-center gap-2 rounded transition-colors hover:bg-slate-50 group-open:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/10 [&::-webkit-details-marker]:hidden">
+        <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+          <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+            Traceable basis
+          </span>
+          <span className="shrink-0 text-[10px] font-medium text-slate-400 group-open:text-slate-500">
+            {summary}
+          </span>
+        </div>
+        <DisclosureChevron />
       </summary>
       <div className="mt-3 min-w-0 space-y-3">
         <TraceEntryGroup

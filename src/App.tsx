@@ -3,6 +3,7 @@ import { formatAppVersionLabel } from "./appVersion";
 import { WorkflowSetupBar } from "./components/WorkflowSetupBar";
 import { CaptureLayerSummary } from "./components/CaptureLayerSummary";
 import { DecisionTraceBasis } from "./components/DecisionTraceBasis";
+import { DisclosureChevron } from "./components/DisclosureChevron";
 import { BrowserInferenceStatus } from "./components/generation/BrowserInferenceStatus";
 import { DownloadDisclosureDialog } from "./components/generation/DownloadDisclosureDialog";
 import { GenerationRunStatus } from "./components/generation/GenerationRunStatus";
@@ -682,15 +683,18 @@ export function App() {
               className="flex min-h-0 min-w-0 flex-col gap-4 overflow-y-auto p-5"
             >
               <details className="group min-w-0">
-                <summary className="flex min-w-0 cursor-pointer list-none flex-col gap-1 rounded border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
-                  <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500 group-open:text-slate-600">
-                    Raw Input
-                  </span>
-                  <span className="min-w-0 break-words text-slate-500 [overflow-wrap:anywhere] group-open:text-slate-600">
-                    {hasRawInput
-                      ? "Source notes for this brief"
-                      : "No raw notes"}
-                  </span>
+                <summary className="flex min-w-0 cursor-pointer list-none items-center gap-2 rounded border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 transition-colors hover:bg-slate-50 group-open:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/10 [&::-webkit-details-marker]:hidden">
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500 group-open:text-slate-600">
+                      Raw Input
+                    </span>
+                    <span className="min-w-0 break-words text-slate-500 [overflow-wrap:anywhere] group-open:text-slate-600">
+                      {hasRawInput
+                        ? "Source notes for this brief"
+                        : "No raw notes"}
+                    </span>
+                  </div>
+                  <DisclosureChevron />
                 </summary>
                 <div className="mt-3 min-w-0 space-y-2">
                   <textarea
