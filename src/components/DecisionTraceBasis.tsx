@@ -62,34 +62,27 @@ function ConfidenceBadge({ confidence }: { confidence: Confidence }) {
  * Capture Layer's text/list field styling rather than introducing a new
  * visual language.
  *
- * The collapsed summary shows a short, positional label (e.g. "Next step
- * basis 2") rather than the full `entry.statement`, since that statement
- * already appears verbatim in the Decision Brief above — repeating it here
- * as a card title is what made this section read like a second brief. The
- * full statement is still shown first inside the expanded body so nothing
- * is hidden, just deferred behind a click.
+ * The collapsed summary shows the recommendation or next-step statement so
+ * users can tell which basis they are opening. Long statements truncate
+ * visually; the full text remains in the DOM for assistive technology and
+ * is available on hover via `title`.
  */
-export function TraceBasisDisclosure({
-  entry,
-  label,
-}: {
-  entry: DecisionTraceEntry;
-  label: string;
-}) {
+export function TraceBasisDisclosure({ entry }: { entry: DecisionTraceEntry }) {
   const { basis } = entry;
 
   return (
-    <details className="group min-w-0 rounded border border-slate-200 bg-white p-2">
-      <summary className="flex min-w-0 cursor-pointer list-none items-center gap-2 rounded transition-colors hover:bg-slate-50 group-open:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/10 [&::-webkit-details-marker]:hidden">
-        <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
-          <span className="min-w-0 flex-1 break-words text-xs font-medium leading-5 text-slate-800 [overflow-wrap:anywhere]">
-            {label}
-          </span>
-          <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-400 group-open:text-slate-600">
-            Basis
-          </span>
-        </div>
-        <DisclosureChevron />
+    <details className="group/basis min-w-0 rounded border border-slate-200 bg-white p-2">
+      <summary className="flex min-w-0 cursor-pointer list-none items-center gap-2 rounded transition-colors hover:bg-slate-50 group-open/basis:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/10 [&::-webkit-details-marker]:hidden">
+        <span
+          className="min-w-0 flex-1 truncate text-xs font-medium leading-5 text-slate-800"
+          title={entry.statement}
+        >
+          {entry.statement}
+        </span>
+        <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-400 group-open/basis:text-slate-600">
+          Basis
+        </span>
+        <DisclosureChevron groupName="basis" />
       </summary>
       <div className="mt-2 min-w-0 space-y-2 border-t border-slate-100 pt-2">
         <ConfidenceBadge confidence={entry.confidence} />
@@ -118,11 +111,9 @@ export function TraceBasisDisclosure({
 function TraceEntryGroup({
   title,
   entries,
-  formatEntryLabel,
 }: {
   title: string;
   entries: DecisionTraceEntry[];
-  formatEntryLabel: (index: number) => string;
 }) {
   if (entries.length === 0) {
     return null;
@@ -138,7 +129,6 @@ function TraceEntryGroup({
           <TraceBasisDisclosure
             entry={entry}
             key={`${entry.kind}-${index}`}
-            label={formatEntryLabel(index)}
           />
         ))}
       </div>
@@ -201,16 +191,8 @@ export function DecisionTraceBasis({
         <DisclosureChevron />
       </summary>
       <div className="mt-3 min-w-0 space-y-3">
-        <TraceEntryGroup
-          entries={groups.recommendations}
-          formatEntryLabel={() => "Recommendation basis"}
-          title="Recommendations"
-        />
-        <TraceEntryGroup
-          entries={groups.nextSteps}
-          formatEntryLabel={(index) => `Next step basis ${index + 1}`}
-          title="Next steps"
-        />
+        <TraceEntryGroup entries={groups.recommendations} title="Recommendations" />
+        <TraceEntryGroup entries={groups.nextSteps} title="Next steps" />
       </div>
     </details>
   );
