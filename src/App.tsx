@@ -144,11 +144,11 @@ function DecisionBriefViewModeControl({
       </button>
       <button
         aria-pressed={mode === "markdown"}
-        className={`rounded px-2.5 py-1 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/10 ${buttonClassName(mode === "markdown")}`}
+        className={`rounded px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/10 ${buttonClassName(mode === "markdown")}`}
         onClick={() => onModeChange("markdown")}
         type="button"
       >
-        Markdown
+        Edit Markdown
       </button>
     </div>
   );
@@ -781,20 +781,27 @@ export function App() {
               aria-labelledby="decision-brief-heading"
               className="flex min-h-0 min-w-0 flex-col overflow-hidden p-5"
             >
-              <div className="mb-4 flex shrink-0 items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-3">
-                  <h2
-                    className="text-[11px] font-bold uppercase tracking-wide text-slate-500"
-                    id="decision-brief-heading"
-                  >
-                    Decision Brief
-                  </h2>
-                  <DecisionBriefViewModeControl
-                    mode={decisionBriefViewMode}
-                    onModeChange={setDecisionBriefViewMode}
-                  />
+              <div className="mb-4 shrink-0 space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <h2
+                      className="text-[11px] font-bold uppercase tracking-wide text-slate-500"
+                      id="decision-brief-heading"
+                    >
+                      Decision Brief
+                    </h2>
+                    <DecisionBriefViewModeControl
+                      mode={decisionBriefViewMode}
+                      onModeChange={setDecisionBriefViewMode}
+                    />
+                  </div>
+                  <StatusBadge label={decisionBriefStatus} />
                 </div>
-                <StatusBadge label={decisionBriefStatus} />
+                {decisionBriefViewMode === "markdown" ? (
+                  <p className="text-[11px] text-slate-400">
+                    Edits apply automatically to Preview and exports.
+                  </p>
+                ) : null}
               </div>
               <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
                 {decisionBriefViewMode === "preview" ? (
