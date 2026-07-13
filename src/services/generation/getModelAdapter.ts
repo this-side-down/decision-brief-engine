@@ -6,7 +6,10 @@ import {
 } from "./generationMode";
 import { mockModelAdapter } from "./mockModelAdapter";
 import { ollamaModelAdapter } from "./ollamaModelAdapter";
-import { createWebGpuModelAdapter } from "./webGpuModelAdapter";
+import {
+  createWebGpuModelAdapter,
+  type WebGpuFirstAttemptResult,
+} from "./webGpuModelAdapter";
 import type { ModelAdapter } from "./types";
 
 type GetModelAdapterOptions = {
@@ -15,6 +18,8 @@ type GetModelAdapterOptions = {
   signal?: AbortSignal;
   onCaptureRetry?: () => void;
   onBriefRetry?: () => void;
+  onCaptureFirstAttempt?: (result: WebGpuFirstAttemptResult) => void;
+  onBriefFirstAttempt?: (result: WebGpuFirstAttemptResult) => void;
 };
 
 export function getModelAdapter(options: GetModelAdapterOptions = {}): ModelAdapter {
@@ -34,6 +39,8 @@ export function getModelAdapter(options: GetModelAdapterOptions = {}): ModelAdap
       signal: options.signal,
       onCaptureRetry: options.onCaptureRetry,
       onBriefRetry: options.onBriefRetry,
+      onCaptureFirstAttempt: options.onCaptureFirstAttempt,
+      onBriefFirstAttempt: options.onBriefFirstAttempt,
     });
   }
 

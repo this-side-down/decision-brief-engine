@@ -1,4 +1,4 @@
-import type { MLCEngineInterface } from "@mlc-ai/web-llm";
+import type { MLCEngineInterface, ResponseFormat } from "@mlc-ai/web-llm";
 import type {
   DecisionBriefResult,
   GenerateCaptureLayerInput,
@@ -14,31 +14,68 @@ import {
 } from "./webGpuEngine";
 import { GenerationCancelledError } from "./webGpuErrors";
 import { getWebGpuConfig } from "./webGpuConfig";
+import {
+  CAPTURE_LAYER_RESPONSE_FORMAT,
+  DECISION_BRIEF_RESULT_RESPONSE_FORMAT,
+  WEBGPU_CAPTURE_LAYER_SCHEMA_VERSION,
+  WEBGPU_DECISION_BRIEF_RESULT_SCHEMA_VERSION,
+  WEB_LLM_PACKAGE_VERSION,
+} from "./webGpuGenerationSchemas";
 
 const JSON_RETRY_SUFFIX =
   "\n\nReturn ONLY valid JSON. No markdown fences, no commentary, no reasoning.";
+
+export type WebGpuFirstAttemptResult = {
+  parsePass: boolean;
+};
+
+export type WebGpuEvalContext = {
+  modelId: string;
+  webLlmVersion: string;
+  captureSchemaVersion: string;
+  briefSchemaVersion: string;
+};
+
+export function getWebGpuEvalContext(): WebGpuEvalContext {
+  const { modelId } = getWebGpuConfig();
+
+  return {
+    modelId,
+    webLlmVersion: WEB_LLM_PACKAGE_VERSION,
+    captureSchemaVersion: WEBGPU_CAPTURE_LAYER_SCHEMA_VERSION,
+    briefSchemaVersion: WEBGPU_DECISION_BRIEF_RESULT_SCHEMA_VERSION,
+  };
+}
 
 type WebGpuAdapterOptions = {
   engine: MLCEngineInterface;
   signal?: AbortSignal;
   onCaptureRetry?: () => void;
   onBriefRetry?: () => void;
+  onCaptureFirstAttempt?: (result: WebGpuFirstAttemptResult) => void;
+  onBriefFirstAttempt?: (result: WebGpuFirstAttemptResult) => void;
 };
 
-async function completePrompt(
+type StructuredCompletionOptions = {
+  prompt: string;
+  responseFormat: ResponseFormat;
+  signal?: AbortSignal;
+};
+
+async function completeStructuredPrompt(
   engine: MLCEngineInterface,
-  prompt: string,
-  signal?: AbortSignal,
+  options: StructuredCompletionOptions,
 ): Promise<string> {
-  assertGenerationNotCancelled(signal);
+  assertGenerationNotCancelled(options.signal);
 
   try {
     const response = await engine.chat.completions.create({
-      messages: [{ role: "user", content: prompt }],
+      messages: [{ role: "user", content: options.prompt }],
       stream: false,
+      response_format: options.responseFormat,
     });
 
-    assertGenerationNotCancelled(signal);
+    assertGenerationNotCancelled(options.signal);
 
     const content = response.choices[0]?.message?.content;
 
@@ -48,7 +85,7 @@ async function completePrompt(
 
     return "";
   } catch (error) {
-    if (signal?.aborted) {
+    if (options.signal?.aborted) {
       await cancelWebGpuGeneration(engine);
       throw new GenerationCancelledError();
     }
@@ -62,6 +99,8 @@ export function createWebGpuModelAdapter({
   signal,
   onCaptureRetry,
   onBriefRetry,
+  onCaptureFirstAttempt,
+  onBriefFirstAttempt,
 }: WebGpuAdapterOptions): ModelAdapter {
   getWebGpuConfig();
 
@@ -72,35 +111,57 @@ export function createWebGpuModelAdapter({
       }
 
       const prompt = buildCaptureLayerPrompt(input);
-      const modelText = await completePrompt(engine, prompt, signal);
+      const modelText = await completeStructuredPrompt(engine, {
+        prompt,
+        responseFormat: CAPTURE_LAYER_RESPONSE_FORMAT,
+        signal,
+      });
 
       try {
-        return parseCaptureLayerJson(modelText);
+        const captureLayer = parseCaptureLayerJson(modelText);
+        onCaptureFirstAttempt?.({ parsePass: true });
+        return captureLayer;
       } catch (firstError) {
         if (firstError instanceof GenerationCancelledError) {
           throw firstError;
         }
 
+        onCaptureFirstAttempt?.({ parsePass: false });
         onCaptureRetry?.();
         const retryPrompt = `${prompt}${JSON_RETRY_SUFFIX}`;
-        const retryText = await completePrompt(engine, retryPrompt, signal);
+        const retryText = await completeStructuredPrompt(engine, {
+          prompt: retryPrompt,
+          responseFormat: CAPTURE_LAYER_RESPONSE_FORMAT,
+          signal,
+        });
         return parseCaptureLayerJson(retryText);
       }
     },
 
     async generateDecisionBrief(input: GenerateDecisionBriefInput): Promise<DecisionBriefResult> {
       const prompt = buildDecisionBriefPrompt(input);
-      const rawText = await completePrompt(engine, prompt, signal);
+      const rawText = await completeStructuredPrompt(engine, {
+        prompt,
+        responseFormat: DECISION_BRIEF_RESULT_RESPONSE_FORMAT,
+        signal,
+      });
 
       try {
-        return parseDecisionBriefResultJson(rawText);
+        const result = parseDecisionBriefResultJson(rawText);
+        onBriefFirstAttempt?.({ parsePass: true });
+        return result;
       } catch (firstError) {
         if (firstError instanceof GenerationCancelledError) {
           throw firstError;
         }
 
+        onBriefFirstAttempt?.({ parsePass: false });
         onBriefRetry?.();
-        const retryText = await completePrompt(engine, `${prompt}${JSON_RETRY_SUFFIX}`, signal);
+        const retryText = await completeStructuredPrompt(engine, {
+          prompt: `${prompt}${JSON_RETRY_SUFFIX}`,
+          responseFormat: DECISION_BRIEF_RESULT_RESPONSE_FORMAT,
+          signal,
+        });
         return parseDecisionBriefResultJson(retryText);
       }
     },

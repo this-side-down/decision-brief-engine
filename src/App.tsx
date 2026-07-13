@@ -23,6 +23,7 @@ import { generateCaptureLayerForSession } from "./services/generation/generateCa
 import { generateDecisionBriefForSession } from "./services/generation/generateDecisionBrief";
 import { getOllamaConfig } from "./services/generation/ollamaConfig";
 import { GenerationCancelledError } from "./services/generation/webGpuErrors";
+import { getWebGpuEvalContext } from "./services/generation/webGpuModelAdapter";
 import type { BriefSession, BriefType, BriefTypeId } from "./types/brief";
 import type { CaptureLayer } from "./types/captureLayer";
 import {
@@ -365,6 +366,9 @@ export function App() {
       updatedAt: new Date().toISOString(),
     }));
     telemetry.startCapture();
+    if (isWebGpuMode) {
+      telemetry.initializeWebGpuEval(getWebGpuEvalContext());
+    }
     notifyCaptureGenerationStarted();
 
     try {
@@ -376,6 +380,9 @@ export function App() {
           onCaptureRetry: () => {
             telemetry.recordCaptureRetry();
             notifyCaptureRetry();
+          },
+          onCaptureFirstAttempt: ({ parsePass }) => {
+            telemetry.recordCaptureFirstAttempt(parsePass);
           },
         }),
       });
@@ -456,6 +463,9 @@ export function App() {
         adapter: getAdapterForGeneration(abortController?.signal, {
           onBriefRetry: () => {
             telemetry.recordBriefRetry();
+          },
+          onBriefFirstAttempt: ({ parsePass }) => {
+            telemetry.recordBriefFirstAttempt(parsePass);
           },
         }),
       });

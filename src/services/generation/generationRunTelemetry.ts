@@ -10,6 +10,15 @@ export type GenerationStep =
 
 export type StepOutcome = "success" | "timeout" | "error" | "cancelled";
 
+export type WebGpuGenerationEval = {
+  modelId: string;
+  webLlmVersion: string;
+  captureSchemaVersion: string;
+  briefSchemaVersion: string;
+  captureFirstAttemptSchemaPass: boolean | null;
+  briefFirstAttemptSchemaPass: boolean | null;
+};
+
 export type GenerationRunRecord = {
   runtimeMode: GenerationMode;
   runtimeLabel: string;
@@ -22,6 +31,7 @@ export type GenerationRunRecord = {
   briefRetryCount: number;
   briefOutcome: StepOutcome | null;
   briefError: string | null;
+  webGpuEval: WebGpuGenerationEval | null;
 };
 
 export function formatElapsedSeconds(durationMs: number): string {
@@ -142,12 +152,36 @@ export function formatOutcomeSummary(
   return formatDurationSummary(durationMs);
 }
 
+function formatFirstAttemptSummary(value: boolean | null): string {
+  if (value === null) {
+    return "not run";
+  }
+
+  return value ? "pass" : "fail";
+}
+
 export function formatRunDetailsLines(record: GenerationRunRecord): string[] {
   const lines = [`Runtime: ${record.runtimeLabel}`];
 
   if (record.modelLoadDurationMs !== null) {
     lines.push(
       `Model load: ${formatDurationSummary(record.modelLoadDurationMs)}`,
+    );
+  }
+
+  if (record.webGpuEval) {
+    const evalRecord = record.webGpuEval;
+    lines.push(
+      `WebLLM: ${evalRecord.webLlmVersion} (${evalRecord.modelId})`,
+    );
+    lines.push(
+      `Structured output schemas: ${evalRecord.captureSchemaVersion} / ${evalRecord.briefSchemaVersion}`,
+    );
+    lines.push(
+      `Capture first attempt schema: ${formatFirstAttemptSummary(evalRecord.captureFirstAttemptSchemaPass)}`,
+    );
+    lines.push(
+      `Decision Brief first attempt schema: ${formatFirstAttemptSummary(evalRecord.briefFirstAttemptSchemaPass)}`,
     );
   }
 
@@ -193,6 +227,7 @@ export function createGenerationRunRecord(
     briefRetryCount: 0,
     briefOutcome: null,
     briefError: null,
+    webGpuEval: null,
   };
 }
 

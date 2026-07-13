@@ -127,7 +127,7 @@ npm run eval:capture -- --mode=webgpu
 5. Click **Load example notes** (construction Strategy) or paste `fixtures/construction-workforce-planning/messy-transcript.md` and select Strategy.
 6. Generate Capture Layer.
 7. Record:
-   - Config ID (W1 default prompt / W2 schema_skeleton / optional W3 model ID)
+   - Config ID (W1 default prompt / W2 schema_skeleton / W3 schema-constrained default prompt / optional W4 model ID)
    - Valid JSON: yes/no (after the built-in one-retry path)
    - Schema pass: yes/no
    - Latency roughly to success or final failure

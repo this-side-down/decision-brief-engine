@@ -324,6 +324,8 @@ export function useGenerationMode() {
       callbacks?: {
         onCaptureRetry?: () => void;
         onBriefRetry?: () => void;
+        onCaptureFirstAttempt?: (result: { parsePass: boolean }) => void;
+        onBriefFirstAttempt?: (result: { parsePass: boolean }) => void;
       },
     ): ModelAdapter => {
       return getModelAdapter({
@@ -332,6 +334,8 @@ export function useGenerationMode() {
         signal,
         onCaptureRetry: callbacks?.onCaptureRetry,
         onBriefRetry: callbacks?.onBriefRetry,
+        onCaptureFirstAttempt: callbacks?.onCaptureFirstAttempt,
+        onBriefFirstAttempt: callbacks?.onBriefFirstAttempt,
       });
     },
     [effectiveMode, engine],
