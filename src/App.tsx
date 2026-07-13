@@ -189,6 +189,8 @@ export function App() {
     isDisclosureOpen;
   const currentMarkdown = briefSession.decisionBrief?.markdown ?? "";
   const hasMarkdown = currentMarkdown.trim().length > 0;
+  const decisionBrief = briefSession.decisionBrief;
+  const hasDecisionBrief = decisionBrief !== null;
   const exportMarkdown = appendDecisionTraceToMarkdown(
     currentMarkdown,
     briefSession.decisionTrace,
@@ -673,114 +675,186 @@ export function App() {
           selectedDemoExampleId={selectedDemoExampleId}
         />
 
-        <div className="grid min-h-0 flex-1 grid-cols-[minmax(12rem,1fr)_minmax(12rem,0.95fr)_minmax(18rem,2fr)] divide-x divide-slate-200 overflow-hidden xl:grid-cols-[minmax(16rem,1fr)_minmax(16rem,0.95fr)_minmax(24rem,2fr)]">
-          <section
-            aria-labelledby="input-workspace-heading"
-            className="flex min-h-0 min-w-0 flex-col overflow-hidden p-5"
-          >
-            <div className="mb-3 shrink-0">
-              <h2
-                className="text-[11px] font-bold uppercase tracking-wide text-slate-500"
-                id="input-workspace-heading"
-              >
-                Input Workspace
-              </h2>
-              <p className="mt-2 text-xs text-slate-500">
-                Paste messy meeting notes for Capture Layer generation. Load a
-                demo example from the setup bar above.
-              </p>
-            </div>
-            <textarea
-              aria-describedby="raw-input-help"
-              className="min-h-0 flex-1 resize-none border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500"
-              disabled={isWorkflowLocked}
-              onChange={(event) => updateRawInput(event.target.value)}
-              placeholder="Paste meeting notes or brainstorms..."
-              value={briefSession.rawInput.text}
-            />
-            <p
-              className={`mt-2 shrink-0 text-xs ${
-                hasRawInput ? "text-slate-500" : "text-amber-700"
-              }`}
-              id="raw-input-help"
+        {decisionBrief ? (
+          <div className="grid min-h-0 flex-1 grid-cols-[minmax(14rem,1fr)_minmax(24rem,2.75fr)] divide-x divide-slate-200 overflow-hidden xl:grid-cols-[minmax(16rem,1fr)_minmax(28rem,3.25fr)]">
+            <section
+              aria-label="Supporting artifacts"
+              className="flex min-h-0 min-w-0 flex-col gap-4 overflow-y-auto p-5"
             >
-              {hasRawInput
-                ? "Raw notes are stored locally for this session."
-                : "Paste messy notes before generating a Capture Layer."}
-            </p>
-          </section>
+              <details className="group min-w-0">
+                <summary className="flex min-w-0 cursor-pointer list-none flex-col gap-1 rounded border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+                  <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500 group-open:text-slate-600">
+                    Raw Input
+                  </span>
+                  <span className="min-w-0 break-words text-slate-500 [overflow-wrap:anywhere] group-open:text-slate-600">
+                    {hasRawInput
+                      ? "Source notes for this brief"
+                      : "No raw notes"}
+                  </span>
+                </summary>
+                <div className="mt-3 min-w-0 space-y-2">
+                  <textarea
+                    aria-describedby="raw-input-help-generated"
+                    className="min-h-48 w-full resize-y border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500"
+                    disabled={isWorkflowLocked}
+                    onChange={(event) => updateRawInput(event.target.value)}
+                    placeholder="Paste meeting notes or brainstorms..."
+                    value={briefSession.rawInput.text}
+                  />
+                  <p
+                    className={`text-xs ${
+                      hasRawInput ? "text-slate-500" : "text-amber-700"
+                    }`}
+                    id="raw-input-help-generated"
+                  >
+                    {hasRawInput
+                      ? "Editing raw notes resets Capture Layer and Decision Brief."
+                      : "Paste messy notes before regenerating."}
+                  </p>
+                </div>
+              </details>
 
-          <section
-            aria-labelledby="capture-layer-heading"
-            className="flex min-h-0 min-w-0 flex-col overflow-hidden p-5"
-          >
-            <div className="mb-4 shrink-0">
-              <div className="flex items-center justify-between">
-                <h2
-                  className="text-[11px] font-bold uppercase tracking-wide text-slate-500"
-                  id="capture-layer-heading"
-                >
-                  Capture Layer
-                </h2>
-                <StatusBadge label={captureLayerStatus} />
-              </div>
-              <p className="mt-2 text-xs text-slate-500">
-                Structured capture artifact: preserves facts, inference, and
-                ambiguity before the final brief—not a summary shortcut.
-              </p>
-            </div>
-            <div className="min-h-0 flex-1 overflow-y-auto">
               {briefSession.captureLayer ? (
                 <CaptureLayerSummary
                   briefType={briefSession.briefType}
                   captureLayer={briefSession.captureLayer}
-                  hasDecisionBrief={briefSession.decisionBrief !== null}
+                  hasDecisionBrief
                 />
-              ) : (
-                <EmptyPanel
-                  label={
-                    isGeneratingCaptureLayer
-                      ? generationStatusMessage ||
-                        (isOllamaMode
-                          ? "Generating Capture Layer via Ollama..."
-                          : isWebGpuMode
-                            ? "Generating Capture Layer in your browser..."
-                            : "Generating mocked Capture Layer...")
-                      : "Capture Layer will appear here"
-                  }
-                />
-              )}
-            </div>
-            {captureErrorMessage ? (
-              <p className="mt-3 shrink-0 text-xs text-red-700">
-                {captureErrorMessage}
-              </p>
-            ) : null}
-          </section>
+              ) : null}
+              {captureErrorMessage ? (
+                <p className="shrink-0 text-xs text-red-700">
+                  {captureErrorMessage}
+                </p>
+              ) : null}
+            </section>
 
-          <section
-            aria-labelledby="decision-brief-heading"
-            className="flex min-h-0 min-w-0 flex-col overflow-hidden p-5"
-          >
-            <div className="mb-4 flex shrink-0 items-center justify-between">
-              <h2
-                className="text-[11px] font-bold uppercase tracking-wide text-slate-500"
-                id="decision-brief-heading"
+            <section
+              aria-labelledby="decision-brief-heading"
+              className="flex min-h-0 min-w-0 flex-col overflow-hidden p-5"
+            >
+              <div className="mb-4 flex shrink-0 items-center justify-between">
+                <h2
+                  className="text-[11px] font-bold uppercase tracking-wide text-slate-500"
+                  id="decision-brief-heading"
+                >
+                  Decision Brief
+                </h2>
+                <StatusBadge label={decisionBriefStatus} />
+              </div>
+              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+                <DecisionBriefEditor
+                  markdown={decisionBrief.markdown}
+                  onChange={updateDecisionBriefMarkdown}
+                />
+                <DecisionTraceBasis decisionTrace={briefSession.decisionTrace} />
+              </div>
+              {briefErrorMessage ? (
+                <p className="mt-3 shrink-0 text-xs text-red-700">
+                  {briefErrorMessage}
+                </p>
+              ) : null}
+            </section>
+          </div>
+        ) : (
+          <div className="grid min-h-0 flex-1 grid-cols-[minmax(12rem,1fr)_minmax(12rem,0.95fr)_minmax(18rem,2fr)] divide-x divide-slate-200 overflow-hidden xl:grid-cols-[minmax(16rem,1fr)_minmax(16rem,0.95fr)_minmax(24rem,2fr)]">
+            <section
+              aria-labelledby="input-workspace-heading"
+              className="flex min-h-0 min-w-0 flex-col overflow-hidden p-5"
+            >
+              <div className="mb-3 shrink-0">
+                <h2
+                  className="text-[11px] font-bold uppercase tracking-wide text-slate-500"
+                  id="input-workspace-heading"
+                >
+                  Input Workspace
+                </h2>
+                <p className="mt-2 text-xs text-slate-500">
+                  Paste messy meeting notes for Capture Layer generation. Load a
+                  demo example from the setup bar above.
+                </p>
+              </div>
+              <textarea
+                aria-describedby="raw-input-help"
+                className="min-h-0 flex-1 resize-none border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500"
+                disabled={isWorkflowLocked}
+                onChange={(event) => updateRawInput(event.target.value)}
+                placeholder="Paste meeting notes or brainstorms..."
+                value={briefSession.rawInput.text}
+              />
+              <p
+                className={`mt-2 shrink-0 text-xs ${
+                  hasRawInput ? "text-slate-500" : "text-amber-700"
+                }`}
+                id="raw-input-help"
               >
-                Decision Brief
-              </h2>
-              <StatusBadge label={decisionBriefStatus} />
-            </div>
-            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-              {briefSession.decisionBrief ? (
-                <>
-                  <DecisionBriefEditor
-                    markdown={briefSession.decisionBrief.markdown}
-                    onChange={updateDecisionBriefMarkdown}
+                {hasRawInput
+                  ? "Raw notes are stored locally for this session."
+                  : "Paste messy notes before generating a Capture Layer."}
+              </p>
+            </section>
+
+            <section
+              aria-labelledby="capture-layer-heading"
+              className="flex min-h-0 min-w-0 flex-col overflow-hidden p-5"
+            >
+              <div className="mb-4 shrink-0">
+                <div className="flex items-center justify-between">
+                  <h2
+                    className="text-[11px] font-bold uppercase tracking-wide text-slate-500"
+                    id="capture-layer-heading"
+                  >
+                    Capture Layer
+                  </h2>
+                  <StatusBadge label={captureLayerStatus} />
+                </div>
+                <p className="mt-2 text-xs text-slate-500">
+                  Structured capture artifact: preserves facts, inference, and
+                  ambiguity before the final brief—not a summary shortcut.
+                </p>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                {briefSession.captureLayer ? (
+                  <CaptureLayerSummary
+                    briefType={briefSession.briefType}
+                    captureLayer={briefSession.captureLayer}
+                    hasDecisionBrief={false}
                   />
-                  <DecisionTraceBasis decisionTrace={briefSession.decisionTrace} />
-                </>
-              ) : (
+                ) : (
+                  <EmptyPanel
+                    label={
+                      isGeneratingCaptureLayer
+                        ? generationStatusMessage ||
+                          (isOllamaMode
+                            ? "Generating Capture Layer via Ollama..."
+                            : isWebGpuMode
+                              ? "Generating Capture Layer in your browser..."
+                              : "Generating mocked Capture Layer...")
+                        : "Capture Layer will appear here"
+                    }
+                  />
+                )}
+              </div>
+              {captureErrorMessage ? (
+                <p className="mt-3 shrink-0 text-xs text-red-700">
+                  {captureErrorMessage}
+                </p>
+              ) : null}
+            </section>
+
+            <section
+              aria-labelledby="decision-brief-heading"
+              className="flex min-h-0 min-w-0 flex-col overflow-hidden p-5"
+            >
+              <div className="mb-4 flex shrink-0 items-center justify-between">
+                <h2
+                  className="text-[11px] font-bold uppercase tracking-wide text-slate-500"
+                  id="decision-brief-heading"
+                >
+                  Decision Brief
+                </h2>
+                <StatusBadge label={decisionBriefStatus} />
+              </div>
+              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
                 <EmptyPanel
                   label={
                     isGeneratingDecisionBrief
@@ -793,15 +867,15 @@ export function App() {
                       : "Decision Brief will appear here"
                   }
                 />
-              )}
-            </div>
-            {briefErrorMessage ? (
-              <p className="mt-3 shrink-0 text-xs text-red-700">
-                {briefErrorMessage}
-              </p>
-            ) : null}
-          </section>
-        </div>
+              </div>
+              {briefErrorMessage ? (
+                <p className="mt-3 shrink-0 text-xs text-red-700">
+                  {briefErrorMessage}
+                </p>
+              ) : null}
+            </section>
+          </div>
+        )}
 
         <footer className="sticky bottom-0 z-20 flex shrink-0 items-center justify-between border-t border-slate-200 bg-white px-5 py-3 shadow-[0_-8px_20px_rgba(15,23,42,0.06)]">
           <div className="flex gap-3">
