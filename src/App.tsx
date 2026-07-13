@@ -803,7 +803,7 @@ export function App() {
                   </p>
                 ) : null}
               </div>
-              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                 {decisionBriefViewMode === "preview" ? (
                   <DecisionBriefPreview markdown={decisionBrief.markdown} />
                 ) : (

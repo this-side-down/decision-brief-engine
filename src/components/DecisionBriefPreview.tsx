@@ -19,7 +19,9 @@ const previewComponents: Components = {
     </h3>
   ),
   p: ({ children }) => (
-    <p className="mb-4 leading-7 text-slate-800 last:mb-0">{children}</p>
+    <p className="mb-4 leading-7 text-slate-800 [overflow-wrap:anywhere] last:mb-0">
+      {children}
+    </p>
   ),
   ul: ({ children }) => (
     <ul className="mb-4 list-disc space-y-1 pl-5 leading-7 text-slate-800 last:mb-0">
@@ -39,7 +41,7 @@ const previewComponents: Components = {
   ),
   a: ({ children, href }) => (
     <a
-      className="font-medium text-slate-900 underline decoration-slate-300 underline-offset-2 hover:decoration-slate-500"
+      className="font-medium text-slate-900 underline decoration-slate-300 underline-offset-2 [overflow-wrap:anywhere] hover:decoration-slate-500"
       href={href}
       rel="noopener noreferrer"
       target="_blank"
@@ -107,7 +109,7 @@ export function DecisionBriefPreview({ markdown }: { markdown: string }) {
   return (
     <article
       aria-label="Rendered Decision Brief preview"
-      className="min-h-0 w-full flex-1 border border-slate-200 bg-white p-4"
+      className="min-h-0 min-w-0 w-full flex-1 overflow-y-auto overflow-x-hidden overscroll-contain border border-slate-200 bg-white p-4 [overflow-wrap:anywhere]"
     >
       <ReactMarkdown components={previewComponents} remarkPlugins={[remarkGfm]}>
         {markdown}
