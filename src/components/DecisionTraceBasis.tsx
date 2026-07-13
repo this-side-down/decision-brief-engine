@@ -148,10 +148,10 @@ function TraceEntryGroup({
  * primary output artifact, and the recommendation/next-step statements
  * this section provides rationale for are already visible above it, so the
  * collapsed state only needs to communicate that basis exists (via a
- * count-only summary — no confidence tally) rather than show it. There is
- * no fixed-height inner scroll region; once expanded, the surrounding
- * Decision Brief column/page scrolling handles the content like everything
- * else in that column.
+ * count-only summary — no confidence tally) rather than show it. When
+ * expanded, the body scrolls inside a viewport-bounded region so every
+ * recommendation and next-step basis field stays reachable without
+ * painting behind the brief surface or footer.
  *
  * Renders nothing when there is no Decision Trace, and a quiet empty-state
  * note when the trace exists but has no entries.
@@ -190,9 +190,11 @@ export function DecisionTraceBasis({
         </div>
         <DisclosureChevron />
       </summary>
-      <div className="mt-3 min-w-0 space-y-3">
-        <TraceEntryGroup entries={groups.recommendations} title="Recommendations" />
-        <TraceEntryGroup entries={groups.nextSteps} title="Next steps" />
+      <div className="mt-3 min-h-0 max-h-[min(40vh,24rem)] overflow-y-auto overflow-x-hidden overscroll-contain">
+        <div className="min-w-0 space-y-3">
+          <TraceEntryGroup entries={groups.recommendations} title="Recommendations" />
+          <TraceEntryGroup entries={groups.nextSteps} title="Next steps" />
+        </div>
       </div>
     </details>
   );
