@@ -1,6 +1,7 @@
 import type { BriefType } from "../types/brief";
 import type { CaptureLayer } from "../types/captureLayer";
 import { formatCaptureLayerSummarySignals } from "../utils/captureLayerSummarySignals";
+import { DisclosureChevron } from "./DisclosureChevron";
 
 function captureCardTextClassName() {
   return "mt-2 min-w-0 break-words text-sm leading-6 text-slate-700 [overflow-wrap:anywhere]";
@@ -114,13 +115,16 @@ export function CaptureLayerSummary({
 
   return (
     <details className="group min-w-0" key="collapsed">
-      <summary className="flex min-w-0 cursor-pointer list-none flex-col gap-1 rounded border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
-        <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500 group-open:text-slate-600">
-          Capture Layer
-        </span>
-        <span className="min-w-0 break-words text-slate-500 [overflow-wrap:anywhere] group-open:text-slate-600">
-          {summary}
-        </span>
+      <summary className="flex min-w-0 cursor-pointer list-none items-center gap-2 rounded border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 transition-colors hover:bg-slate-50 group-open:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/10 [&::-webkit-details-marker]:hidden">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500 group-open:text-slate-600">
+            Capture Layer
+          </span>
+          <span className="min-w-0 break-words text-slate-500 [overflow-wrap:anywhere] group-open:text-slate-600">
+            {summary}
+          </span>
+        </div>
+        <DisclosureChevron />
       </summary>
       <div className="mt-3 min-w-0">
         <CaptureLayerFields captureLayer={captureLayer} />
