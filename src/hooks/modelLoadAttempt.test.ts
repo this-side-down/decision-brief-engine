@@ -1,14 +1,30 @@
 import { describe, expect, it, vi } from "vitest";
-import { ModelDownloadFailedError, ModelLoadTimeoutError } from "../services/generation/webGpuErrors";
+import { ModelDownloadFailedError, ModelLoadCancelledError, ModelLoadTimeoutError } from "../services/generation/webGpuErrors";
 import {
+  applyModelLoadFailureTransition,
   applyModelLoadProgressUpdate,
+  applyModelLoadSuccessTransition,
   createModelLoadAttemptState,
   formatModelDownloadFailureMessage,
   formatDownloadingStatusMessage,
   resolveBrowserInferenceDownloadUi,
   resolveBrowserInferenceStatusMessage,
   sanitizeModelDownloadErrorDetail,
+  type ModelLoadUiSnapshot,
 } from "./modelLoadAttempt";
+
+function createUiSnapshot(
+  overrides: Partial<ModelLoadUiSnapshot> = {},
+): ModelLoadUiSnapshot {
+  return {
+    engine: null,
+    downloadProgress: { progress: 0.25, text: "Fetching shard" },
+    lastModelLoadDurationMs: null,
+    inferenceUiState: "downloading_model",
+    statusMessage: "Downloading model for live browser generation… 25%",
+    ...overrides,
+  };
+}
 
 describe("createModelLoadAttemptState", () => {
   it("accepts progress only for the current unsettled attempt", () => {
@@ -17,7 +33,7 @@ describe("createModelLoadAttemptState", () => {
 
     expect(state.canAcceptProgress(attemptId, false)).toBe(true);
 
-    state.settleAttempt(attemptId);
+    expect(state.trySettleAttempt(attemptId)).toBe(true);
 
     expect(state.canAcceptProgress(attemptId, false)).toBe(false);
   });
@@ -48,6 +64,50 @@ describe("createModelLoadAttemptState", () => {
   });
 });
 
+describe("trySettleAttempt", () => {
+  it("lets the current unsettled attempt claim terminal state once", () => {
+    const state = createModelLoadAttemptState();
+    const attemptId = state.beginAttempt();
+
+    expect(state.trySettleAttempt(attemptId)).toBe(true);
+    expect(state.trySettleAttempt(attemptId)).toBe(false);
+  });
+
+  it("rejects a second terminal claim for the same attempt", () => {
+    const state = createModelLoadAttemptState();
+    const attemptId = state.beginAttempt();
+
+    expect(state.trySettleAttempt(attemptId)).toBe(true);
+    expect(state.trySettleAttempt(attemptId)).toBe(false);
+  });
+
+  it("rejects terminal claims from a superseded attempt", () => {
+    const state = createModelLoadAttemptState();
+    const firstAttemptId = state.beginAttempt();
+    state.beginAttempt();
+
+    expect(state.trySettleAttempt(firstAttemptId)).toBe(false);
+  });
+
+  it("rejects terminal claims from an invalidated attempt", () => {
+    const state = createModelLoadAttemptState();
+    const attemptId = state.beginAttempt();
+
+    state.invalidateCurrentAttempt();
+
+    expect(state.trySettleAttempt(attemptId)).toBe(false);
+  });
+
+  it("lets a fresh retry claim terminal state", () => {
+    const state = createModelLoadAttemptState();
+    const firstAttemptId = state.beginAttempt();
+    expect(state.trySettleAttempt(firstAttemptId)).toBe(true);
+
+    const retryAttemptId = state.beginAttempt();
+    expect(state.trySettleAttempt(retryAttemptId)).toBe(true);
+  });
+});
+
 describe("applyModelLoadProgressUpdate", () => {
   it("applies progress for an active attempt", () => {
     const state = createModelLoadAttemptState();
@@ -69,28 +129,10 @@ describe("applyModelLoadProgressUpdate", () => {
     );
   });
 
-  it("ignores late progress after failure settlement", () => {
+  it("ignores late progress after terminal settlement", () => {
     const state = createModelLoadAttemptState();
     const attemptId = state.beginAttempt();
-    state.settleAttempt(attemptId);
-    const applyUpdate = vi.fn();
-
-    const applied = applyModelLoadProgressUpdate({
-      attemptState: state,
-      attemptId,
-      aborted: false,
-      progress: { progress: 0.9, text: "Late callback" },
-      applyUpdate,
-    });
-
-    expect(applied).toBe(false);
-    expect(applyUpdate).not.toHaveBeenCalled();
-  });
-
-  it("ignores late progress after timeout settlement", () => {
-    const state = createModelLoadAttemptState();
-    const attemptId = state.beginAttempt();
-    state.settleAttempt(attemptId);
+    state.trySettleAttempt(attemptId);
     const applyUpdate = vi.fn();
 
     expect(
@@ -98,33 +140,17 @@ describe("applyModelLoadProgressUpdate", () => {
         attemptState: state,
         attemptId,
         aborted: false,
-        progress: { progress: 0.75, text: "Still downloading?" },
+        progress: { progress: 0.9, text: "Late callback" },
         applyUpdate,
       }),
     ).toBe(false);
-  });
-
-  it("ignores late progress after cancellation", () => {
-    const state = createModelLoadAttemptState();
-    const attemptId = state.beginAttempt();
-    state.settleAttempt(attemptId);
-    const applyUpdate = vi.fn();
-
-    expect(
-      applyModelLoadProgressUpdate({
-        attemptState: state,
-        attemptId,
-        aborted: true,
-        progress: { progress: 0.2, text: "Cancelled attempt" },
-        applyUpdate,
-      }),
-    ).toBe(false);
+    expect(applyUpdate).not.toHaveBeenCalled();
   });
 
   it("allows a fresh retry attempt to report progress normally", () => {
     const state = createModelLoadAttemptState();
     const firstAttemptId = state.beginAttempt();
-    state.settleAttempt(firstAttemptId);
+    state.trySettleAttempt(firstAttemptId);
     const retryAttemptId = state.beginAttempt();
     const applyUpdate = vi.fn();
 
@@ -148,6 +174,205 @@ describe("applyModelLoadProgressUpdate", () => {
       }),
     ).toBe(true);
     expect(applyUpdate).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("applyModelLoadSuccessTransition", () => {
+  it("reaches model_ready for the current attempt", () => {
+    const state = createModelLoadAttemptState();
+    const attemptId = state.beginAttempt();
+    const ui = createUiSnapshot();
+    const loadedEngine = { id: "engine" };
+
+    expect(
+      applyModelLoadSuccessTransition({
+        attemptState: state,
+        attemptId,
+        loadedEngine,
+        loadDurationMs: 12_000,
+        ui,
+      }),
+    ).toBe(true);
+
+    expect(ui).toEqual({
+      engine: loadedEngine,
+      downloadProgress: null,
+      lastModelLoadDurationMs: 12_000,
+      inferenceUiState: "model_ready",
+      statusMessage:
+        "Live in browser is ready. Generation runs locally on your device.",
+    });
+  });
+
+  it("does not apply stale success after supersession", () => {
+    const state = createModelLoadAttemptState();
+    const attemptA = state.beginAttempt();
+    const ui = createUiSnapshot();
+    state.beginAttempt();
+
+    expect(
+      applyModelLoadSuccessTransition({
+        attemptState: state,
+        attemptId: attemptA,
+        loadedEngine: { id: "stale" },
+        loadDurationMs: 9_000,
+        ui,
+      }),
+    ).toBe(false);
+
+    expect(ui.inferenceUiState).toBe("downloading_model");
+    expect(ui.engine).toBeNull();
+    expect(ui.downloadProgress).not.toBeNull();
+  });
+});
+
+describe("applyModelLoadFailureTransition", () => {
+  it("reaches download_failed for the current attempt", () => {
+    const state = createModelLoadAttemptState();
+    const attemptId = state.beginAttempt();
+    const ui = createUiSnapshot();
+    const onTerminal = vi.fn();
+
+    expect(
+      applyModelLoadFailureTransition({
+        attemptState: state,
+        attemptId,
+        error: new ModelDownloadFailedError("Failed to load model shard: 403 Forbidden"),
+        ui,
+        onTerminal,
+      }),
+    ).toBe(true);
+
+    expect(onTerminal).toHaveBeenCalledTimes(1);
+    expect(ui.inferenceUiState).toBe("download_failed");
+    expect(ui.downloadProgress).toBeNull();
+    expect(ui.statusMessage).toContain("Model download failed.");
+  });
+
+  it("does not apply stale failure after supersession", () => {
+    const state = createModelLoadAttemptState();
+    const attemptA = state.beginAttempt();
+    const ui = createUiSnapshot({
+      statusMessage: "Downloading model for live browser generation… 50%",
+    });
+    const onTerminal = vi.fn();
+    state.beginAttempt();
+
+    expect(
+      applyModelLoadFailureTransition({
+        attemptState: state,
+        attemptId: attemptA,
+        error: new ModelDownloadFailedError("403 Forbidden"),
+        ui,
+        onTerminal,
+      }),
+    ).toBe(false);
+
+    expect(onTerminal).not.toHaveBeenCalled();
+    expect(ui.inferenceUiState).toBe("downloading_model");
+    expect(ui.downloadProgress).not.toBeNull();
+  });
+});
+
+describe("model load terminal orchestration", () => {
+  it("keeps attempt B downloading when attempt A rejects", () => {
+    const state = createModelLoadAttemptState();
+    const attemptA = state.beginAttempt();
+    const ui = createUiSnapshot({
+      statusMessage: "Downloading model for live browser generation… 50%",
+    });
+    const onTerminal = vi.fn();
+    const attemptB = state.beginAttempt();
+
+    expect(
+      applyModelLoadFailureTransition({
+        attemptState: state,
+        attemptId: attemptA,
+        error: new ModelDownloadFailedError("403 Forbidden"),
+        ui,
+        onTerminal,
+      }),
+    ).toBe(false);
+
+    expect(onTerminal).not.toHaveBeenCalled();
+    expect(ui.inferenceUiState).toBe("downloading_model");
+    expect(state.canAcceptProgress(attemptB, false)).toBe(true);
+  });
+
+  it("keeps attempt B authoritative when attempt A resolves", () => {
+    const state = createModelLoadAttemptState();
+    const attemptA = state.beginAttempt();
+    const ui = createUiSnapshot();
+    state.beginAttempt();
+
+    expect(
+      applyModelLoadSuccessTransition({
+        attemptState: state,
+        attemptId: attemptA,
+        loadedEngine: { id: "stale" },
+        loadDurationMs: 4_000,
+        ui,
+      }),
+    ).toBe(false);
+
+    expect(ui.inferenceUiState).toBe("downloading_model");
+    expect(ui.engine).toBeNull();
+  });
+
+  it("preserves fallback_to_mock when a late rejection arrives after Mock fallback", () => {
+    const state = createModelLoadAttemptState();
+    const attemptId = state.beginAttempt();
+    const ui = createUiSnapshot({
+      inferenceUiState: "fallback_to_mock",
+      statusMessage: "Switched to Mock demo.",
+      downloadProgress: null,
+    });
+    const onTerminal = vi.fn();
+
+    state.invalidateCurrentAttempt();
+
+    expect(
+      applyModelLoadFailureTransition({
+        attemptState: state,
+        attemptId,
+        error: new ModelDownloadFailedError("403 Forbidden"),
+        ui,
+        onTerminal,
+      }),
+    ).toBe(false);
+
+    expect(onTerminal).not.toHaveBeenCalled();
+    expect(ui.inferenceUiState).toBe("fallback_to_mock");
+    expect(ui.statusMessage).toBe("Switched to Mock demo.");
+  });
+
+  it("preserves download_cancelled when a late rejection arrives after explicit cancel", () => {
+    const state = createModelLoadAttemptState();
+    const attemptId = state.beginAttempt();
+    const ui = createUiSnapshot({
+      inferenceUiState: "download_cancelled",
+      statusMessage: "Model download cancelled. Live in browser is not ready.",
+      downloadProgress: null,
+    });
+    const onTerminal = vi.fn();
+
+    state.invalidateCurrentAttempt();
+
+    expect(
+      applyModelLoadFailureTransition({
+        attemptState: state,
+        attemptId,
+        error: new ModelLoadCancelledError(),
+        ui,
+        onTerminal,
+      }),
+    ).toBe(false);
+
+    expect(onTerminal).not.toHaveBeenCalled();
+    expect(ui.inferenceUiState).toBe("download_cancelled");
+    expect(ui.statusMessage).toBe(
+      "Model download cancelled. Live in browser is not ready.",
+    );
   });
 });
 

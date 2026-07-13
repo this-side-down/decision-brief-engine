@@ -222,7 +222,10 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
         throw new ModelLoadCancelledError();
       }
 
-      modelLoadAttemptStateRef.current.settleAttempt(attemptId);
+      if (!modelLoadAttemptStateRef.current.trySettleAttempt(attemptId)) {
+        return;
+      }
+
       setEngine(loadedEngine);
       setDownloadProgress(null);
       setLastModelLoadDurationMs(Date.now() - loadStartedAt);
@@ -231,7 +234,10 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
         "Live in browser is ready. Generation runs locally on your device.",
       );
     } catch (error) {
-      modelLoadAttemptStateRef.current.settleAttempt(attemptId);
+      if (!modelLoadAttemptStateRef.current.trySettleAttempt(attemptId)) {
+        return;
+      }
+
       onModelLoadTerminalRef.current?.();
       setDownloadProgress(null);
 

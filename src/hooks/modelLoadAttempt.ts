@@ -12,7 +12,7 @@ export type DownloadProgressUpdate = {
 export type ModelLoadAttemptState = {
   beginAttempt(): number;
   invalidateCurrentAttempt(): void;
-  settleAttempt(attemptId: number): void;
+  trySettleAttempt(attemptId: number): boolean;
   canAcceptProgress(attemptId: number, aborted: boolean): boolean;
   isCurrentAttempt(attemptId: number): boolean;
 };
@@ -30,10 +30,13 @@ export function createModelLoadAttemptState(): ModelLoadAttemptState {
     invalidateCurrentAttempt() {
       settled = true;
     },
-    settleAttempt(attemptId) {
-      if (attemptId === currentAttemptId) {
-        settled = true;
+    trySettleAttempt(attemptId) {
+      if (attemptId !== currentAttemptId || settled) {
+        return false;
       }
+
+      settled = true;
+      return true;
     },
     canAcceptProgress(attemptId, aborted) {
       return attemptId === currentAttemptId && !settled && !aborted;
@@ -153,5 +156,62 @@ export function applyModelLoadProgressUpdate(options: {
     options.progress,
     formatDownloadingStatusMessage(options.progress.progress),
   );
+  return true;
+}
+
+export type ModelLoadUiSnapshot = {
+  engine: unknown | null;
+  downloadProgress: DownloadProgressUpdate | null;
+  lastModelLoadDurationMs: number | null;
+  inferenceUiState: string;
+  statusMessage: string;
+};
+
+const MODEL_READY_STATUS =
+  "Live in browser is ready. Generation runs locally on your device.";
+const DOWNLOAD_CANCELLED_STATUS =
+  "Model download cancelled. Live in browser is not ready.";
+
+export function applyModelLoadSuccessTransition(options: {
+  attemptState: ModelLoadAttemptState;
+  attemptId: number;
+  loadedEngine: unknown;
+  loadDurationMs: number;
+  ui: ModelLoadUiSnapshot;
+}): boolean {
+  if (!options.attemptState.trySettleAttempt(options.attemptId)) {
+    return false;
+  }
+
+  options.ui.engine = options.loadedEngine;
+  options.ui.downloadProgress = null;
+  options.ui.lastModelLoadDurationMs = options.loadDurationMs;
+  options.ui.inferenceUiState = "model_ready";
+  options.ui.statusMessage = MODEL_READY_STATUS;
+  return true;
+}
+
+export function applyModelLoadFailureTransition(options: {
+  attemptState: ModelLoadAttemptState;
+  attemptId: number;
+  error: unknown;
+  ui: ModelLoadUiSnapshot;
+  onTerminal?: () => void;
+}): boolean {
+  if (!options.attemptState.trySettleAttempt(options.attemptId)) {
+    return false;
+  }
+
+  options.onTerminal?.();
+  options.ui.downloadProgress = null;
+
+  if (isModelLoadCancellation(options.error)) {
+    options.ui.inferenceUiState = "download_cancelled";
+    options.ui.statusMessage = DOWNLOAD_CANCELLED_STATUS;
+    return true;
+  }
+
+  options.ui.inferenceUiState = "download_failed";
+  options.ui.statusMessage = formatModelDownloadFailureMessage(options.error);
   return true;
 }
