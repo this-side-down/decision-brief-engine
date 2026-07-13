@@ -1,4 +1,5 @@
 import type { BrowserInferenceUiState } from "../../hooks/useGenerationMode";
+import { resolveBrowserInferenceDownloadUi } from "../../hooks/modelLoadAttempt";
 
 type BrowserInferenceStatusProps = {
   inferenceUiState: BrowserInferenceUiState;
@@ -23,6 +24,7 @@ export function BrowserInferenceStatus({
   onTryAgain,
   onCancelGeneration,
 }: BrowserInferenceStatusProps) {
+  const downloadUi = resolveBrowserInferenceDownloadUi(inferenceUiState);
   const showBanner = [
     "browser_unsupported",
     "ready_to_opt_in",
@@ -57,7 +59,7 @@ export function BrowserInferenceStatus({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p>{statusMessage}</p>
         <div className="flex flex-wrap gap-2">
-          {inferenceUiState === "downloading_model" && onCancelDownload ? (
+          {downloadUi.showCancelDownload && onCancelDownload ? (
             <button
               className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-neutral-950 hover:text-neutral-950"
               onClick={onCancelDownload}
@@ -75,10 +77,7 @@ export function BrowserInferenceStatus({
               Try again
             </button>
           ) : null}
-          {(inferenceUiState === "download_cancelled" ||
-            inferenceUiState === "download_failed" ||
-            inferenceUiState === "browser_unsupported") &&
-          onStayOnMockDemo ? (
+          {downloadUi.showStayOnMockDemo && onStayOnMockDemo ? (
             <button
               className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-neutral-950 hover:text-neutral-950"
               onClick={onStayOnMockDemo}
@@ -87,7 +86,7 @@ export function BrowserInferenceStatus({
               Stay on Mock demo
             </button>
           ) : null}
-          {inferenceUiState === "download_failed" && onRetryDownload ? (
+          {downloadUi.showRetryDownload && onRetryDownload ? (
             <button
               className="rounded border border-neutral-950 bg-neutral-950 px-3 py-1.5 text-xs font-semibold text-white"
               onClick={onRetryDownload}
@@ -132,7 +131,7 @@ export function BrowserInferenceStatus({
           ) : null}
         </div>
       </div>
-      {inferenceUiState === "downloading_model" ? (
+      {downloadUi.showProgressBar ? (
         <div className="mt-3">
           <div
             aria-label="Model download progress"

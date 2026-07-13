@@ -21,14 +21,18 @@ import {
   loadWebGpuEngine,
 } from "../services/generation/webGpuEngine";
 import {
-  ModelDownloadFailedError,
   ModelLoadCancelledError,
-  ModelLoadTimeoutError,
 } from "../services/generation/webGpuErrors";
 import {
   runWebGpuPreflight,
   type PreflightResult,
 } from "../services/generation/webGpuPreflight";
+import {
+  applyModelLoadProgressUpdate,
+  createModelLoadAttemptState,
+  formatModelDownloadFailureMessage,
+  isModelLoadCancellation,
+} from "./modelLoadAttempt";
 
 export type BrowserInferenceUiState =
   | "mock_default"
@@ -52,7 +56,11 @@ type DownloadProgress = {
   text: string;
 };
 
-export function useGenerationMode() {
+type UseGenerationModeOptions = {
+  onModelLoadTerminal?: () => void;
+};
+
+export function useGenerationMode(options: UseGenerationModeOptions = {}) {
   const [modePreference, setModePreferenceState] =
     useState<UserGenerationModePreference>(() => getGenerationModePreference());
   const [preflight, setPreflight] = useState<PreflightResult>({ supported: true });
@@ -71,6 +79,9 @@ export function useGenerationMode() {
   >(null);
   const loadAbortRef = useRef<AbortController | null>(null);
   const generationAbortRef = useRef<AbortController | null>(null);
+  const modelLoadAttemptStateRef = useRef(createModelLoadAttemptState());
+  const onModelLoadTerminalRef = useRef(options.onModelLoadTerminal);
+  onModelLoadTerminalRef.current = options.onModelLoadTerminal;
 
   const effectiveMode = useMemo(
     () => resolveEffectiveMode(modePreference),
@@ -143,6 +154,8 @@ export function useGenerationMode() {
   const selectMockDemo = useCallback(() => {
     loadAbortRef.current?.abort();
     generationAbortRef.current?.abort();
+    modelLoadAttemptStateRef.current.invalidateCurrentAttempt();
+    onModelLoadTerminalRef.current?.();
     void cancelWebGpuLoad();
     void cancelWebGpuGeneration(engine);
     persistPreference("mock");
@@ -155,6 +168,8 @@ export function useGenerationMode() {
   const cancelModelDownload = useCallback(() => {
     loadAbortRef.current?.abort();
     loadAbortRef.current = null;
+    modelLoadAttemptStateRef.current.invalidateCurrentAttempt();
+    onModelLoadTerminalRef.current?.();
     void cancelWebGpuLoad();
     setDownloadProgress(null);
     setIsDisclosureOpen(false);
@@ -176,8 +191,10 @@ export function useGenerationMode() {
     }
 
     loadAbortRef.current?.abort();
+    modelLoadAttemptStateRef.current.invalidateCurrentAttempt();
     const controller = new AbortController();
     loadAbortRef.current = controller;
+    const attemptId = modelLoadAttemptStateRef.current.beginAttempt();
     setIsDisclosureOpen(false);
     setInferenceUiState("downloading_model");
     setStatusMessage("Downloading model for live browser generation…");
@@ -188,15 +205,25 @@ export function useGenerationMode() {
       const loadedEngine = await loadWebGpuEngine({
         signal: controller.signal,
         onProgress: (progress) => {
-          setDownloadProgress(progress);
-          setStatusMessage(
-            `Downloading model for live browser generation… ${Math.round(progress.progress * 100)}%`,
-          );
+          applyModelLoadProgressUpdate({
+            attemptState: modelLoadAttemptStateRef.current,
+            attemptId,
+            aborted: controller.signal.aborted,
+            progress,
+            applyUpdate: (nextProgress, nextStatusMessage) => {
+              setDownloadProgress(nextProgress);
+              setStatusMessage(nextStatusMessage);
+            },
+          });
         },
       });
 
       if (controller.signal.aborted) {
         throw new ModelLoadCancelledError();
+      }
+
+      if (!modelLoadAttemptStateRef.current.trySettleAttempt(attemptId)) {
+        return;
       }
 
       setEngine(loadedEngine);
@@ -207,26 +234,21 @@ export function useGenerationMode() {
         "Live in browser is ready. Generation runs locally on your device.",
       );
     } catch (error) {
+      if (!modelLoadAttemptStateRef.current.trySettleAttempt(attemptId)) {
+        return;
+      }
+
+      onModelLoadTerminalRef.current?.();
       setDownloadProgress(null);
 
-      if (error instanceof ModelLoadCancelledError) {
+      if (isModelLoadCancellation(error)) {
         setInferenceUiState("download_cancelled");
         setStatusMessage("Model download cancelled. Live in browser is not ready.");
         return;
       }
 
-      if (error instanceof ModelLoadTimeoutError) {
-        setInferenceUiState("download_failed");
-        setStatusMessage(error.message);
-        return;
-      }
-
       setInferenceUiState("download_failed");
-      setStatusMessage(
-        error instanceof ModelDownloadFailedError
-          ? error.message
-          : "Model download failed. Check your connection and try again.",
-      );
+      setStatusMessage(formatModelDownloadFailureMessage(error));
     } finally {
       if (loadAbortRef.current === controller) {
         loadAbortRef.current = null;
@@ -324,6 +346,8 @@ export function useGenerationMode() {
       callbacks?: {
         onCaptureRetry?: () => void;
         onBriefRetry?: () => void;
+        onCaptureFirstAttempt?: (result: { parsePass: boolean }) => void;
+        onBriefFirstAttempt?: (result: { parsePass: boolean }) => void;
       },
     ): ModelAdapter => {
       return getModelAdapter({
@@ -332,6 +356,8 @@ export function useGenerationMode() {
         signal,
         onCaptureRetry: callbacks?.onCaptureRetry,
         onBriefRetry: callbacks?.onBriefRetry,
+        onCaptureFirstAttempt: callbacks?.onCaptureFirstAttempt,
+        onBriefFirstAttempt: callbacks?.onBriefFirstAttempt,
       });
     },
     [effectiveMode, engine],

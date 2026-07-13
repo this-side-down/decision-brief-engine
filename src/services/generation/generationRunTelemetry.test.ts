@@ -69,6 +69,7 @@ describe("generationRunTelemetry", () => {
       briefRetryCount: 0,
       briefOutcome: "timeout",
       briefError: "Ollama request timed out after 120000ms.",
+      webGpuEval: null,
     });
 
     expect(lines).toEqual([
@@ -77,6 +78,38 @@ describe("generationRunTelemetry", () => {
       "Decision Brief: timed out after 120s",
       "Decision Brief error: Ollama request timed out after 120000ms.",
     ]);
+  });
+
+  it("includes WebGPU structured-output evaluation details when present", () => {
+    const lines = formatRunDetailsLines({
+      runtimeMode: "webgpu",
+      runtimeLabel: "Live in browser",
+      modelLoadDurationMs: 30_000,
+      captureDurationMs: 45_000,
+      captureRetryCount: 1,
+      captureOutcome: "success",
+      captureError: null,
+      briefDurationMs: 20_000,
+      briefRetryCount: 0,
+      briefOutcome: "success",
+      briefError: null,
+      webGpuEval: {
+        modelId: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+        webLlmVersion: "0.2.84",
+        captureSchemaVersion: "capture-layer-v1",
+        briefSchemaVersion: "decision-brief-result-v1",
+        captureFirstAttemptSchemaPass: false,
+        briefFirstAttemptSchemaPass: true,
+      },
+    });
+
+    expect(lines).toContain("WebLLM: 0.2.84 (Qwen2.5-1.5B-Instruct-q4f16_1-MLC)");
+    expect(lines).toContain(
+      "Structured output schemas: capture-layer-v1 / decision-brief-result-v1",
+    );
+    expect(lines).toContain("Capture first attempt schema: fail");
+    expect(lines).toContain("Decision Brief first attempt schema: pass");
+    expect(lines).toContain("Capture Layer: 45s (1 retry)");
   });
 
   it("only enables telemetry for real-generation modes", () => {

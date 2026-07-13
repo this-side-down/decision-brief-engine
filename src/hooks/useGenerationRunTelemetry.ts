@@ -11,6 +11,7 @@ import {
   shouldShowGenerationTelemetry,
   type GenerationRunRecord,
   type GenerationStep,
+  type WebGpuGenerationEval,
 } from "../services/generation/generationRunTelemetry";
 
 type UseGenerationRunTelemetryOptions = {
@@ -99,6 +100,64 @@ export function useGenerationRunTelemetry({
     setCurrentStep("capture");
     setStepStartedAt(startedAt);
   }, [beginRun, enabled]);
+
+  const initializeWebGpuEval = useCallback(
+    (evalContext: Omit<WebGpuGenerationEval, "captureFirstAttemptSchemaPass" | "briefFirstAttemptSchemaPass">) => {
+      if (!enabled) {
+        return;
+      }
+
+      setRunRecord((current) => {
+        const base = current ?? createGenerationRunRecord(runtimeMode);
+
+        return {
+          ...base,
+          webGpuEval: {
+            ...evalContext,
+            captureFirstAttemptSchemaPass: null,
+            briefFirstAttemptSchemaPass: null,
+          },
+        };
+      });
+    },
+    [enabled, runtimeMode],
+  );
+
+  const recordCaptureFirstAttempt = useCallback((parsePass: boolean) => {
+    if (!enabled) {
+      return;
+    }
+
+    setRunRecord((current) =>
+      current?.webGpuEval
+        ? {
+            ...current,
+            webGpuEval: {
+              ...current.webGpuEval,
+              captureFirstAttemptSchemaPass: parsePass,
+            },
+          }
+        : current,
+    );
+  }, [enabled]);
+
+  const recordBriefFirstAttempt = useCallback((parsePass: boolean) => {
+    if (!enabled) {
+      return;
+    }
+
+    setRunRecord((current) =>
+      current?.webGpuEval
+        ? {
+            ...current,
+            webGpuEval: {
+              ...current.webGpuEval,
+              briefFirstAttemptSchemaPass: parsePass,
+            },
+          }
+        : current,
+    );
+  }, [enabled]);
 
   const recordCaptureRetry = useCallback(() => {
     if (!enabled) {
@@ -285,9 +344,12 @@ export function useGenerationRunTelemetry({
     completeModelLoad,
     cancelModelLoad,
     startCapture,
+    initializeWebGpuEval,
+    recordCaptureFirstAttempt,
     recordCaptureRetry,
     completeCapture,
     startBrief,
+    recordBriefFirstAttempt,
     recordBriefRetry,
     completeBrief,
   };
