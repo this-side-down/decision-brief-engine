@@ -804,14 +804,16 @@ export function App() {
                 ) : null}
               </div>
               <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                {decisionBriefViewMode === "preview" ? (
-                  <DecisionBriefPreview markdown={decisionBrief.markdown} />
-                ) : (
-                  <DecisionBriefEditor
-                    markdown={decisionBrief.markdown}
-                    onChange={updateDecisionBriefMarkdown}
-                  />
-                )}
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                  {decisionBriefViewMode === "preview" ? (
+                    <DecisionBriefPreview markdown={decisionBrief.markdown} />
+                  ) : (
+                    <DecisionBriefEditor
+                      markdown={decisionBrief.markdown}
+                      onChange={updateDecisionBriefMarkdown}
+                    />
+                  )}
+                </div>
                 <DecisionTraceBasis decisionTrace={briefSession.decisionTrace} />
               </div>
               {briefErrorMessage ? (
