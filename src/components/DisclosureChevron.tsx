@@ -1,16 +1,19 @@
-type DisclosureChevronProps = {
-  groupName?: string;
+export type DisclosureChevronVariant = "default" | "basis";
+
+export const DISCLOSURE_CHEVRON_OPEN_CLASSES: Record<DisclosureChevronVariant, string> = {
+  default: "group-open:rotate-90 group-open:text-slate-600",
+  basis: "group-open/basis:rotate-90 group-open/basis:text-slate-600",
 };
 
-export function DisclosureChevron({ groupName }: DisclosureChevronProps = {}) {
-  const openRotateClass = groupName
-    ? `group-open/${groupName}:rotate-90 group-open/${groupName}:text-slate-600`
-    : "group-open:rotate-90 group-open:text-slate-600";
+type DisclosureChevronProps = {
+  variant?: DisclosureChevronVariant;
+};
 
+export function DisclosureChevron({ variant = "default" }: DisclosureChevronProps = {}) {
   return (
     <svg
       aria-hidden="true"
-      className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform duration-150 ${openRotateClass}`}
+      className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform duration-150 ${DISCLOSURE_CHEVRON_OPEN_CLASSES[variant]}`}
       fill="none"
       stroke="currentColor"
       strokeWidth={2}
