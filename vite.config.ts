@@ -10,7 +10,13 @@ export default defineConfig(({ mode }) => {
     env.VITE_OLLAMA_HOST ?? "http://127.0.0.1:11434";
 
   return {
-    plugins: [react(), tailwindcss(), browserGenerationDiagnosticsPlugin()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      browserGenerationDiagnosticsPlugin({
+        enabled: env.VITE_BROWSER_GENERATION_DIAGNOSTICS === "true",
+      }),
+    ],
     define: {
       "import.meta.env.VITE_APP_VERSION": JSON.stringify(pkg.version),
     },

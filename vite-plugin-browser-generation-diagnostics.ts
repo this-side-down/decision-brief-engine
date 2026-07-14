@@ -1,13 +1,23 @@
 import type { Connect } from "vite";
 import type { Plugin } from "vite";
-import {
-  BROWSER_GENERATION_DIAGNOSTICS_ENV,
-} from "./src/services/generation/browserGenerationDiagnostics";
 import { writeBrowserGenerationDiagnosticArtifactToDirectory } from "./src/services/generation/browserGenerationLocalCapture.node";
 
-function createDiagnosticsMiddleware(root: string): Connect.NextHandleFunction {
+export type BrowserGenerationDiagnosticsPluginOptions = {
+  enabled?: boolean;
+};
+
+export function resolveBrowserGenerationDiagnosticsPluginEnabled(
+  options: BrowserGenerationDiagnosticsPluginOptions = {},
+): boolean {
+  return options.enabled === true;
+}
+
+export function createDiagnosticsMiddleware(
+  root: string,
+  enabled: boolean,
+): Connect.NextHandleFunction {
   return async (request, response, next) => {
-    if (process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV] !== "true") {
+    if (!enabled) {
       response.statusCode = 404;
       response.end("Browser generation diagnostics are disabled.");
       return;
@@ -52,7 +62,10 @@ function createDiagnosticsMiddleware(root: string): Connect.NextHandleFunction {
   };
 }
 
-export function browserGenerationDiagnosticsPlugin(): Plugin {
+export function browserGenerationDiagnosticsPlugin(
+  options: BrowserGenerationDiagnosticsPluginOptions = {},
+): Plugin {
+  const enabled = resolveBrowserGenerationDiagnosticsPluginEnabled(options);
   let root = process.cwd();
 
   return {
@@ -63,13 +76,13 @@ export function browserGenerationDiagnosticsPlugin(): Plugin {
     configureServer(server) {
       server.middlewares.use(
         "/__browser-generation-diagnostics/write",
-        createDiagnosticsMiddleware(root),
+        createDiagnosticsMiddleware(root, enabled),
       );
     },
     configurePreviewServer(server) {
       server.middlewares.use(
         "/__browser-generation-diagnostics/write",
-        createDiagnosticsMiddleware(root),
+        createDiagnosticsMiddleware(root, enabled),
       );
     },
   };

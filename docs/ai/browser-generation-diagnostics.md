@@ -15,7 +15,7 @@ VITE_BROWSER_GENERATION_DIAGNOSTICS=true
 
 3. Run generation through **Live in browser** (`npm run dev` or `npm run build && npm run preview`).
 
-Raw model output is **disabled by default**. When enabled, artifacts are written only through the local Vite middleware — never to Run Details, never to telemetry, and never to a hosted service.
+Raw model output is **disabled by default**. When enabled, artifacts are written only through the local Vite middleware, which receives the same resolved flag as browser code via `browserGenerationDiagnosticsPlugin({ enabled })` in `vite.config.ts`. The middleware does **not** read `process.env` directly. Never to Run Details, never to telemetry, and never to a hosted service.
 
 ## Where files are written
 
