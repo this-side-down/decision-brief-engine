@@ -4,11 +4,11 @@ import {
   buildChunkExtractionRetryPrompt,
 } from "../prompts";
 import {
-  GENERIC_MOCK_STRUCTURAL_EXPECTATIONS,
   STANDARD_CAPTURE_LAYER_STRUCTURAL_EXPECTATIONS,
   type StructuralExpectation,
 } from "../captureLayerStructuralReadiness";
 import { CHUNK_EXTRACTION_JSON_SCHEMA } from "./chunkExtractionSchema";
+import { ChunkExtractionContractError } from "./chunkExtractionErrors";
 import { parsePartialCaptureSignalsJson } from "./parsePartialCaptureSignals";
 import type {
   ChunkExtractionInput,
@@ -26,6 +26,7 @@ async function requestChunkSignals(
     prompt,
     format: CHUNK_EXTRACTION_JSON_SCHEMA,
     temperature: 0,
+    think: false,
     signal: input.signal,
   });
 }
@@ -49,14 +50,13 @@ export async function extractOllamaChunkSignals(
         retryCount,
       };
     } catch (error) {
-      lastError = error instanceof Error ? error.message : String(error);
+      if (!(error instanceof ChunkExtractionContractError)) {
+        throw error;
+      }
 
-      const isContractFailure =
-        /valid JSON|missing required field|must be a string|must be an array|confidence must|placeholder text|conflict|unresolved reference/i.test(
-          lastError,
-        );
+      lastError = error.message;
 
-      if (!isContractFailure || attempt >= MAX_CHUNK_RETRIES) {
+      if (attempt >= MAX_CHUNK_RETRIES) {
         throw error;
       }
 
@@ -64,7 +64,7 @@ export async function extractOllamaChunkSignals(
     }
   }
 
-  throw new Error(lastError);
+  throw new ChunkExtractionContractError(lastError);
 }
 
 export const ollamaLongInputCaptureCapability: LongInputCaptureCapability = {

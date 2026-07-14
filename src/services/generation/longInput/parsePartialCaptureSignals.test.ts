@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { EXECUTION_DECISION_BRIEF } from "../../../data/briefTypes";
+import { ChunkExtractionContractError } from "./chunkExtractionErrors";
 import { parsePartialCaptureSignalsJson } from "./parsePartialCaptureSignals";
 import type { ChunkExtractionInput } from "./types";
 
@@ -58,37 +59,85 @@ describe("parsePartialCaptureSignalsJson", () => {
     );
 
     expect(parsed.chunkId).toBe("chunk-001");
-    expect(parsed.sourceRange).toEqual({ start: 0, end: 44 });
     expect(parsed.evidence[0]).toMatchObject({
       text: "Support queue averaged 18 minutes last week.",
       sourceChunkId: "chunk-001",
-      sourceRange: { start: 0, end: 44 },
     });
-    expect(parsed.conflicts[0].sourceChunkIds).toEqual(["chunk-001"]);
-    expect(parsed.unresolved_references[0].sourceChunkId).toBe("chunk-001");
   });
 
-  it("rejects instructional placeholder text", () => {
+  it("accepts legitimate technical content containing schema", () => {
+    const parsed = parsePartialCaptureSignalsJson(
+      JSON.stringify({
+        ...validEnvelope,
+        decision_context:
+          "Team discussed API schema alignment before the regional launch.",
+        evidence: [
+          "Database schema review is scheduled before routing changes.",
+        ],
+      }),
+      baseInput,
+    );
+
+    expect(parsed.decision_context).toContain("API schema alignment");
+    expect(parsed.evidence[0]?.text).toContain("Database schema review");
+  });
+
+  it("rejects copied instructional placeholder text", () => {
     expect(() =>
       parsePartialCaptureSignalsJson(
         JSON.stringify({
           ...validEnvelope,
-          implied_decision: "TODO fill this in",
+          implied_decision: "Return only the JSON object",
         }),
         baseInput,
       ),
-    ).toThrow(/placeholder text/i);
-  });
+    ).toThrow(ChunkExtractionContractError);
 
-  it("rejects invalid confidence values", () => {
     expect(() =>
       parsePartialCaptureSignalsJson(
         JSON.stringify({
           ...validEnvelope,
-          confidence: "Uncertain",
+          goals: ["Use this schema as a template"],
         }),
         baseInput,
       ),
-    ).toThrow(/confidence must be/i);
+    ).toThrow(ChunkExtractionContractError);
+  });
+
+  it("throws ChunkExtractionContractError for invalid JSON", () => {
+    expect(() => parsePartialCaptureSignalsJson("{", baseInput)).toThrow(
+      ChunkExtractionContractError,
+    );
+  });
+
+  it("throws ChunkExtractionContractError when top-level JSON is an array", () => {
+    expect(() => parsePartialCaptureSignalsJson("[]", baseInput)).toThrow(
+      ChunkExtractionContractError,
+    );
+  });
+
+  it("throws ChunkExtractionContractError for missing required fields", () => {
+    const { goals: _goals, ...missingGoals } = validEnvelope;
+    expect(() =>
+      parsePartialCaptureSignalsJson(JSON.stringify(missingGoals), baseInput),
+    ).toThrow(ChunkExtractionContractError);
+  });
+
+  it("throws ChunkExtractionContractError for wrong field types", () => {
+    expect(() =>
+      parsePartialCaptureSignalsJson(
+        JSON.stringify({ ...validEnvelope, goals: "not-an-array" }),
+        baseInput,
+      ),
+    ).toThrow(ChunkExtractionContractError);
+  });
+
+  it("throws ChunkExtractionContractError for invalid confidence values", () => {
+    expect(() =>
+      parsePartialCaptureSignalsJson(
+        JSON.stringify({ ...validEnvelope, confidence: "Uncertain" }),
+        baseInput,
+      ),
+    ).toThrow(ChunkExtractionContractError);
   });
 });

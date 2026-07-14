@@ -9,6 +9,7 @@ export type OllamaGenerateOptions = {
   format?: OllamaGenerateFormat;
   signal?: AbortSignal;
   temperature?: number;
+  think?: boolean;
 };
 
 function isUserCancellation(
@@ -47,7 +48,7 @@ export async function ollamaGenerate(
         model: config.model,
         prompt: options.prompt,
         stream: false,
-        think: false,
+        ...(options.think !== undefined ? { think: options.think } : {}),
         ...(options.format ? { format: options.format } : {}),
         ...(options.temperature !== undefined
           ? { options: { temperature: options.temperature } }
