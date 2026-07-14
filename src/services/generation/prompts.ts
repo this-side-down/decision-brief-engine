@@ -1,3 +1,11 @@
+import {
+  BANNED_CANNED_PHRASES,
+  BANNED_CONSULTANT_FILLER,
+  BANNED_SENTENCE_OPENERS,
+  DECISION_BRIEF_REQUIRED_SECTIONS,
+  SENTENCE_ERROR_WORDS,
+  SUMMARY_MAX_WORDS,
+} from "../../evaluation/decisionBriefWritingRules";
 import type { GenerateCaptureLayerInput, GenerateDecisionBriefInput } from "./types";
 
 const NO_REASONING_INSTRUCTION =
@@ -184,21 +192,31 @@ function buildStructuredDecisionBriefResponseInstructions(
   ].join("\n");
 }
 
-function buildMarkdownOnlyDecisionBriefResponseInstructions(
-  markdownStructure: string[],
-): string {
+function formatMarkdownOnlyBannedPhrases(): string {
+  return [...BANNED_CANNED_PHRASES, ...BANNED_CONSULTANT_FILLER]
+    .map((phrase) => `"${phrase}"`)
+    .join(", ");
+}
+
+function formatMarkdownOnlyBannedOpeners(): string {
+  return BANNED_SENTENCE_OPENERS.map((opener) => `"${opener},"`).join(" or ");
+}
+
+function buildMarkdownOnlyDecisionBriefResponseInstructions(): string {
+  const sectionHeadings = DECISION_BRIEF_REQUIRED_SECTIONS.map(
+    (section) => `- ## ${section}`,
+  ).join("\n");
+
   return [
     "Return a single JSON object with one top-level field:",
-    "- markdown: complete Decision Brief Markdown as a JSON string. Start with # Decision Brief.",
-    "",
-    "Required Decision Brief sections in markdown:",
-    markdownStructure.map((section) => `- ${section}`).join("\n"),
-    "- Confidence (include a Confidence section with High, Medium, or Low calibration)",
-    "",
+    "- markdown: complete Decision Brief Markdown as a JSON string.",
     "Do not include decisionTrace or any other top-level fields.",
-    "Populate markdown with grounded content from the Capture Layer. Output values must be specific decision content, not field labels or instructions.",
-    "- The recommendation in the Decision Brief must correspond to recommendation_candidate from the Capture Layer.",
-    "- Every suggested_next_steps item from the Capture Layer must appear in Suggested Next Steps.",
+    "",
+    "Markdown structure requirements:",
+    "- Start with exactly: # Decision Brief",
+    "- Use each required section as an ## heading with non-empty body content:",
+    sectionHeadings,
+    "- Every required section must contain substantive content; do not leave any section empty.",
   ].join("\n");
 }
 
@@ -206,9 +224,32 @@ function buildMarkdownOnlyDecisionBriefRules(): string[] {
   return [
     "Decision Brief rules:",
     "- The markdown field must contain the complete Decision Brief Markdown as a JSON string value.",
-    "- Start the markdown with # Decision Brief.",
-    "- Use the Capture Layer as the source of truth. Do not reinterpret unsupported facts.",
-    "- Do not copy instructional text, field descriptions, or example placeholders into any output field.",
+    "- Use the Capture Layer as the source of truth. Do not invent facts. Preserve ambiguity and missing context instead of flattening it.",
+    "- Do not copy instructional text, field descriptions, schema language, examples, or placeholders into the output.",
+    "",
+    "Recommendation:",
+    "- Preserve captureLayer.recommendation_candidate. Prefer beginning the Recommendation section with that exact text.",
+    "- Do not replace it with a different recommendation thesis. Any qualification must be brief, grounded, and separate from the preserved recommendation.",
+    "",
+    "Suggested Next Steps:",
+    "- The Suggested Next Steps section must contain only Markdown list items (lines starting with - or *).",
+    "- Produce exactly one list item for every captureLayer.suggested_next_steps item, in the same order.",
+    "- Preserve each input item's wording exactly or closely enough for deterministic text correspondence.",
+    "- Produce exactly the same number of list items as captureLayer.suggested_next_steps.",
+    "- Do not add introductory prose, closing prose, additional bullets, sub-bullets, invented steps, or explanatory continuation lines in that section.",
+    "",
+    "Confidence:",
+    "- Include High, Medium, or Low plus a concise explanation grounded in the Capture Layer.",
+    '- Never output only a bare label such as "Confidence: High", "Confidence: Medium", or "Confidence: Low" without explanation.',
+    "",
+    "Writing requirements (hard failures):",
+    `- Summary must be at most ${SUMMARY_MAX_WORDS} words.`,
+    `- Every sentence must be at most ${SENTENCE_ERROR_WORDS} words.`,
+    "- Do not use the em dash character (—).",
+    "- Do not use emoji.",
+    "- Do not use exclamation marks.",
+    `- Do not begin sentences with ${formatMarkdownOnlyBannedOpeners()}.`,
+    `- Do not use these banned canned phrases or consultant filler: ${formatMarkdownOnlyBannedPhrases()}.`,
   ];
 }
 
@@ -229,7 +270,7 @@ export function buildDecisionBriefPrompt(
       "",
       `Tone: ${tone}`,
       "",
-      buildMarkdownOnlyDecisionBriefResponseInstructions(input.markdownStructure),
+      buildMarkdownOnlyDecisionBriefResponseInstructions(),
       "",
       ...buildMarkdownOnlyDecisionBriefRules(),
       NO_REASONING_INSTRUCTION,
