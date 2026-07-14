@@ -7,13 +7,24 @@ export const DISCLOSURE_CHEVRON_OPEN_CLASSES: Record<DisclosureChevronVariant, s
 
 type DisclosureChevronProps = {
   variant?: DisclosureChevronVariant;
+  open?: boolean;
 };
 
-export function DisclosureChevron({ variant = "default" }: DisclosureChevronProps = {}) {
+export function DisclosureChevron({
+  variant = "default",
+  open,
+}: DisclosureChevronProps = {}) {
+  const openClasses =
+    open === undefined
+      ? DISCLOSURE_CHEVRON_OPEN_CLASSES[variant]
+      : open
+        ? "rotate-90 text-slate-600"
+        : "text-slate-400";
+
   return (
     <svg
       aria-hidden="true"
-      className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform duration-150 ${DISCLOSURE_CHEVRON_OPEN_CLASSES[variant]}`}
+      className={`h-3.5 w-3.5 shrink-0 transition-transform duration-150 ${openClasses}`}
       fill="none"
       stroke="currentColor"
       strokeWidth={2}

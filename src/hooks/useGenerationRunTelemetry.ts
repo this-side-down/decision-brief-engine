@@ -28,6 +28,7 @@ export function useGenerationRunTelemetry({
   const [stepStartedAt, setStepStartedAt] = useState<number | null>(null);
   const [tick, setTick] = useState(0);
   const [runRecord, setRunRecord] = useState<GenerationRunRecord | null>(null);
+  const [runGenerationId, setRunGenerationId] = useState(0);
   const runStartedAtRef = useRef<number | null>(null);
   const captureStartedAtRef = useRef<number | null>(null);
   const briefStartedAtRef = useRef<number | null>(null);
@@ -48,6 +49,7 @@ export function useGenerationRunTelemetry({
     setCurrentStep("idle");
     setStepStartedAt(null);
     setRunRecord(null);
+    setRunGenerationId(0);
     runStartedAtRef.current = null;
     captureStartedAtRef.current = null;
     briefStartedAtRef.current = null;
@@ -60,6 +62,7 @@ export function useGenerationRunTelemetry({
 
     const startedAt = Date.now();
     runStartedAtRef.current = startedAt;
+    setRunGenerationId((current) => current + 1);
     setRunRecord(createGenerationRunRecord(runtimeMode));
     setCurrentStep("idle");
     setStepStartedAt(null);
@@ -380,6 +383,7 @@ export function useGenerationRunTelemetry({
     failureMessage,
     runDetails,
     runRecord,
+    runGenerationId,
     beginRun,
     resetRun,
     startModelLoad,
