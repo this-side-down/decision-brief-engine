@@ -1,17 +1,44 @@
 import { extractOllamaModelText, type OllamaGenerateResponse } from "./extractOllamaText";
 import { getOllamaConfig } from "./ollamaConfig";
+import { GenerationCancelledError } from "./webGpuErrors";
+
+export type OllamaGenerateFormat = "json" | Record<string, unknown>;
 
 export type OllamaGenerateOptions = {
   prompt: string;
-  format?: "json";
+  format?: OllamaGenerateFormat;
+  signal?: AbortSignal;
+  temperature?: number;
+  think?: boolean;
 };
+
+function isUserCancellation(
+  error: unknown,
+  externalSignal?: AbortSignal,
+): boolean {
+  return (
+    error instanceof Error &&
+    error.name === "AbortError" &&
+    externalSignal?.aborted === true
+  );
+}
 
 export async function ollamaGenerate(
   options: OllamaGenerateOptions,
 ): Promise<string> {
   const config = getOllamaConfig();
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), config.timeoutMs);
+
+  if (options.signal?.aborted) {
+    throw new GenerationCancelledError();
+  }
+
+  const timeoutController = new AbortController();
+  const timeout = setTimeout(() => timeoutController.abort(), config.timeoutMs);
+  const onExternalAbort = () => timeoutController.abort();
+
+  if (options.signal) {
+    options.signal.addEventListener("abort", onExternalAbort, { once: true });
+  }
 
   try {
     const response = await fetch(`${config.baseUrl}/api/generate`, {
@@ -21,9 +48,13 @@ export async function ollamaGenerate(
         model: config.model,
         prompt: options.prompt,
         stream: false,
+        ...(options.think !== undefined ? { think: options.think } : {}),
         ...(options.format ? { format: options.format } : {}),
+        ...(options.temperature !== undefined
+          ? { options: { temperature: options.temperature } }
+          : {}),
       }),
-      signal: controller.signal,
+      signal: timeoutController.signal,
     });
 
     if (!response.ok) {
@@ -34,6 +65,10 @@ export async function ollamaGenerate(
 
     return extractOllamaModelText(payload);
   } catch (error) {
+    if (isUserCancellation(error, options.signal)) {
+      throw new GenerationCancelledError();
+    }
+
     if (error instanceof Error && error.name === "AbortError") {
       throw new Error(`Ollama request timed out after ${config.timeoutMs}ms.`);
     }
@@ -41,5 +76,8 @@ export async function ollamaGenerate(
     throw error;
   } finally {
     clearTimeout(timeout);
+    if (options.signal) {
+      options.signal.removeEventListener("abort", onExternalAbort);
+    }
   }
 }

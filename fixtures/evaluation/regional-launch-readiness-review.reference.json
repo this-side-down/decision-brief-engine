@@ -1,0 +1,16 @@
+{
+  "beginningEvidenceAnchor": "support queue at 18 minutes",
+  "middleEvidenceAnchor": "Singapore/Sydney pilot vs broader APAC wave",
+  "terminalEvidenceAnchor": "April 14 limited pilot, 12 accounts",
+  "expectedStatedDecisionConcept": "limited pilot on April 14 with 12 accounts in Singapore and Sydney",
+  "expectedConflictTopic": "pilot-first Singapore/Sydney rollout versus broad APAC launch on April 14",
+  "unresolvedTerm": "Project Northstar",
+  "requiredOwnerOrDependencySignals": [
+    "Raj owns lighthouse account selection and CS enablement",
+    "Dev owns attestation enforcement and routing blocks",
+    "Tomas owns SLA gating and support capacity",
+    "March 29 Sydney queue split dependency",
+    "April 7 contractor staffing dependency",
+    "May 28 expansion gate tied to 95% SLA readiness"
+  ]
+}

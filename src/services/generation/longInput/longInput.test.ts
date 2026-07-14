@@ -18,7 +18,11 @@ import { mergePartialCaptureSignals } from "./mergePartialSignals";
 import { mockLongInputCaptureCapability } from "./mockChunkExtractor";
 import { planLongInput } from "./planLongInput";
 import type { CaptureLayer } from "../../../types/captureLayer";
-import { assertMergedCaptureLayerReadiness, runLongInputCapture } from "./runLongInputCapture";
+import {
+  assertMergedCaptureLayerReadiness,
+  runLongInputCapture,
+} from "./runLongInputCapture";
+import { GENERIC_MOCK_STRUCTURAL_EXPECTATIONS } from "../captureLayerStructuralReadiness";
 import { segmentSourceText, validateSourceCoverage } from "./segmentSource";
 import { formatLongInputProgressMessage } from "./types";
 
@@ -80,7 +84,7 @@ describe("long-input planning", () => {
 
 describe("long-input merge and orchestration", () => {
   it("preserves beginning, middle, and end evidence", async () => {
-    const captureLayer = await runLongInputCapture({
+    const { captureLayer } = await runLongInputCapture({
       input: {
         rawInputText: platformNotes,
         briefType: PRODUCT_DECISION_BRIEF,
@@ -158,7 +162,7 @@ describe("long-input merge and orchestration", () => {
   });
 
   it("preserves conflicts and unresolved references", async () => {
-    const captureLayer = await runLongInputCapture({
+    const { captureLayer } = await runLongInputCapture({
       input: {
         rawInputText: platformNotes,
         briefType: PRODUCT_DECISION_BRIEF,
@@ -174,7 +178,7 @@ describe("long-input merge and orchestration", () => {
   });
 
   it("does not invent a stated decision for the long-form fixture", async () => {
-    const captureLayer = await runLongInputCapture({
+    const { captureLayer } = await runLongInputCapture({
       input: {
         rawInputText: platformNotes,
         briefType: PRODUCT_DECISION_BRIEF,
@@ -327,10 +331,16 @@ describe("long-input merge and orchestration", () => {
     };
 
     expect(() =>
-      assertMergedCaptureLayerReadiness(hollowCaptureLayer, "custom pasted notes"),
+      assertMergedCaptureLayerReadiness(
+        hollowCaptureLayer,
+        GENERIC_MOCK_STRUCTURAL_EXPECTATIONS,
+      ),
     ).toThrow(LongInputMergeFailureError);
     expect(() =>
-      assertMergedCaptureLayerReadiness(hollowCaptureLayer, "custom pasted notes"),
+      assertMergedCaptureLayerReadiness(
+        hollowCaptureLayer,
+        GENERIC_MOCK_STRUCTURAL_EXPECTATIONS,
+      ),
     ).toThrow(/structural readiness/i);
   });
 

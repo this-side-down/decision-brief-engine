@@ -93,6 +93,16 @@ const EVALUATION_FIXTURE_CASES: PipelineEvalCase[] = [
     structuralExpectations: STANDARD_STRUCTURAL_EXPECTATIONS,
     expectEmptyStatedDecision: true,
   },
+  {
+    id: "regional-launch-readiness-review",
+    name: "Regional launch readiness review",
+    category: "evaluation-fixture",
+    briefTypeId: "execution",
+    fixtureDocPath: "fixtures/evaluation/regional-launch-readiness-review.md",
+    sourceLabel: "eval-harness:regional-launch-readiness-review",
+    structuralExpectations: STANDARD_STRUCTURAL_EXPECTATIONS,
+    expectEmptyStatedDecision: false,
+  },
 ];
 
 const GALLERY_CASES: PipelineEvalCase[] = [
@@ -138,7 +148,7 @@ const GALLERY_CASES: PipelineEvalCase[] = [
   },
 ];
 
-/** Canonical nine cases for the full-pipeline harness (#126, #147). */
+/** Canonical ten cases for the full-pipeline harness (#126, #147, #151). */
 export const PIPELINE_EVAL_CASES: PipelineEvalCase[] = [
   ...EVALUATION_FIXTURE_CASES,
   ...GALLERY_CASES,

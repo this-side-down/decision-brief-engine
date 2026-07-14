@@ -57,6 +57,20 @@ export type WebGpuRuntimeProfile = {
   briefSemanticFindings?: SemanticAcceptanceDetailedFindings | null;
 };
 
+export type LongInputCaptureDiagnostics = {
+  strategy: "single_pass" | "hierarchical";
+  chunkCount: number | null;
+  sourceCoverageComplete: boolean | null;
+  totalSourceLength: number | null;
+  coveredSourceLength: number | null;
+  chunkRetryCounts: Record<string, number> | null;
+  totalChunkRetries: number | null;
+  planningLatencyMs: number | null;
+  chunkExtractionLatencyMs: number | null;
+  mergeLatencyMs: number | null;
+  validationLatencyMs: number | null;
+};
+
 export type PipelineEvalResult = {
   resultFormatVersion: typeof PIPELINE_RESULT_FORMAT_VERSION;
   runId: string;
@@ -103,6 +117,7 @@ export type PipelineEvalResult = {
     decisionTrace?: string;
   } | null;
   webGpu: WebGpuRuntimeProfile | null;
+  longInputDiagnostics: LongInputCaptureDiagnostics | null;
 };
 
 export type PipelineRunSummary = {

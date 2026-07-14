@@ -1,5 +1,6 @@
 import type { BriefType } from "../../../types/brief";
 import type { CaptureLayer } from "../../../types/captureLayer";
+import type { StructuralExpectation } from "../captureLayerStructuralReadiness";
 
 export type SourceRange = {
   start: number;
@@ -77,6 +78,12 @@ export type ChunkExtractionInput = {
   sourceLabel?: string;
   fullSourceText: string;
   chunkCount: number;
+  signal?: AbortSignal;
+};
+
+export type ChunkExtractionOutput = {
+  signals: PartialCaptureSignals;
+  retryCount: number;
 };
 
 export type MergeCaptureSignalsInput = {
@@ -101,7 +108,27 @@ export type LongInputProgressState = {
 export type LongInputCaptureCapability = {
   extractChunkSignals(
     input: ChunkExtractionInput,
-  ): Promise<PartialCaptureSignals>;
+  ): Promise<ChunkExtractionOutput>;
+  resolveStructuralExpectations(sourceLabel?: string): StructuralExpectation;
+};
+
+export type LongInputCaptureDiagnostics = {
+  strategy: "hierarchical";
+  chunkCount: number;
+  sourceCoverageComplete: boolean;
+  totalSourceLength: number;
+  coveredSourceLength: number;
+  chunkRetryCounts: Record<string, number>;
+  totalChunkRetries: number;
+  planningLatencyMs: number;
+  chunkExtractionLatencyMs: number;
+  mergeLatencyMs: number;
+  validationLatencyMs: number;
+};
+
+export type LongInputCaptureResult = {
+  captureLayer: CaptureLayer;
+  diagnostics: LongInputCaptureDiagnostics;
 };
 
 export function formatLongInputProgressMessage(

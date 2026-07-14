@@ -1,4 +1,5 @@
 import type { CaptureLayer } from "../../types/captureLayer";
+import { mockLongInputCaptureCapability } from "./longInput/mockChunkExtractor";
 
 export type StructuralExpectation = {
   requireStatedOrImpliedDecision: boolean;
@@ -162,9 +163,7 @@ export function formatStructuralReadinessFailures(
 export function resolveLongInputStructuralExpectations(
   sourceLabel?: string,
 ): StructuralExpectation {
-  if (sourceLabel === "demo:platform-rearchitecture-review") {
-    return STANDARD_CAPTURE_LAYER_STRUCTURAL_EXPECTATIONS;
-  }
-
-  return GENERIC_MOCK_STRUCTURAL_EXPECTATIONS;
+  return mockLongInputCaptureCapability.resolveStructuralExpectations(
+    sourceLabel,
+  );
 }

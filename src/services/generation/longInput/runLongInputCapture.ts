@@ -1,9 +1,9 @@
 import type { CaptureLayer } from "../../../types/captureLayer";
+import type { StructuralExpectation } from "../captureLayerStructuralReadiness";
 import { parseCaptureLayerJson } from "../parseCaptureLayer";
 import {
   evaluateStructuralReadiness,
   formatStructuralReadinessFailures,
-  resolveLongInputStructuralExpectations,
 } from "../captureLayerStructuralReadiness";
 import { GenerationCancelledError } from "../webGpuErrors";
 import type { GenerateCaptureLayerInput } from "../types";
@@ -16,8 +16,10 @@ import {
 } from "./longInputErrors";
 import { mergePartialCaptureSignals } from "./mergePartialSignals";
 import { planLongInput } from "./planLongInput";
+import { validateSourceCoverage } from "./segmentSource";
 import type {
   LongInputCaptureCapability,
+  LongInputCaptureResult,
   LongInputProgressState,
   PartialCaptureSignals,
 } from "./types";
@@ -59,12 +61,9 @@ async function delay(ms: number): Promise<void> {
 
 export function assertMergedCaptureLayerReadiness(
   captureLayer: CaptureLayer,
-  sourceLabel?: string,
+  expectations: StructuralExpectation,
 ): void {
-  const readiness = evaluateStructuralReadiness(
-    captureLayer,
-    resolveLongInputStructuralExpectations(sourceLabel),
-  );
+  const readiness = evaluateStructuralReadiness(captureLayer, expectations);
 
   if (!readiness.pass) {
     throw new LongInputMergeFailureError(
@@ -73,9 +72,16 @@ export function assertMergedCaptureLayerReadiness(
   }
 }
 
+function computeCoveredSourceLength(chunks: { sourceRange: { start: number; end: number } }[]): number {
+  return chunks.reduce(
+    (total, chunk) => total + (chunk.sourceRange.end - chunk.sourceRange.start),
+    0,
+  );
+}
+
 export async function runLongInputCapture(
   options: RunLongInputCaptureOptions,
-): Promise<CaptureLayer> {
+): Promise<LongInputCaptureResult> {
   const { input, capability } = options;
   const rawInputText = normalizeSourceText(input.rawInputText);
 
@@ -90,8 +96,15 @@ export async function runLongInputCapture(
   options.onProgress?.({ phase: "preparing" });
   assertRunActive(options);
 
+  const planningStarted = Date.now();
   const plan = planLongInput(rawInputText);
+  const planningLatencyMs = Date.now() - planningStarted;
+  const coverage = validateSourceCoverage(rawInputText, plan.chunks);
   const partialResults: PartialCaptureSignals[] = [];
+  const chunkRetryCounts: Record<string, number> = {};
+  let totalChunkRetries = 0;
+
+  const chunkExtractionStarted = Date.now();
 
   for (const chunk of plan.chunks) {
     assertRunActive(options);
@@ -110,15 +123,22 @@ export async function runLongInputCapture(
     }
 
     try {
-      const partial = await capability.extractChunkSignals({
+      const extraction = await capability.extractChunkSignals({
         chunk,
         briefType: input.briefType,
         sourceLabel: input.sourceLabel,
         fullSourceText: rawInputText,
         chunkCount: plan.chunks.length,
+        signal: options.signal,
       });
-      partialResults.push(partial);
+      partialResults.push(extraction.signals);
+      chunkRetryCounts[chunk.id] = extraction.retryCount;
+      totalChunkRetries += extraction.retryCount;
     } catch (error) {
+      if (error instanceof GenerationCancelledError) {
+        throw error;
+      }
+
       const message =
         error instanceof Error
           ? error.message
@@ -129,9 +149,12 @@ export async function runLongInputCapture(
     await delay(options.interChunkDelayMs ?? 0);
   }
 
+  const chunkExtractionLatencyMs = Date.now() - chunkExtractionStarted;
+
   assertRunActive(options);
   options.onProgress?.({ phase: "merging" });
 
+  const mergeStarted = Date.now();
   let captureLayer: CaptureLayer;
   try {
     captureLayer = mergePartialCaptureSignals({
@@ -149,10 +172,12 @@ export async function runLongInputCapture(
       error instanceof Error ? error.message : "Capture Layer merge failed.";
     throw new LongInputMergeFailureError(message);
   }
+  const mergeLatencyMs = Date.now() - mergeStarted;
 
   assertRunActive(options);
   options.onProgress?.({ phase: "validating" });
 
+  const validationStarted = Date.now();
   let validatedCaptureLayer: CaptureLayer;
   try {
     validatedCaptureLayer = parseCaptureLayerJson(JSON.stringify(captureLayer));
@@ -166,8 +191,26 @@ export async function runLongInputCapture(
 
   assertMergedCaptureLayerReadiness(
     validatedCaptureLayer,
-    input.sourceLabel,
+    capability.resolveStructuralExpectations(input.sourceLabel),
   );
+  const validationLatencyMs = Date.now() - validationStarted;
 
-  return validatedCaptureLayer;
+  return {
+    captureLayer: validatedCaptureLayer,
+    diagnostics: {
+      strategy: "hierarchical",
+      chunkCount: plan.chunks.length,
+      sourceCoverageComplete: coverage.complete,
+      totalSourceLength: plan.totalSourceLength,
+      coveredSourceLength: computeCoveredSourceLength(plan.chunks),
+      chunkRetryCounts,
+      totalChunkRetries,
+      planningLatencyMs,
+      chunkExtractionLatencyMs,
+      mergeLatencyMs,
+      validationLatencyMs,
+    },
+  };
 }
+
+export { validateSourceCoverage };
