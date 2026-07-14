@@ -62,16 +62,23 @@ export class StorageQuotaError extends WebGpuInferenceError {
   }
 }
 
+import type { SemanticAcceptanceDetailedFindings } from "./decisionBriefSemanticAcceptance";
+
 export class GenerationQualityError extends WebGpuInferenceError {
   readonly failureCategories: readonly string[];
+  readonly semanticFindings?: SemanticAcceptanceDetailedFindings;
 
   constructor(
     message = "Browser generation returned an incomplete Decision Brief. Try again or use Mock demo.",
     failureCategories: readonly string[] = [],
+    semanticFindings?: SemanticAcceptanceDetailedFindings,
   ) {
     super(message);
     this.name = "GenerationQualityError";
     this.failureCategories = failureCategories;
+    if (semanticFindings) {
+      this.semanticFindings = semanticFindings;
+    }
   }
 }
 

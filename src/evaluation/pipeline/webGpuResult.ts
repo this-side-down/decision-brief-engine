@@ -7,6 +7,8 @@ import type {
   WebGpuRuntimeProfile,
 } from "./resultTypes";
 import { decideDeterministicUsableBrief } from "./deterministicUsableBrief";
+import type { StructuredCompletionDiagnostics } from "../../services/generation/browserGenerationDiagnostics";
+import type { SemanticAcceptanceDetailedFindings } from "../../services/generation/decisionBriefSemanticAcceptance";
 
 /**
  * Construct a stable WebGPU evaluation result for later manual import.
@@ -46,6 +48,8 @@ export function buildWebGpuPipelineResult(input: {
   supportLimitations?: string[];
   rawErrorCategory?: PipelineEvalResult["rawErrorCategory"];
   webGpu?: Partial<WebGpuRuntimeProfile> | null;
+  completionDiagnostics?: StructuredCompletionDiagnostics[];
+  briefSemanticFindings?: SemanticAcceptanceDetailedFindings | null;
 }): PipelineEvalResult {
   const invented = Boolean(input.inventedStatedDecisionFinding);
   const writingHardFailures = input.writingHardFailures ?? [];
@@ -75,6 +79,10 @@ export function buildWebGpuPipelineResult(input: {
     warmLoadMs: input.webGpu?.warmLoadMs ?? null,
     deliveryBlocker: input.webGpu?.deliveryBlocker ?? null,
     unsupportedDevice: input.webGpu?.unsupportedDevice ?? null,
+    completionDiagnostics:
+      input.completionDiagnostics ?? input.webGpu?.completionDiagnostics ?? [],
+    briefSemanticFindings:
+      input.briefSemanticFindings ?? input.webGpu?.briefSemanticFindings ?? null,
   };
 
   return createBasePipelineResult({

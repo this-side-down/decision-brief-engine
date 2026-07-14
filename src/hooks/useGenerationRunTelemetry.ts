@@ -13,6 +13,9 @@ import {
   type GenerationStep,
   type WebGpuGenerationEval,
 } from "../services/generation/generationRunTelemetry";
+import type { StructuredCompletionDiagnostics } from "../services/generation/browserGenerationDiagnostics";
+import type { WebGpuFirstAttemptResult } from "../services/generation/webGpuModelAdapter";
+import { GenerationQualityError } from "../services/generation/webGpuErrors";
 
 type UseGenerationRunTelemetryOptions = {
   runtimeMode: GenerationMode;
@@ -113,6 +116,10 @@ export function useGenerationRunTelemetry({
       | "briefFirstAttemptPlaceholderLeakage"
       | "briefQualityRetryReasonCategories"
       | "briefQualityFailureCategories"
+      | "briefFirstAttemptCompletionDiagnostics"
+      | "briefFirstAttemptSemanticFindings"
+      | "briefQualityFailureFindings"
+      | "completionDiagnostics"
     >) => {
       if (!enabled) {
         return;
@@ -131,11 +138,39 @@ export function useGenerationRunTelemetry({
             briefFirstAttemptPlaceholderLeakage: null,
             briefQualityRetryReasonCategories: null,
             briefQualityFailureCategories: null,
+            briefFirstAttemptCompletionDiagnostics: null,
+            briefFirstAttemptSemanticFindings: null,
+            briefQualityFailureFindings: null,
+            completionDiagnostics: [],
           },
         };
       });
     },
     [enabled, runtimeMode],
+  );
+
+  const recordCompletionDiagnostics = useCallback(
+    (diagnostics: StructuredCompletionDiagnostics) => {
+      if (!enabled) {
+        return;
+      }
+
+      setRunRecord((current) =>
+        current?.webGpuEval
+          ? {
+              ...current,
+              webGpuEval: {
+                ...current.webGpuEval,
+                completionDiagnostics: [
+                  ...current.webGpuEval.completionDiagnostics,
+                  diagnostics,
+                ],
+              },
+            }
+          : current,
+      );
+    },
+    [enabled],
   );
 
   const recordCaptureFirstAttempt = useCallback((parsePass: boolean) => {
@@ -157,12 +192,7 @@ export function useGenerationRunTelemetry({
   }, [enabled]);
 
   const recordBriefFirstAttempt = useCallback(
-    (result: {
-      parsePass: boolean;
-      semanticQualityPass?: boolean | null;
-      placeholderLeakageDetected?: boolean;
-      retryReasonCategories?: string[];
-    }) => {
+    (result: WebGpuFirstAttemptResult) => {
       if (!enabled) {
         return;
       }
@@ -183,6 +213,10 @@ export function useGenerationRunTelemetry({
                   result.retryReasonCategories.length > 0
                     ? [...result.retryReasonCategories]
                     : null,
+                briefFirstAttemptCompletionDiagnostics:
+                  result.completionDiagnostics ?? null,
+                briefFirstAttemptSemanticFindings:
+                  result.semanticFindings ?? null,
               },
             }
           : current,
@@ -273,10 +307,12 @@ export function useGenerationRunTelemetry({
       const durationMs = Date.now() - briefStartedAtRef.current;
       const outcome = classifyStepOutcome(error, configuredTimeoutMs);
       const qualityFailureCategories =
-        error &&
-        "failureCategories" in error &&
-        Array.isArray(error.failureCategories)
+        error instanceof GenerationQualityError
           ? [...error.failureCategories]
+          : null;
+      const qualityFailureFindings =
+        error instanceof GenerationQualityError
+          ? error.semanticFindings ?? null
           : null;
 
       setRunRecord((current) =>
@@ -291,6 +327,7 @@ export function useGenerationRunTelemetry({
                   ? {
                       ...current.webGpuEval,
                       briefQualityFailureCategories: qualityFailureCategories,
+                      briefQualityFailureFindings: qualityFailureFindings,
                     }
                   : current.webGpuEval,
             }
@@ -392,6 +429,7 @@ export function useGenerationRunTelemetry({
     startCapture,
     initializeWebGpuEval,
     recordCaptureFirstAttempt,
+    recordCompletionDiagnostics,
     recordCaptureRetry,
     completeCapture,
     startBrief,

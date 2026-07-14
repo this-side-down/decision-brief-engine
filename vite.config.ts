@@ -2,6 +2,7 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, loadEnv } from "vite";
 import pkg from "./package.json";
+import { browserGenerationDiagnosticsPlugin } from "./vite-plugin-browser-generation-diagnostics";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
@@ -9,7 +10,13 @@ export default defineConfig(({ mode }) => {
     env.VITE_OLLAMA_HOST ?? "http://127.0.0.1:11434";
 
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      browserGenerationDiagnosticsPlugin({
+        enabled: env.VITE_BROWSER_GENERATION_DIAGNOSTICS === "true",
+      }),
+    ],
     define: {
       "import.meta.env.VITE_APP_VERSION": JSON.stringify(pkg.version),
     },
