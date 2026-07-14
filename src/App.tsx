@@ -23,7 +23,7 @@ import { useTimedStatusMessage } from "./hooks/useTimedStatusMessage";
 import { generateCaptureLayerForSession } from "./services/generation/generateCaptureLayer";
 import { generateDecisionBriefForSession } from "./services/generation/generateDecisionBrief";
 import { getOllamaConfig } from "./services/generation/ollamaConfig";
-import { GenerationCancelledError } from "./services/generation/webGpuErrors";
+import { GenerationCancelledError, GenerationQualityError } from "./services/generation/webGpuErrors";
 import { getWebGpuEvalContext } from "./services/generation/webGpuModelAdapter";
 import type { BriefSession, BriefType, BriefTypeId } from "./types/brief";
 import type { CaptureLayer } from "./types/captureLayer";
@@ -474,8 +474,8 @@ export function App() {
           onBriefRetry: () => {
             telemetry.recordBriefRetry();
           },
-          onBriefFirstAttempt: ({ parsePass }) => {
-            telemetry.recordBriefFirstAttempt(parsePass);
+          onBriefFirstAttempt: (result) => {
+            telemetry.recordBriefFirstAttempt(result);
           },
         }),
       });
@@ -537,9 +537,11 @@ export function App() {
         updatedAt: new Date().toISOString(),
       }));
       notifyBriefFailed(
-        isWebGpuMode
-          ? "Decision Brief generation failed. Your Capture Layer is preserved."
-          : message,
+        error instanceof GenerationQualityError
+          ? error.message
+          : isWebGpuMode
+            ? "Decision Brief generation failed. Your Capture Layer is preserved."
+            : message,
       );
     } finally {
       if (abortController) {

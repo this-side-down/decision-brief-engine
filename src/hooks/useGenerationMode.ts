@@ -13,6 +13,7 @@ import {
 } from "../services/generation/generationMode";
 import { getModelAdapter } from "../services/generation/getModelAdapter";
 import type { ModelAdapter } from "../services/generation/types";
+import type { WebGpuFirstAttemptResult } from "../services/generation/webGpuModelAdapter";
 import {
   cancelWebGpuGeneration,
   cancelWebGpuLoad,
@@ -388,7 +389,7 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
         onCaptureRetry?: () => void;
         onBriefRetry?: () => void;
         onCaptureFirstAttempt?: (result: { parsePass: boolean }) => void;
-        onBriefFirstAttempt?: (result: { parsePass: boolean }) => void;
+        onBriefFirstAttempt?: (result: WebGpuFirstAttemptResult) => void;
       },
     ): ModelAdapter => {
       return getModelAdapter({

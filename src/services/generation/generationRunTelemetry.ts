@@ -17,6 +17,10 @@ export type WebGpuGenerationEval = {
   briefSchemaVersion: string;
   captureFirstAttemptSchemaPass: boolean | null;
   briefFirstAttemptSchemaPass: boolean | null;
+  briefFirstAttemptSemanticPass: boolean | null;
+  briefFirstAttemptPlaceholderLeakage: boolean | null;
+  briefQualityRetryReasonCategories: string[] | null;
+  briefQualityFailureCategories: string[] | null;
 };
 
 export type GenerationRunRecord = {
@@ -183,6 +187,28 @@ export function formatRunDetailsLines(record: GenerationRunRecord): string[] {
     lines.push(
       `Decision Brief first attempt schema: ${formatFirstAttemptSummary(evalRecord.briefFirstAttemptSchemaPass)}`,
     );
+    lines.push(
+      `Decision Brief first attempt semantic quality: ${formatFirstAttemptSummary(evalRecord.briefFirstAttemptSemanticPass)}`,
+    );
+    if (evalRecord.briefFirstAttemptPlaceholderLeakage === true) {
+      lines.push("Decision Brief placeholder leakage: detected on first attempt");
+    }
+    if (
+      evalRecord.briefQualityRetryReasonCategories &&
+      evalRecord.briefQualityRetryReasonCategories.length > 0
+    ) {
+      lines.push(
+        `Decision Brief quality retry reason: ${evalRecord.briefQualityRetryReasonCategories.join(", ")}`,
+      );
+    }
+    if (
+      evalRecord.briefQualityFailureCategories &&
+      evalRecord.briefQualityFailureCategories.length > 0
+    ) {
+      lines.push(
+        `Decision Brief quality failure: ${evalRecord.briefQualityFailureCategories.join(", ")}`,
+      );
+    }
   }
 
   lines.push(

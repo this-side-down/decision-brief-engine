@@ -61,3 +61,16 @@ export class StorageQuotaError extends WebGpuInferenceError {
     this.name = "StorageQuotaError";
   }
 }
+
+export class GenerationQualityError extends WebGpuInferenceError {
+  readonly failureCategories: readonly string[];
+
+  constructor(
+    message = "Browser generation returned an incomplete Decision Brief. Try again or use Mock demo.",
+    failureCategories: readonly string[] = [],
+  ) {
+    super(message);
+    this.name = "GenerationQualityError";
+    this.failureCategories = failureCategories;
+  }
+}
