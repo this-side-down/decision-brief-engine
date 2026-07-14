@@ -1,12 +1,14 @@
-import { useEffect, useReducer, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DisclosureChevron } from "../DisclosureChevron";
 import type { GenerationRunRecord } from "../../services/generation/generationRunTelemetry";
 import {
+  applyRunRecordTransition,
   createRunDetailsDisclosureState,
+  createStageCompletionSnapshot,
   formatRunDetailsCollapsedSummary,
-  isGenerationRunFailed,
-  isGenerationRunTerminal,
   runDetailsDisclosureReducer,
+  type RunDetailsDisclosureState,
+  type StageCompletionSnapshot,
 } from "../../services/generation/runDetailsDisclosure";
 
 type GenerationRunStatusProps = {
@@ -24,13 +26,13 @@ export function GenerationRunStatus({
   runRecord,
   runGenerationId = 0,
 }: GenerationRunStatusProps) {
-  const [disclosureState, dispatchDisclosure] = useReducer(
-    runDetailsDisclosureReducer,
-    undefined,
+  const [disclosureState, setDisclosureState] = useState<RunDetailsDisclosureState>(
     createRunDetailsDisclosureState,
   );
   const previousRunIdRef = useRef<number | null>(null);
-  const previousTerminalRef = useRef(false);
+  const stageSnapshotRef = useRef<StageCompletionSnapshot>(
+    createStageCompletionSnapshot(),
+  );
 
   useEffect(() => {
     if (
@@ -38,8 +40,8 @@ export function GenerationRunStatus({
       previousRunIdRef.current !== null &&
       runGenerationId !== previousRunIdRef.current
     ) {
-      dispatchDisclosure({ type: "new_run_started" });
-      previousTerminalRef.current = false;
+      setDisclosureState(createRunDetailsDisclosureState());
+      stageSnapshotRef.current = createStageCompletionSnapshot();
     }
 
     previousRunIdRef.current = runGenerationId;
@@ -50,18 +52,16 @@ export function GenerationRunStatus({
       return;
     }
 
-    const terminal = isGenerationRunTerminal(runRecord);
-    const failed = isGenerationRunFailed(runRecord);
-
-    if (terminal && !previousTerminalRef.current) {
-      dispatchDisclosure({
-        type: "run_completed",
+    setDisclosureState((current) => {
+      const transition = applyRunRecordTransition({
+        state: current,
+        previousSnapshot: stageSnapshotRef.current,
         runId: runGenerationId,
-        failed,
+        record: runRecord,
       });
-    }
-
-    previousTerminalRef.current = terminal;
+      stageSnapshotRef.current = transition.snapshot;
+      return transition.state;
+    });
   }, [runGenerationId, runRecord]);
 
   const hasLiveStatus = Boolean(liveStatusMessage);
@@ -95,11 +95,13 @@ export function GenerationRunStatus({
             aria-expanded={disclosureState.expanded}
             className="flex w-full items-center gap-2 rounded border border-slate-200 bg-slate-50 px-3 py-2 text-left text-xs text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/10"
             onClick={() =>
-              dispatchDisclosure({
-                type: "toggle",
-                runId: runGenerationId,
-                expanded: !disclosureState.expanded,
-              })
+              setDisclosureState((current) =>
+                runDetailsDisclosureReducer(current, {
+                  type: "toggle",
+                  runId: runGenerationId,
+                  expanded: !current.expanded,
+                }),
+              )
             }
             type="button"
           >

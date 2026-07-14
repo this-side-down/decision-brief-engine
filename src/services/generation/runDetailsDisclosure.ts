@@ -3,23 +3,51 @@ import { formatElapsedSeconds } from "./generationRunTelemetry";
 
 const FAILED_OUTCOMES: StepOutcome[] = ["error", "timeout", "cancelled"];
 
+export type GenerationStage = "model_load" | "capture" | "brief";
+
+export type StageCompletionSnapshot = {
+  modelLoadCompleted: boolean;
+  captureCompleted: boolean;
+  briefCompleted: boolean;
+};
+
 export type RunDetailsDisclosureState = {
   expanded: boolean;
-  autoExpandedRunId: number | null;
+  autoExpandedFailureKeys: string[];
   manuallyCollapsedRunId: number | null;
 };
 
 export type RunDetailsDisclosureAction =
-  | { type: "run_completed"; runId: number; failed: boolean }
+  | {
+      type: "stage_completed";
+      runId: number;
+      stage: GenerationStage;
+      failed: boolean;
+    }
   | { type: "toggle"; runId: number; expanded: boolean }
   | { type: "new_run_started" };
 
 export function createRunDetailsDisclosureState(): RunDetailsDisclosureState {
   return {
     expanded: false,
-    autoExpandedRunId: null,
+    autoExpandedFailureKeys: [],
     manuallyCollapsedRunId: null,
   };
+}
+
+export function createStageCompletionSnapshot(): StageCompletionSnapshot {
+  return {
+    modelLoadCompleted: false,
+    captureCompleted: false,
+    briefCompleted: false,
+  };
+}
+
+export function stageFailureKey(
+  runId: number,
+  stage: GenerationStage,
+): string {
+  return `${runId}:${stage}`;
 }
 
 export function runDetailsDisclosureReducer(
@@ -27,7 +55,7 @@ export function runDetailsDisclosureReducer(
   action: RunDetailsDisclosureAction,
 ): RunDetailsDisclosureState {
   switch (action.type) {
-    case "run_completed":
+    case "stage_completed":
       if (!action.failed) {
         return {
           ...state,
@@ -39,14 +67,21 @@ export function runDetailsDisclosureReducer(
         return state;
       }
 
-      if (state.autoExpandedRunId === action.runId) {
+      if (
+        state.autoExpandedFailureKeys.includes(
+          stageFailureKey(action.runId, action.stage),
+        )
+      ) {
         return state;
       }
 
       return {
         ...state,
         expanded: true,
-        autoExpandedRunId: action.runId,
+        autoExpandedFailureKeys: [
+          ...state.autoExpandedFailureKeys,
+          stageFailureKey(action.runId, action.stage),
+        ],
       };
     case "toggle":
       return {
@@ -63,20 +98,89 @@ export function runDetailsDisclosureReducer(
   }
 }
 
-export function isGenerationRunTerminal(record: GenerationRunRecord): boolean {
-  if (record.captureOutcome !== null) {
-    return true;
+export function getStageCompletionSnapshot(
+  record: GenerationRunRecord,
+): StageCompletionSnapshot {
+  return {
+    modelLoadCompleted: record.modelLoadDurationMs !== null,
+    captureCompleted: record.captureOutcome !== null,
+    briefCompleted: record.briefOutcome !== null,
+  };
+}
+
+export function detectNewlyCompletedStages(
+  previous: StageCompletionSnapshot,
+  current: StageCompletionSnapshot,
+): GenerationStage[] {
+  const stages: GenerationStage[] = [];
+
+  if (current.modelLoadCompleted && !previous.modelLoadCompleted) {
+    stages.push("model_load");
   }
 
-  return record.modelLoadDurationMs !== null;
+  if (current.captureCompleted && !previous.captureCompleted) {
+    stages.push("capture");
+  }
+
+  if (current.briefCompleted && !previous.briefCompleted) {
+    stages.push("brief");
+  }
+
+  return stages;
+}
+
+export function isStageFailed(
+  record: GenerationRunRecord,
+  stage: GenerationStage,
+): boolean {
+  switch (stage) {
+    case "model_load":
+      return false;
+    case "capture":
+      return (
+        record.captureOutcome !== null &&
+        FAILED_OUTCOMES.includes(record.captureOutcome)
+      );
+    case "brief":
+      return (
+        record.briefOutcome !== null &&
+        FAILED_OUTCOMES.includes(record.briefOutcome)
+      );
+  }
+}
+
+export function applyRunRecordTransition(options: {
+  state: RunDetailsDisclosureState;
+  previousSnapshot: StageCompletionSnapshot;
+  runId: number;
+  record: GenerationRunRecord;
+}): {
+  state: RunDetailsDisclosureState;
+  snapshot: StageCompletionSnapshot;
+} {
+  const snapshot = getStageCompletionSnapshot(options.record);
+  const newlyCompletedStages = detectNewlyCompletedStages(
+    options.previousSnapshot,
+    snapshot,
+  );
+
+  let state = options.state;
+
+  for (const stage of newlyCompletedStages) {
+    state = runDetailsDisclosureReducer(state, {
+      type: "stage_completed",
+      runId: options.runId,
+      stage,
+      failed: isStageFailed(options.record, stage),
+    });
+  }
+
+  return { state, snapshot };
 }
 
 export function isGenerationRunFailed(record: GenerationRunRecord): boolean {
   return (
-    (record.captureOutcome !== null &&
-      FAILED_OUTCOMES.includes(record.captureOutcome)) ||
-    (record.briefOutcome !== null &&
-      FAILED_OUTCOMES.includes(record.briefOutcome))
+    isStageFailed(record, "capture") || isStageFailed(record, "brief")
   );
 }
 
