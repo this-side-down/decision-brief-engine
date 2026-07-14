@@ -1,0 +1,793 @@
+{
+  "resultFormatVersion": 1,
+  "runId": "pipeline-2026-07-13T23-43-51-960Z",
+  "timestamp": "2026-07-13T23:43:51.982Z",
+  "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+  "generationMode": "ollama",
+  "modelId": "ollama:qwen3:4b",
+  "caseIds": [
+    "product-prioritization",
+    "strategy-tradeoff",
+    "execution-planning",
+    "customer-interview-synthesis",
+    "ambiguous-stakeholder-conversation",
+    "q4-workforce-allocation",
+    "local-inference-setup-flow",
+    "household-move-planning"
+  ],
+  "results": [
+    {
+      "runId": "pipeline-2026-07-13T23-43-51-960Z",
+      "timestamp": "2026-07-13T23:46:20.887Z",
+      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "fixtureId": "product-prioritization",
+      "fixtureName": "Product prioritization meeting",
+      "fixtureCategory": "evaluation-fixture",
+      "generationMode": "ollama",
+      "modelId": "ollama:qwen3:4b",
+      "runtimeLibraryVersion": null,
+      "promptVariant": "default",
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": false,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": true,
+          "detail": "3 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": true,
+          "detail": "5 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": false,
+          "detail": "2 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "3 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": true,
+          "detail": "4 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "4 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": true,
+          "detail": "recommendation_candidate is non-empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=Medium"
+        }
+      ],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 64553,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": false,
+      "decisionBriefLatencyMs": 84350,
+      "decisionTraceSchemaPass": null,
+      "decisionTraceStructuralReadinessPass": null,
+      "decisionTraceFindings": [],
+      "recommendationAlignmentPass": null,
+      "nextStepAlignmentPass": null,
+      "requiredDecisionBriefSectionsPass": null,
+      "writingHardFailures": [],
+      "writingWarnings": [],
+      "writingReportOnlyFindings": [],
+      "deterministicUsableBrief": false,
+      "evaluatorNotes": [
+        "Decision Brief generation failed: Decision Brief result is missing a non-empty \"markdown\" field."
+      ],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment."
+      ],
+      "rawErrorCategory": "brief_generation",
+      "failureKind": "product_quality",
+      "artifactPaths": null,
+      "webGpu": null,
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    },
+    {
+      "runId": "pipeline-2026-07-13T23-43-51-960Z",
+      "timestamp": "2026-07-13T23:50:14.893Z",
+      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "fixtureId": "strategy-tradeoff",
+      "fixtureName": "Strategy tradeoff discussion",
+      "fixtureCategory": "evaluation-fixture",
+      "generationMode": "ollama",
+      "modelId": "ollama:qwen3:4b",
+      "runtimeLibraryVersion": null,
+      "promptVariant": "default",
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": true,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": true,
+          "detail": "4 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": true,
+          "detail": "6 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": true,
+          "detail": "7 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "5 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": true,
+          "detail": "6 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "4 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": true,
+          "detail": "recommendation_candidate is non-empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=High"
+        }
+      ],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 113875,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": false,
+      "decisionBriefLatencyMs": 120128,
+      "decisionTraceSchemaPass": null,
+      "decisionTraceStructuralReadinessPass": null,
+      "decisionTraceFindings": [],
+      "recommendationAlignmentPass": null,
+      "nextStepAlignmentPass": null,
+      "requiredDecisionBriefSectionsPass": null,
+      "writingHardFailures": [],
+      "writingWarnings": [],
+      "writingReportOnlyFindings": [],
+      "deterministicUsableBrief": false,
+      "evaluatorNotes": [
+        "Decision Brief generation failed: Ollama request timed out after 120000ms."
+      ],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment."
+      ],
+      "rawErrorCategory": "infrastructure",
+      "failureKind": "infrastructure",
+      "artifactPaths": null,
+      "webGpu": null,
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    },
+    {
+      "runId": "pipeline-2026-07-13T23-43-51-960Z",
+      "timestamp": "2026-07-13T23:53:22.318Z",
+      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "fixtureId": "execution-planning",
+      "fixtureName": "Execution planning disagreement",
+      "fixtureCategory": "evaluation-fixture",
+      "generationMode": "ollama",
+      "modelId": "ollama:qwen3:4b",
+      "runtimeLibraryVersion": null,
+      "promptVariant": "default",
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": true,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": true,
+          "detail": "3 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": true,
+          "detail": "6 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": true,
+          "detail": "5 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "3 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": true,
+          "detail": "4 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "3 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": true,
+          "detail": "recommendation_candidate is non-empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=Medium"
+        }
+      ],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 82262,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": false,
+      "decisionBriefLatencyMs": 105161,
+      "decisionTraceSchemaPass": null,
+      "decisionTraceStructuralReadinessPass": null,
+      "decisionTraceFindings": [],
+      "recommendationAlignmentPass": null,
+      "nextStepAlignmentPass": null,
+      "requiredDecisionBriefSectionsPass": null,
+      "writingHardFailures": [],
+      "writingWarnings": [],
+      "writingReportOnlyFindings": [],
+      "deterministicUsableBrief": false,
+      "evaluatorNotes": [
+        "Decision Brief generation failed: Decision Brief result is missing a non-empty \"markdown\" field."
+      ],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment."
+      ],
+      "rawErrorCategory": "brief_generation",
+      "failureKind": "product_quality",
+      "artifactPaths": null,
+      "webGpu": null,
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    },
+    {
+      "runId": "pipeline-2026-07-13T23-43-51-960Z",
+      "timestamp": "2026-07-13T23:55:41.902Z",
+      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "fixtureId": "customer-interview-synthesis",
+      "fixtureName": "Customer interview synthesis",
+      "fixtureCategory": "evaluation-fixture",
+      "generationMode": "ollama",
+      "modelId": "ollama:qwen3:4b",
+      "runtimeLibraryVersion": null,
+      "promptVariant": "default",
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": false,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": true,
+          "detail": "4 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": true,
+          "detail": "7 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": false,
+          "detail": "2 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "3 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": true,
+          "detail": "3 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "3 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": true,
+          "detail": "recommendation_candidate is non-empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=Medium"
+        }
+      ],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 64973,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": false,
+      "decisionBriefLatencyMs": 74609,
+      "decisionTraceSchemaPass": null,
+      "decisionTraceStructuralReadinessPass": null,
+      "decisionTraceFindings": [],
+      "recommendationAlignmentPass": null,
+      "nextStepAlignmentPass": null,
+      "requiredDecisionBriefSectionsPass": null,
+      "writingHardFailures": [],
+      "writingWarnings": [],
+      "writingReportOnlyFindings": [],
+      "deterministicUsableBrief": false,
+      "evaluatorNotes": [
+        "Decision Brief generation failed: Decision Brief result is missing a non-empty \"markdown\" field."
+      ],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment."
+      ],
+      "rawErrorCategory": "brief_generation",
+      "failureKind": "product_quality",
+      "artifactPaths": null,
+      "webGpu": null,
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    },
+    {
+      "runId": "pipeline-2026-07-13T23-43-51-960Z",
+      "timestamp": "2026-07-13T23:58:50.426Z",
+      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "fixtureId": "ambiguous-stakeholder-conversation",
+      "fixtureName": "Ambiguous stakeholder conversation",
+      "fixtureCategory": "evaluation-fixture",
+      "generationMode": "ollama",
+      "modelId": "ollama:qwen3:4b",
+      "runtimeLibraryVersion": null,
+      "promptVariant": "default",
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": true,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": true,
+          "detail": "3 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": true,
+          "detail": "6 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": true,
+          "detail": "3 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "3 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": true,
+          "detail": "5 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "3 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": true,
+          "detail": "recommendation_candidate is non-empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=Medium"
+        }
+      ],
+      "inventedStatedDecisionFinding": "Invented stated_decision treated as fact: \"None\"",
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 91794,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": false,
+      "decisionBriefLatencyMs": 96728,
+      "decisionTraceSchemaPass": null,
+      "decisionTraceStructuralReadinessPass": null,
+      "decisionTraceFindings": [],
+      "recommendationAlignmentPass": null,
+      "nextStepAlignmentPass": null,
+      "requiredDecisionBriefSectionsPass": null,
+      "writingHardFailures": [],
+      "writingWarnings": [],
+      "writingReportOnlyFindings": [],
+      "deterministicUsableBrief": false,
+      "evaluatorNotes": [
+        "Decision Brief generation failed: Decision Brief result is missing a non-empty \"markdown\" field."
+      ],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment."
+      ],
+      "rawErrorCategory": "brief_generation",
+      "failureKind": "product_quality",
+      "artifactPaths": null,
+      "webGpu": null,
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    },
+    {
+      "runId": "pipeline-2026-07-13T23-43-51-960Z",
+      "timestamp": "2026-07-14T00:00:50.432Z",
+      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "fixtureId": "q4-workforce-allocation",
+      "fixtureName": "Q4 Workforce Allocation",
+      "fixtureCategory": "gallery-example",
+      "generationMode": "ollama",
+      "modelId": "ollama:qwen3:4b",
+      "runtimeLibraryVersion": null,
+      "promptVariant": "default",
+      "captureLayerFirstAttemptParsePass": false,
+      "captureLayerFinalParsePass": false,
+      "captureLayerSchemaPass": false,
+      "captureLayerStructuralReadinessPass": false,
+      "captureLayerReadinessFindings": [],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 120003,
+      "decisionBriefAttempted": false,
+      "decisionBriefGenerationSuccess": false,
+      "decisionBriefLatencyMs": null,
+      "decisionTraceSchemaPass": null,
+      "decisionTraceStructuralReadinessPass": null,
+      "decisionTraceFindings": [],
+      "recommendationAlignmentPass": null,
+      "nextStepAlignmentPass": null,
+      "requiredDecisionBriefSectionsPass": null,
+      "writingHardFailures": [],
+      "writingWarnings": [],
+      "writingReportOnlyFindings": [],
+      "deterministicUsableBrief": false,
+      "evaluatorNotes": [
+        "Capture Layer generation failed: Ollama request timed out after 120000ms.",
+        "Decision Brief skipped because Capture Layer schema/parse gate did not pass."
+      ],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment."
+      ],
+      "rawErrorCategory": "infrastructure",
+      "failureKind": "infrastructure",
+      "artifactPaths": null,
+      "webGpu": null,
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    },
+    {
+      "runId": "pipeline-2026-07-13T23-43-51-960Z",
+      "timestamp": "2026-07-14T00:04:28.477Z",
+      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "fixtureId": "local-inference-setup-flow",
+      "fixtureName": "Local Inference Setup Flow",
+      "fixtureCategory": "gallery-example",
+      "generationMode": "ollama",
+      "modelId": "ollama:qwen3:4b",
+      "runtimeLibraryVersion": null,
+      "promptVariant": "default",
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": true,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": true,
+          "detail": "4 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": true,
+          "detail": "4 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": true,
+          "detail": "5 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "4 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": true,
+          "detail": "5 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "4 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": true,
+          "detail": "recommendation_candidate is non-empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=High"
+        }
+      ],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 98039,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": false,
+      "decisionBriefLatencyMs": 120002,
+      "decisionTraceSchemaPass": null,
+      "decisionTraceStructuralReadinessPass": null,
+      "decisionTraceFindings": [],
+      "recommendationAlignmentPass": null,
+      "nextStepAlignmentPass": null,
+      "requiredDecisionBriefSectionsPass": null,
+      "writingHardFailures": [],
+      "writingWarnings": [],
+      "writingReportOnlyFindings": [],
+      "deterministicUsableBrief": false,
+      "evaluatorNotes": [
+        "Decision Brief generation failed: Ollama request timed out after 120000ms."
+      ],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment."
+      ],
+      "rawErrorCategory": "infrastructure",
+      "failureKind": "infrastructure",
+      "artifactPaths": null,
+      "webGpu": null,
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    },
+    {
+      "runId": "pipeline-2026-07-13T23-43-51-960Z",
+      "timestamp": "2026-07-14T00:07:34.763Z",
+      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "fixtureId": "household-move-planning",
+      "fixtureName": "Household Move Planning",
+      "fixtureCategory": "gallery-example",
+      "generationMode": "ollama",
+      "modelId": "ollama:qwen3:4b",
+      "runtimeLibraryVersion": null,
+      "promptVariant": "default",
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": true,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": true,
+          "detail": "4 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": true,
+          "detail": "5 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": true,
+          "detail": "5 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "5 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": true,
+          "detail": "5 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "5 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": true,
+          "detail": "recommendation_candidate is non-empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=Medium"
+        }
+      ],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 84828,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": false,
+      "decisionBriefLatencyMs": 101456,
+      "decisionTraceSchemaPass": null,
+      "decisionTraceStructuralReadinessPass": null,
+      "decisionTraceFindings": [],
+      "recommendationAlignmentPass": null,
+      "nextStepAlignmentPass": null,
+      "requiredDecisionBriefSectionsPass": null,
+      "writingHardFailures": [],
+      "writingWarnings": [],
+      "writingReportOnlyFindings": [],
+      "deterministicUsableBrief": false,
+      "evaluatorNotes": [
+        "Decision Brief generation failed: Decision Brief result is missing a non-empty \"markdown\" field."
+      ],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment."
+      ],
+      "rawErrorCategory": "brief_generation",
+      "failureKind": "product_quality",
+      "artifactPaths": null,
+      "webGpu": null,
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    }
+  ],
+  "infrastructureFailure": true,
+  "harnessExecutionError": null
+}

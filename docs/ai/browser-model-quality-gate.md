@@ -8,6 +8,8 @@ This document defines the gate to run, not a completed evaluation. Record result
 
 For a repeatable Capture Layer-first entry point (mock + Ollama CLI, WebGPU manual procedure, schema-before-score), use [`capture-layer-eval-harness.md`](capture-layer-eval-harness.md). The first harness case is the construction Strategy example; the five-fixture ungating thresholds in this document still apply before public WebGPU decisions.
 
+For **current-contract full-pipeline evaluation** (Capture Layer, Decision Trace, alignment, Decision Brief writing across all eight cases), use [`pipeline-eval-harness.md`](pipeline-eval-harness.md) and `npm run eval:pipeline` (#126). That harness establishes Mock/Ollama baselines while #124 blocks the scored W3 browser run. It does not replace the hard/score/UX thresholds below.
+
 The gate exists because the product promise depends on preserving facts, inference, ambiguity, risks, assumptions, missing context, and open questions through a two-step pipeline:
 
 1. Generate valid typed Capture Layer JSON.
@@ -195,6 +197,7 @@ Required placeholder rows to maintain until evaluation is complete:
 
 ## Related documents
 
+- [Full-pipeline evaluation harness](pipeline-eval-harness.md)
 - [Capture Layer evaluation harness](capture-layer-eval-harness.md)
 - [Browser model / prompt variant eval (#73)](browser-model-prompt-variant-eval.md)
 - [WebGPU adapter feasibility](webgpu-adapter-feasibility.md)

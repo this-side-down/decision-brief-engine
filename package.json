@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "eval:capture": "tsx scripts/eval-capture-layer.ts",
+    "eval:capture": "tsx --import ./scripts/register-fixture-raw-hooks.mts scripts/eval-capture-layer.ts",
+    "eval:pipeline": "tsx --import ./scripts/register-fixture-raw-hooks.mts scripts/eval-pipeline.ts",
     "health:ollama": "tsx scripts/ollama-health.ts",
     "diagnose:webgpu-model": "tsx scripts/diagnose-webgpu-model-delivery.ts"
   },
