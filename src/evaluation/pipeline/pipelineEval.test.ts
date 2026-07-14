@@ -1,4 +1,6 @@
 import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { EXAMPLE_FIXTURES } from "../../data/exampleFixtures";
 import type { CaptureLayer } from "../../types/captureLayer";
@@ -25,6 +27,28 @@ import { buildWebGpuPipelineResult } from "./webGpuResult";
 import { PIPELINE_RESULT_FORMAT_VERSION } from "./constants";
 
 const repoRoot = process.cwd();
+
+function spawnEvalPipelineCli(cliArgs: string[]) {
+  const require = createRequire(import.meta.url);
+  const tsxPackageJson = require.resolve("tsx/package.json");
+  const tsxCli = join(dirname(tsxPackageJson), "dist/cli.mjs");
+
+  return spawnSync(
+    process.execPath,
+    [
+      tsxCli,
+      "--import",
+      "./scripts/register-fixture-raw-hooks.mts",
+      "./scripts/eval-pipeline.ts",
+      ...cliArgs,
+    ],
+    {
+      cwd: repoRoot,
+      encoding: "utf8",
+      env: process.env,
+    },
+  );
+}
 
 const usableOptions = {
   captureLayerFinalParsePass: true,
@@ -377,15 +401,7 @@ describe("Decision Trace and writing failure classification", () => {
 
 describe("CLI harness execution errors", () => {
   it("exits nonzero for unknown CLI arguments (distinct from product-quality)", () => {
-    const result = spawnSync(
-      "npm",
-      ["run", "eval:pipeline", "--", "--definitely-not-a-flag"],
-      {
-        cwd: repoRoot,
-        encoding: "utf8",
-        env: process.env,
-      },
-    );
+    const result = spawnEvalPipelineCli(["--definitely-not-a-flag"]);
 
     expect(result.status).toBe(1);
     expect(`${result.stdout}\n${result.stderr}`).toMatch(/Unknown argument/);
