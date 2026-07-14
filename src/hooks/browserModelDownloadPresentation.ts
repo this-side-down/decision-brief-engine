@@ -1,14 +1,20 @@
 export const BROWSER_MODEL_DOWNLOAD_SLOW_THRESHOLD_MS = 30_000;
 export const BROWSER_MODEL_DOWNLOAD_STALL_THRESHOLD_MS = 45_000;
 
-export type DownloadActivityState = "active" | "slow" | "stalled" | "terminal";
+export type DownloadActivityState =
+  | "active"
+  | "slow"
+  | "no_visible_progress_change"
+  | "stalled"
+  | "terminal";
 export type ProgressMode = "determinate" | "indeterminate" | "none";
 
 export type BrowserModelDownloadPresentationInput = {
   inferenceUiState: string;
   downloadProgress: { progress: number; text: string } | null;
   attemptStartedAt: number | null;
-  lastProgressAt: number | null;
+  lastCallbackAt: number | null;
+  lastMeaningfulProgressAt: number | null;
   now: number;
 };
 
@@ -53,7 +59,8 @@ export function formatDownloadElapsedLabel(elapsedMs: number): string {
 export function resolveDownloadActivityState(options: {
   inferenceUiState: string;
   attemptStartedAt: number | null;
-  lastProgressAt: number | null;
+  lastCallbackAt: number | null;
+  lastMeaningfulProgressAt: number | null;
   now: number;
 }): DownloadActivityState {
   if (
@@ -63,12 +70,19 @@ export function resolveDownloadActivityState(options: {
     return "terminal";
   }
 
-  const lastActivityAt = options.lastProgressAt ?? options.attemptStartedAt;
-  const inactiveMs = options.now - lastActivityAt;
+  const lastCallbackAt = options.lastCallbackAt ?? options.attemptStartedAt;
+  const lastMeaningfulProgressAt =
+    options.lastMeaningfulProgressAt ?? options.attemptStartedAt;
+  const callbackInactiveMs = options.now - lastCallbackAt;
+  const meaningfulProgressInactiveMs = options.now - lastMeaningfulProgressAt;
   const elapsedMs = options.now - options.attemptStartedAt;
 
-  if (inactiveMs >= BROWSER_MODEL_DOWNLOAD_STALL_THRESHOLD_MS) {
+  if (callbackInactiveMs >= BROWSER_MODEL_DOWNLOAD_STALL_THRESHOLD_MS) {
     return "stalled";
+  }
+
+  if (meaningfulProgressInactiveMs >= BROWSER_MODEL_DOWNLOAD_STALL_THRESHOLD_MS) {
+    return "no_visible_progress_change";
   }
 
   if (elapsedMs >= BROWSER_MODEL_DOWNLOAD_SLOW_THRESHOLD_MS) {
@@ -84,7 +98,8 @@ export function resolveBrowserModelDownloadPresentation(
   const activityState = resolveDownloadActivityState({
     inferenceUiState: input.inferenceUiState,
     attemptStartedAt: input.attemptStartedAt,
-    lastProgressAt: input.lastProgressAt,
+    lastCallbackAt: input.lastCallbackAt,
+    lastMeaningfulProgressAt: input.lastMeaningfulProgressAt,
     now: input.now,
   });
 
@@ -129,6 +144,10 @@ export function resolveBrowserModelDownloadPresentation(
   if (activityState === "slow") {
     headline = "Still downloading…";
     detail = "Large model files can take several minutes on the first load.";
+  } else if (activityState === "no_visible_progress_change") {
+    headline = "Still downloading…";
+    detail =
+      "No visible progress change has been reported recently. You can keep waiting until timeout or cancel.";
   } else if (activityState === "stalled") {
     headline = "Download may be stalled.";
     detail =

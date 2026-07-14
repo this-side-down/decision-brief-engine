@@ -111,6 +111,88 @@ describe("trySettleAttempt", () => {
   });
 });
 
+describe("ModelDownloadActivitySnapshot", () => {
+  it("initializes both callback and meaningful-progress timestamps on a fresh attempt", () => {
+    const snapshot = createModelDownloadActivitySnapshot(1_000);
+
+    expect(snapshot).toEqual({
+      attemptStartedAt: 1_000,
+      lastCallbackAt: 1_000,
+      lastMeaningfulProgressAt: 1_000,
+      lastProgressValue: null,
+      lastPhaseText: "",
+    });
+  });
+
+  it("updates lastCallbackAt on every accepted callback", () => {
+    const snapshot = createModelDownloadActivitySnapshot(1_000);
+    const updated = updateModelDownloadActivitySnapshot(
+      snapshot,
+      { progress: 0, text: "Start to fetch params" },
+      2_000,
+    );
+
+    expect(updated.lastCallbackAt).toBe(2_000);
+  });
+
+  it("does not update lastMeaningfulProgressAt for repeated identical callbacks", () => {
+    const snapshot = updateModelDownloadActivitySnapshot(
+      createModelDownloadActivitySnapshot(1_000),
+      { progress: 0, text: "Start to fetch params" },
+      2_000,
+    );
+
+    const repeated = updateModelDownloadActivitySnapshot(
+      snapshot,
+      { progress: 0, text: "Start to fetch params" },
+      3_000,
+    );
+
+    expect(repeated.lastCallbackAt).toBe(3_000);
+    expect(repeated.lastMeaningfulProgressAt).toBe(2_000);
+  });
+
+  it("updates both timestamps when numeric progress advances", () => {
+    const snapshot = updateModelDownloadActivitySnapshot(
+      createModelDownloadActivitySnapshot(1_000),
+      { progress: 0.1, text: "Fetching shard" },
+      2_000,
+    );
+    const advanced = updateModelDownloadActivitySnapshot(
+      snapshot,
+      { progress: 0.2, text: "Fetching shard" },
+      3_000,
+    );
+
+    expect(advanced.lastCallbackAt).toBe(3_000);
+    expect(advanced.lastMeaningfulProgressAt).toBe(3_000);
+    expect(advanced.lastProgressValue).toBe(0.2);
+  });
+
+  it("updates both timestamps when phase text changes", () => {
+    const snapshot = updateModelDownloadActivitySnapshot(
+      createModelDownloadActivitySnapshot(1_000),
+      { progress: 0, text: "Start to fetch params" },
+      2_000,
+    );
+    const phaseChanged = updateModelDownloadActivitySnapshot(
+      snapshot,
+      { progress: 0, text: "Fetching shard 1" },
+      3_000,
+    );
+
+    expect(phaseChanged.lastCallbackAt).toBe(3_000);
+    expect(phaseChanged.lastMeaningfulProgressAt).toBe(3_000);
+  });
+
+  it("resets both timestamps for a fresh retry snapshot", () => {
+    const retrySnapshot = createModelDownloadActivitySnapshot(5_000);
+
+    expect(retrySnapshot.lastCallbackAt).toBe(5_000);
+    expect(retrySnapshot.lastMeaningfulProgressAt).toBe(5_000);
+  });
+});
+
 describe("applyModelLoadProgressUpdate", () => {
   it("applies progress for an active attempt", () => {
     const state = createModelLoadAttemptState();
@@ -179,7 +261,7 @@ describe("applyModelLoadProgressUpdate", () => {
       }),
     ).toBe(false);
 
-    expect(updated.lastProgressAt).toBe(2_000);
+    expect(updated.lastMeaningfulProgressAt).toBe(2_000);
   });
 
   it("allows a fresh retry attempt to report progress normally", () => {

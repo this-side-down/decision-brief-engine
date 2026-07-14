@@ -11,7 +11,8 @@ type BrowserInferenceStatusProps = {
   statusMessage: string;
   downloadProgress: { progress: number; text: string } | null;
   modelLoadAttemptStartedAt?: number | null;
-  modelLoadLastProgressAt?: number | null;
+  modelLoadLastCallbackAt?: number | null;
+  modelLoadLastMeaningfulProgressAt?: number | null;
   liveModelLoadMessage?: string;
   onCancelDownload?: () => void;
   onRetryDownload?: () => void;
@@ -26,7 +27,8 @@ export function BrowserInferenceStatus({
   statusMessage,
   downloadProgress,
   modelLoadAttemptStartedAt = null,
-  modelLoadLastProgressAt = null,
+  modelLoadLastCallbackAt = null,
+  modelLoadLastMeaningfulProgressAt = null,
   liveModelLoadMessage = "",
   onCancelDownload,
   onRetryDownload,
@@ -55,14 +57,16 @@ export function BrowserInferenceStatus({
         inferenceUiState,
         downloadProgress,
         attemptStartedAt: modelLoadAttemptStartedAt,
-        lastProgressAt: modelLoadLastProgressAt,
+        lastCallbackAt: modelLoadLastCallbackAt,
+        lastMeaningfulProgressAt: modelLoadLastMeaningfulProgressAt,
         now,
       }),
     [
       downloadProgress,
       inferenceUiState,
       modelLoadAttemptStartedAt,
-      modelLoadLastProgressAt,
+      modelLoadLastCallbackAt,
+      modelLoadLastMeaningfulProgressAt,
       now,
     ],
   );

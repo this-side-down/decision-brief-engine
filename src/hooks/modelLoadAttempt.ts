@@ -11,7 +11,8 @@ export type DownloadProgressUpdate = {
 
 export type ModelDownloadActivitySnapshot = {
   attemptStartedAt: number;
-  lastProgressAt: number;
+  lastCallbackAt: number;
+  lastMeaningfulProgressAt: number;
   lastProgressValue: number | null;
   lastPhaseText: string;
 };
@@ -21,7 +22,8 @@ export function createModelDownloadActivitySnapshot(
 ): ModelDownloadActivitySnapshot {
   return {
     attemptStartedAt: now,
-    lastProgressAt: now,
+    lastCallbackAt: now,
+    lastMeaningfulProgressAt: now,
     lastProgressValue: null,
     lastPhaseText: "",
   };
@@ -36,18 +38,19 @@ export function updateModelDownloadActivitySnapshot(
     typeof progress.progress === "number" && Number.isFinite(progress.progress)
       ? progress.progress
       : null;
-  const progressChanged =
-    progressValue !== null &&
-    progressValue > 0 &&
-    progressValue !== snapshot.lastProgressValue;
+  const progressAdvanced =
+    progressValue !== null && progressValue !== snapshot.lastProgressValue;
   const phaseChanged = progress.text !== snapshot.lastPhaseText;
+  const meaningfulProgressChanged = progressAdvanced || phaseChanged;
 
   return {
     ...snapshot,
-    lastProgressValue: progressChanged ? progressValue : snapshot.lastProgressValue,
+    lastCallbackAt: now,
+    lastMeaningfulProgressAt: meaningfulProgressChanged
+      ? now
+      : snapshot.lastMeaningfulProgressAt,
+    lastProgressValue: progressAdvanced ? progressValue : snapshot.lastProgressValue,
     lastPhaseText: progress.text,
-    lastProgressAt:
-      progressChanged || phaseChanged ? now : snapshot.lastProgressAt,
   };
 }
 

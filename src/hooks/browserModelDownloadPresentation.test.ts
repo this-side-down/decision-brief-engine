@@ -16,7 +16,8 @@ describe("browserModelDownloadPresentation", () => {
       inferenceUiState: "downloading_model",
       downloadProgress: { progress: 0, text: "Start to fetch params" },
       attemptStartedAt: ATTEMPT_STARTED_AT,
-      lastProgressAt: ATTEMPT_STARTED_AT,
+      lastCallbackAt: ATTEMPT_STARTED_AT,
+      lastMeaningfulProgressAt: ATTEMPT_STARTED_AT,
       now: ATTEMPT_STARTED_AT + 5_000,
     });
 
@@ -30,7 +31,8 @@ describe("browserModelDownloadPresentation", () => {
       inferenceUiState: "downloading_model",
       downloadProgress: { progress: 0.256, text: "Fetching shard" },
       attemptStartedAt: ATTEMPT_STARTED_AT,
-      lastProgressAt: ATTEMPT_STARTED_AT + 1_000,
+      lastCallbackAt: ATTEMPT_STARTED_AT + 1_000,
+      lastMeaningfulProgressAt: ATTEMPT_STARTED_AT + 1_000,
       now: ATTEMPT_STARTED_AT + 2_000,
     });
 
@@ -51,33 +53,64 @@ describe("browserModelDownloadPresentation", () => {
       resolveDownloadActivityState({
         inferenceUiState: "downloading_model",
         attemptStartedAt: ATTEMPT_STARTED_AT,
-        lastProgressAt: ATTEMPT_STARTED_AT + 10_000,
+        lastCallbackAt: ATTEMPT_STARTED_AT + 10_000,
+        lastMeaningfulProgressAt: ATTEMPT_STARTED_AT + 10_000,
         now: ATTEMPT_STARTED_AT + 20_000,
       }),
     ).toBe("active");
   });
 
-  it("marks long-running downloads as slow when still receiving updates", () => {
+  it("marks long-running downloads as slow when callbacks are still arriving", () => {
     expect(
       resolveDownloadActivityState({
         inferenceUiState: "downloading_model",
         attemptStartedAt: ATTEMPT_STARTED_AT,
-        lastProgressAt: ATTEMPT_STARTED_AT + 35_000,
+        lastCallbackAt: ATTEMPT_STARTED_AT + 35_000,
+        lastMeaningfulProgressAt: ATTEMPT_STARTED_AT + 35_000,
         now: ATTEMPT_STARTED_AT + 35_000,
       }),
     ).toBe("slow");
   });
 
-  it("marks downloads as stalled after no recent progress activity", () => {
+  it("marks no visible progress change when callbacks arrive but meaningful progress is stale", () => {
     expect(
       resolveDownloadActivityState({
         inferenceUiState: "downloading_model",
         attemptStartedAt: ATTEMPT_STARTED_AT,
-        lastProgressAt: ATTEMPT_STARTED_AT,
+        lastCallbackAt: ATTEMPT_STARTED_AT + 50_000,
+        lastMeaningfulProgressAt: ATTEMPT_STARTED_AT,
+        now: ATTEMPT_STARTED_AT + 50_000,
+      }),
+    ).toBe("no_visible_progress_change");
+    expect(BROWSER_MODEL_DOWNLOAD_SLOW_THRESHOLD_MS).toBe(30_000);
+  });
+
+  it("marks downloads as potentially stalled only after no accepted callbacks", () => {
+    expect(
+      resolveDownloadActivityState({
+        inferenceUiState: "downloading_model",
+        attemptStartedAt: ATTEMPT_STARTED_AT,
+        lastCallbackAt: ATTEMPT_STARTED_AT,
+        lastMeaningfulProgressAt: ATTEMPT_STARTED_AT,
         now: ATTEMPT_STARTED_AT + BROWSER_MODEL_DOWNLOAD_STALL_THRESHOLD_MS,
       }),
     ).toBe("stalled");
-    expect(BROWSER_MODEL_DOWNLOAD_SLOW_THRESHOLD_MS).toBe(30_000);
+  });
+
+  it("does not classify repeated identical callbacks as stalled when callbacks remain recent", () => {
+    const presentation = resolveBrowserModelDownloadPresentation({
+      inferenceUiState: "downloading_model",
+      downloadProgress: { progress: 0, text: "Start to fetch params" },
+      attemptStartedAt: ATTEMPT_STARTED_AT,
+      lastCallbackAt: ATTEMPT_STARTED_AT + 50_000,
+      lastMeaningfulProgressAt: ATTEMPT_STARTED_AT,
+      now: ATTEMPT_STARTED_AT + 50_000,
+    });
+
+    expect(presentation.activityState).toBe("no_visible_progress_change");
+    expect(presentation.headline).toBe("Still downloading…");
+    expect(presentation.detail).toContain("No visible progress change");
+    expect(presentation.detail).not.toContain("Download may be stalled");
   });
 
   it("uses slow copy without failing the attempt", () => {
@@ -85,7 +118,8 @@ describe("browserModelDownloadPresentation", () => {
       inferenceUiState: "downloading_model",
       downloadProgress: { progress: 0, text: "Start to fetch params" },
       attemptStartedAt: ATTEMPT_STARTED_AT,
-      lastProgressAt: ATTEMPT_STARTED_AT + 31_000,
+      lastCallbackAt: ATTEMPT_STARTED_AT + 31_000,
+      lastMeaningfulProgressAt: ATTEMPT_STARTED_AT + 31_000,
       now: ATTEMPT_STARTED_AT + 31_000,
     });
 
@@ -94,12 +128,13 @@ describe("browserModelDownloadPresentation", () => {
     expect(presentation.showCancel).toBe(true);
   });
 
-  it("uses stalled copy without failing the attempt", () => {
+  it("uses potentially stalled copy only when callbacks stop arriving", () => {
     const presentation = resolveBrowserModelDownloadPresentation({
       inferenceUiState: "downloading_model",
       downloadProgress: { progress: 0, text: "Start to fetch params" },
       attemptStartedAt: ATTEMPT_STARTED_AT,
-      lastProgressAt: ATTEMPT_STARTED_AT,
+      lastCallbackAt: ATTEMPT_STARTED_AT,
+      lastMeaningfulProgressAt: ATTEMPT_STARTED_AT,
       now: ATTEMPT_STARTED_AT + BROWSER_MODEL_DOWNLOAD_STALL_THRESHOLD_MS + 1,
     });
 
@@ -108,12 +143,28 @@ describe("browserModelDownloadPresentation", () => {
     expect(presentation.showCancel).toBe(true);
   });
 
+  it("does not change inference state from stalled presentation", () => {
+    const presentation = resolveBrowserModelDownloadPresentation({
+      inferenceUiState: "downloading_model",
+      downloadProgress: { progress: 0, text: "Start to fetch params" },
+      attemptStartedAt: ATTEMPT_STARTED_AT,
+      lastCallbackAt: ATTEMPT_STARTED_AT,
+      lastMeaningfulProgressAt: ATTEMPT_STARTED_AT,
+      now: ATTEMPT_STARTED_AT + BROWSER_MODEL_DOWNLOAD_STALL_THRESHOLD_MS + 1,
+    });
+
+    expect(presentation.activityState).toBe("stalled");
+    expect(presentation.showCancel).toBe(true);
+    expect(presentation.showRetry).toBe(false);
+  });
+
   it("hides progress UI for terminal timeout state", () => {
     const presentation = resolveBrowserModelDownloadPresentation({
       inferenceUiState: "download_failed",
       downloadProgress: null,
       attemptStartedAt: null,
-      lastProgressAt: null,
+      lastCallbackAt: null,
+      lastMeaningfulProgressAt: null,
       now: ATTEMPT_STARTED_AT + 120_000,
     });
 
@@ -128,7 +179,8 @@ describe("browserModelDownloadPresentation", () => {
       inferenceUiState: "download_cancelled",
       downloadProgress: null,
       attemptStartedAt: null,
-      lastProgressAt: null,
+      lastCallbackAt: null,
+      lastMeaningfulProgressAt: null,
       now: ATTEMPT_STARTED_AT + 60_000,
     });
 
@@ -142,7 +194,8 @@ describe("browserModelDownloadPresentation", () => {
       inferenceUiState: "model_ready",
       downloadProgress: null,
       attemptStartedAt: null,
-      lastProgressAt: null,
+      lastCallbackAt: null,
+      lastMeaningfulProgressAt: null,
       now: ATTEMPT_STARTED_AT + 60_000,
     });
 

@@ -83,9 +83,11 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
   const [modelLoadAttemptStartedAt, setModelLoadAttemptStartedAt] = useState<
     number | null
   >(null);
-  const [modelLoadLastProgressAt, setModelLoadLastProgressAt] = useState<
+  const [modelLoadLastCallbackAt, setModelLoadLastCallbackAt] = useState<
     number | null
   >(null);
+  const [modelLoadLastMeaningfulProgressAt, setModelLoadLastMeaningfulProgressAt] =
+    useState<number | null>(null);
   const loadAbortRef = useRef<AbortController | null>(null);
   const generationAbortRef = useRef<AbortController | null>(null);
   const modelLoadAttemptStateRef = useRef(createModelLoadAttemptState());
@@ -166,7 +168,8 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
   const clearModelLoadActivity = useCallback(() => {
     modelLoadActivityRef.current = null;
     setModelLoadAttemptStartedAt(null);
-    setModelLoadLastProgressAt(null);
+    setModelLoadLastCallbackAt(null);
+    setModelLoadLastMeaningfulProgressAt(null);
   }, []);
 
   const selectMockDemo = useCallback(() => {
@@ -218,7 +221,8 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
     const activitySnapshot = createModelDownloadActivitySnapshot(Date.now());
     modelLoadActivityRef.current = activitySnapshot;
     setModelLoadAttemptStartedAt(activitySnapshot.attemptStartedAt);
-    setModelLoadLastProgressAt(activitySnapshot.lastProgressAt);
+    setModelLoadLastCallbackAt(activitySnapshot.lastCallbackAt);
+    setModelLoadLastMeaningfulProgressAt(activitySnapshot.lastMeaningfulProgressAt);
     setIsDisclosureOpen(false);
     setInferenceUiState("downloading_model");
     setStatusMessage("Downloading browser model…");
@@ -238,7 +242,10 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
             applyUpdate: (nextProgress, nextActivity) => {
               modelLoadActivityRef.current = nextActivity;
               setDownloadProgress(nextProgress);
-              setModelLoadLastProgressAt(nextActivity.lastProgressAt);
+              setModelLoadLastCallbackAt(nextActivity.lastCallbackAt);
+              setModelLoadLastMeaningfulProgressAt(
+                nextActivity.lastMeaningfulProgressAt,
+              );
             },
           });
         },
@@ -488,7 +495,8 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
     statusMessage,
     lastModelLoadDurationMs,
     modelLoadAttemptStartedAt,
-    modelLoadLastProgressAt,
+    modelLoadLastCallbackAt,
+    modelLoadLastMeaningfulProgressAt,
     downloadProgress,
     isDisclosureOpen,
     isEngineReady,
