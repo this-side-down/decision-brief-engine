@@ -23,7 +23,9 @@ The model returns a constrained JSON envelope with semantic fields only. Applica
 - conflict `sourceChunkIds`
 - unresolved-reference `sourceChunkId`
 
-`ollamaGenerate` accepts either `format: "json"` or a JSON Schema object. Chunk extraction uses the schema object, `temperature: 0`, `think: false`, and no reasoning output.
+`ollamaGenerate` accepts optional `think` and `temperature` settings. Ordinary single-pass Capture Layer and Decision Brief calls omit `think` and temperature. Chunk extraction passes `think: false`, `temperature: 0`, and the chunk JSON Schema as `format`.
+
+Chunk parse/schema/placeholder failures throw `ChunkExtractionContractError`. The extractor retries exactly once for that typed contract failure only.
 
 ## Retry limits
 

@@ -1,19 +1,20 @@
 {
   "resultFormatVersion": 1,
-  "runId": "pipeline-2026-07-14T18-49-24-046Z",
-  "timestamp": "2026-07-14T18:49:24.100Z",
-  "buildCommit": "c4aef624b178159292efca1d2c9422506569b858",
+  "runId": "pipeline-2026-07-14T19-05-03-048Z",
+  "timestamp": "2026-07-14T19:05:03.100Z",
+  "buildCommit": "9510fb88edcfd298311ca2ce2b26a61e089e0b13",
   "generationMode": "ollama",
   "modelId": "ollama:qwen3:4b",
   "caseIds": [
     "platform-rearchitecture-review",
-    "regional-launch-readiness-review"
+    "regional-launch-readiness-review",
+    "q4-workforce-allocation"
   ],
   "results": [
     {
-      "runId": "pipeline-2026-07-14T18-49-24-046Z",
-      "timestamp": "2026-07-14T18:50:00.257Z",
-      "buildCommit": "c4aef624b178159292efca1d2c9422506569b858",
+      "runId": "pipeline-2026-07-14T19-05-03-048Z",
+      "timestamp": "2026-07-14T19:05:36.093Z",
+      "buildCommit": "9510fb88edcfd298311ca2ce2b26a61e089e0b13",
       "fixtureId": "platform-rearchitecture-review",
       "fixtureName": "Platform Re-Architecture Review",
       "fixtureCategory": "gallery-example",
@@ -34,12 +35,12 @@
         {
           "id": "options_count",
           "pass": true,
-          "detail": "12 options (min 3)"
+          "detail": "13 options (min 3)"
         },
         {
           "id": "stakeholders_count",
           "pass": true,
-          "detail": "20 stakeholders (min 4)"
+          "detail": "12 stakeholders (min 4)"
         },
         {
           "id": "risks_count",
@@ -72,12 +73,12 @@
           "detail": "confidence=Medium"
         }
       ],
-      "inventedStatedDecisionFinding": "Invented stated_decision treated as fact: \"No final architecture decision made Pursue Helix modular-monolith with staged invoice remediation track and tracing/SLO gates, with microservices extraction as later phase if module boundaries fail No stated final decision today\"",
+      "inventedStatedDecisionFinding": "Invented stated_decision treated as fact: \"No final architecture decision today Pursue Helix modular-monolith with staged invoice remediation track and tracing/SLO gates, with microservices extraction as later phase if module boundaries fail No stated final decision today\"",
       "captureLayerRetryCount": 0,
-      "captureLayerLatencyMs": 24381,
+      "captureLayerLatencyMs": 28243,
       "decisionBriefAttempted": true,
       "decisionBriefGenerationSuccess": false,
-      "decisionBriefLatencyMs": 11774,
+      "decisionBriefLatencyMs": 4749,
       "decisionTraceSchemaPass": null,
       "decisionTraceStructuralReadinessPass": null,
       "decisionTraceFindings": [],
@@ -114,7 +115,7 @@
         },
         "totalChunkRetries": 0,
         "planningLatencyMs": 1,
-        "chunkExtractionLatencyMs": 24378,
+        "chunkExtractionLatencyMs": 28240,
         "mergeLatencyMs": 2,
         "validationLatencyMs": 0
       },
@@ -132,9 +133,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-14T18-49-24-046Z",
-      "timestamp": "2026-07-14T18:50:57.027Z",
-      "buildCommit": "c4aef624b178159292efca1d2c9422506569b858",
+      "runId": "pipeline-2026-07-14T19-05-03-048Z",
+      "timestamp": "2026-07-14T19:06:26.434Z",
+      "buildCommit": "9510fb88edcfd298311ca2ce2b26a61e089e0b13",
       "fixtureId": "regional-launch-readiness-review",
       "fixtureName": "Regional launch readiness review",
       "fixtureCategory": "evaluation-fixture",
@@ -195,10 +196,10 @@
       ],
       "inventedStatedDecisionFinding": null,
       "captureLayerRetryCount": 0,
-      "captureLayerLatencyMs": 43880,
+      "captureLayerLatencyMs": 42530,
       "decisionBriefAttempted": true,
       "decisionBriefGenerationSuccess": false,
-      "decisionBriefLatencyMs": 12889,
+      "decisionBriefLatencyMs": 7810,
       "decisionTraceSchemaPass": null,
       "decisionTraceStructuralReadinessPass": null,
       "decisionTraceFindings": [],
@@ -236,9 +237,124 @@
         },
         "totalChunkRetries": 0,
         "planningLatencyMs": 0,
-        "chunkExtractionLatencyMs": 43879,
+        "chunkExtractionLatencyMs": 42528,
         "mergeLatencyMs": 1,
-        "validationLatencyMs": 0
+        "validationLatencyMs": 1
+      },
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    },
+    {
+      "runId": "pipeline-2026-07-14T19-05-03-048Z",
+      "timestamp": "2026-07-14T19:06:41.627Z",
+      "buildCommit": "9510fb88edcfd298311ca2ce2b26a61e089e0b13",
+      "fixtureId": "q4-workforce-allocation",
+      "fixtureName": "Q4 Workforce Allocation",
+      "fixtureCategory": "gallery-example",
+      "generationMode": "ollama",
+      "modelId": "ollama:qwen3:4b",
+      "runtimeLibraryVersion": null,
+      "promptVariant": "default",
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": true,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": true,
+          "detail": "6 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": true,
+          "detail": "5 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": true,
+          "detail": "6 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "4 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": true,
+          "detail": "5 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "5 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": true,
+          "detail": "recommendation_candidate is non-empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=Medium"
+        }
+      ],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 7433,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": false,
+      "decisionBriefLatencyMs": 7760,
+      "decisionTraceSchemaPass": null,
+      "decisionTraceStructuralReadinessPass": null,
+      "decisionTraceFindings": [],
+      "recommendationAlignmentPass": null,
+      "nextStepAlignmentPass": null,
+      "requiredDecisionBriefSectionsPass": null,
+      "writingHardFailures": [],
+      "writingWarnings": [],
+      "writingReportOnlyFindings": [],
+      "deterministicUsableBrief": false,
+      "evaluatorNotes": [
+        "Decision Brief generation failed: Decision Brief result is missing a non-empty \"markdown\" field."
+      ],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment."
+      ],
+      "rawErrorCategory": "brief_generation",
+      "failureKind": "product_quality",
+      "artifactPaths": null,
+      "webGpu": null,
+      "longInputDiagnostics": {
+        "strategy": "single_pass",
+        "chunkCount": null,
+        "sourceCoverageComplete": null,
+        "totalSourceLength": null,
+        "coveredSourceLength": null,
+        "chunkRetryCounts": null,
+        "totalChunkRetries": null,
+        "planningLatencyMs": null,
+        "chunkExtractionLatencyMs": null,
+        "mergeLatencyMs": null,
+        "validationLatencyMs": null
       },
       "resultFormatVersion": 1,
       "captureLayerSchemaVersion": "1",
