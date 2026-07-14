@@ -209,7 +209,7 @@ Warnings and report-only writing findings do **not** independently fail the expe
 
 ### Results (2026-07-14)
 
-Manual E2b gallery runs completed after PR #146 merged the validator-aligned `markdown_only` prompt. Diagnostics enabled; raw artifacts stored locally only (not committed).
+Manual E2b gallery runs completed on the PR #146 branch using the validator-aligned `markdown_only` prompt. Diagnostics enabled; raw artifacts stored locally only (not committed).
 
 | Example | Attempt 1 (prompt / completion / total) | Finish reason | Retry (prompt / completion / total) | Retry finish | Final result | Failure categories (final) |
 | --- | --- | --- | --- | --- | --- | --- |
