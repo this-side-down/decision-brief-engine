@@ -102,7 +102,15 @@ export function useGenerationRunTelemetry({
   }, [beginRun, enabled]);
 
   const initializeWebGpuEval = useCallback(
-    (evalContext: Omit<WebGpuGenerationEval, "captureFirstAttemptSchemaPass" | "briefFirstAttemptSchemaPass">) => {
+    (evalContext: Omit<
+      WebGpuGenerationEval,
+      | "captureFirstAttemptSchemaPass"
+      | "briefFirstAttemptSchemaPass"
+      | "briefFirstAttemptSemanticPass"
+      | "briefFirstAttemptPlaceholderLeakage"
+      | "briefQualityRetryReasonCategories"
+      | "briefQualityFailureCategories"
+    >) => {
       if (!enabled) {
         return;
       }
@@ -116,6 +124,10 @@ export function useGenerationRunTelemetry({
             ...evalContext,
             captureFirstAttemptSchemaPass: null,
             briefFirstAttemptSchemaPass: null,
+            briefFirstAttemptSemanticPass: null,
+            briefFirstAttemptPlaceholderLeakage: null,
+            briefQualityRetryReasonCategories: null,
+            briefQualityFailureCategories: null,
           },
         };
       });
@@ -141,23 +153,40 @@ export function useGenerationRunTelemetry({
     );
   }, [enabled]);
 
-  const recordBriefFirstAttempt = useCallback((parsePass: boolean) => {
-    if (!enabled) {
-      return;
-    }
+  const recordBriefFirstAttempt = useCallback(
+    (result: {
+      parsePass: boolean;
+      semanticQualityPass?: boolean | null;
+      placeholderLeakageDetected?: boolean;
+      retryReasonCategories?: string[];
+    }) => {
+      if (!enabled) {
+        return;
+      }
 
-    setRunRecord((current) =>
-      current?.webGpuEval
-        ? {
-            ...current,
-            webGpuEval: {
-              ...current.webGpuEval,
-              briefFirstAttemptSchemaPass: parsePass,
-            },
-          }
-        : current,
-    );
-  }, [enabled]);
+      setRunRecord((current) =>
+        current?.webGpuEval
+          ? {
+              ...current,
+              webGpuEval: {
+                ...current.webGpuEval,
+                briefFirstAttemptSchemaPass: result.parsePass,
+                briefFirstAttemptSemanticPass:
+                  result.semanticQualityPass ?? null,
+                briefFirstAttemptPlaceholderLeakage:
+                  result.placeholderLeakageDetected ?? null,
+                briefQualityRetryReasonCategories:
+                  result.retryReasonCategories &&
+                  result.retryReasonCategories.length > 0
+                    ? [...result.retryReasonCategories]
+                    : null,
+              },
+            }
+          : current,
+      );
+    },
+    [enabled],
+  );
 
   const recordCaptureRetry = useCallback(() => {
     if (!enabled) {
@@ -240,6 +269,12 @@ export function useGenerationRunTelemetry({
 
       const durationMs = Date.now() - briefStartedAtRef.current;
       const outcome = classifyStepOutcome(error, configuredTimeoutMs);
+      const qualityFailureCategories =
+        error &&
+        "failureCategories" in error &&
+        Array.isArray(error.failureCategories)
+          ? [...error.failureCategories]
+          : null;
 
       setRunRecord((current) =>
         current
@@ -248,6 +283,13 @@ export function useGenerationRunTelemetry({
               briefDurationMs: durationMs,
               briefOutcome: outcome,
               briefError: error?.message ?? null,
+              webGpuEval:
+                current.webGpuEval && qualityFailureCategories
+                  ? {
+                      ...current.webGpuEval,
+                      briefQualityFailureCategories: qualityFailureCategories,
+                    }
+                  : current.webGpuEval,
             }
           : current,
       );

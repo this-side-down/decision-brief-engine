@@ -19,6 +19,19 @@ JSON reliability is the load-bearing risk. Markdown generation is lower risk.
 
 This document satisfies the planning scope for [#57](https://github.com/this-side-down/decision-brief-engine/issues/57). It does not implement browser inference, add runtime dependencies, call hosted model APIs, or change app behavior.
 
+### #132 semantic quality gate (2026-07-13)
+
+The first successful Windows W3 run passed both Capture Layer and Decision Brief JSON schemas on the first attempt but produced semantically unusable output by copying prompt-template placeholders into the exported artifacts. [#132](https://github.com/this-side-down/decision-brief-engine/issues/132) adds a browser-only semantic acceptance gate:
+
+- WebGPU Decision Brief prompts no longer include copyable example response values; WebLLM `response_format` remains the structural schema source.
+- Parsed browser output must pass placeholder-leakage detection and existing artifact-quality checks before the UI reaches READY.
+- One bounded retry regenerates grounded content when schema-valid output fails semantic quality.
+- Run details distinguish schema pass from semantic quality pass.
+
+This gate is necessary but not sufficient for public ungating. W3 quality evaluation remains incomplete; browser inference stays gated and Mock remains default.
+
+See [`fixtures/evaluation/browser-model-results.md`](../../fixtures/evaluation/browser-model-results.md) for the W3 Windows smoke record.
+
 ## Candidate model/runtime combinations to evaluate
 
 | Role | Runtime | Model | License | Approx. download |

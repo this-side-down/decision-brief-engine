@@ -191,6 +191,28 @@ Separate from the Windows/Xet 403 blocker ([#124](https://github.com/this-side-d
 
 Do not claim model delivery is fixed on macOS or Windows.
 
+### #132 W3 Windows smoke (2026-07-13)
+
+| Check | Result |
+| --- | --- |
+| Device | Windows manual W3 attempt (same machine profile as W2: 64 GB RAM, Intel i9, NVIDIA RTX 3080 Ti) |
+| Env | `VITE_ENABLE_WEBGPU_INFERENCE=true`; omit `VITE_CAPTURE_PROMPT_VARIANT` |
+| Model | `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` |
+| WebLLM | `@mlc-ai/web-llm@0.2.84` |
+| Model load | **Succeeded** — first successful Windows W3 browser run completed |
+| Capture Layer first-attempt schema | **Pass** |
+| Capture Layer latency | ~22s |
+| Decision Brief first-attempt schema | **Pass** |
+| Decision Brief latency | ~23s |
+| Decision Brief semantic quality | **Fail** — model copied illustrative placeholder strings from the legacy example schema embedded in the WebGPU prompt (recommendation/goal/evidence/assumption/risk/would-change-if templates) |
+| Artifact usability | **Unusable** despite syntactically valid JSON — duplicated recommendation, generic decision-context prose, hollow Trace |
+| UI state before fix | Incorrectly reached READY |
+| Correction | [#132](https://github.com/this-side-down/decision-brief-engine/issues/132) — structured-response WebGPU prompt, placeholder detector, semantic acceptance gate, bounded quality retry |
+| W3 quality gate status | **Incomplete** — schema pass does not imply artifact quality pass |
+| Browser inference release posture | **Still gated** — do not claim browser inference is working for release yet |
+
+Do not treat schema validity alone as structural or product-quality success.
+
 ### #116 prompt variant W3 (schema-constrained default prompt) — manual run pending
 
 | Check | Result |

@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { ChatCompletionRequest, MLCEngineInterface } from "@mlc-ai/web-llm";
 import { describe, expect, it, vi } from "vitest";
 import { STRATEGY_DECISION_BRIEF } from "../../data/briefTypes";
@@ -8,8 +11,15 @@ import { ollamaModelAdapter } from "./ollamaModelAdapter";
 import { getModelAdapter } from "./getModelAdapter";
 import { parseCaptureLayerJson } from "./parseCaptureLayer";
 import { parseDecisionBriefResultJson } from "./parseDecisionBriefResult";
-import { CAPTURE_LAYER_FIELDS } from "./types";
-import { GenerationCancelledError } from "./webGpuErrors";
+import { CAPTURE_LAYER_FIELDS, DECISION_BRIEF_MARKDOWN_STRUCTURE } from "./types";
+import {
+  FORBIDDEN_WEBGPU_PROMPT_PLACEHOLDER_STRINGS,
+} from "./decisionBriefPlaceholderDetection";
+import { createW3PlaceholderLeakedBriefResult } from "./fixtures/w3PlaceholderLeakedBriefResult";
+import {
+  GenerationCancelledError,
+  GenerationQualityError,
+} from "./webGpuErrors";
 import {
   CAPTURE_LAYER_RESPONSE_SCHEMA_JSON,
   DECISION_BRIEF_RESULT_RESPONSE_SCHEMA_JSON,
@@ -40,6 +50,16 @@ function createMockEngine(handler: MockCreateHandler): MLCEngineInterface {
   } as unknown as MLCEngineInterface;
 }
 
+const fixtureRoot = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../../../fixtures/examples/q4-workforce-allocation",
+);
+
+const Q4_BRIEF_MARKDOWN = readFileSync(
+  join(fixtureRoot, "expected-decision-brief.md"),
+  "utf-8",
+);
+
 const CAPTURE_INPUT = {
   rawInputText: "Workforce allocation notes for hospital and school projects.",
   briefType: STRATEGY_DECISION_BRIEF,
@@ -51,11 +71,11 @@ const BRIEF_INPUT = {
   captureLayer: q4CaptureLayer,
   briefType: STRATEGY_DECISION_BRIEF,
   briefTypeGuidance: STRATEGY_DECISION_BRIEF.guidance,
-  markdownStructure: ["Summary", "Recommendation"],
+  markdownStructure: [...DECISION_BRIEF_MARKDOWN_STRUCTURE],
 };
 
 const VALID_BRIEF_ENVELOPE = {
-  markdown: "# Decision Brief\n\nRecommendation text.",
+  markdown: Q4_BRIEF_MARKDOWN,
   decisionTrace: q4DecisionTrace,
 };
 
@@ -91,6 +111,19 @@ describe("createWebGpuModelAdapter", () => {
     expect(result.markdown).toContain("# Decision Brief");
     expect(result.decisionTrace.entries.length).toBeGreaterThan(0);
     expect(engine.chat.completions.create).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses structured-response prompt without forbidden placeholders", async () => {
+    const engine = createMockEngine(async (request) => {
+      const prompt = request.messages?.[0]?.content ?? "";
+      for (const forbidden of FORBIDDEN_WEBGPU_PROMPT_PLACEHOLDER_STRINGS) {
+        expect(String(prompt)).not.toContain(forbidden);
+      }
+      return JSON.stringify(VALID_BRIEF_ENVELOPE);
+    });
+
+    const adapter = createWebGpuModelAdapter({ engine });
+    await adapter.generateDecisionBrief(BRIEF_INPUT);
   });
 
   it("parses valid constrained Capture Layer responses with existing parser", async () => {
@@ -135,7 +168,7 @@ describe("createWebGpuModelAdapter", () => {
     expect(engine.chat.completions.create).toHaveBeenCalledTimes(2);
   });
 
-  it("retries Decision Brief generation with the same schema constraint", async () => {
+  it("retries Decision Brief generation with the same schema constraint on parse failure", async () => {
     const onBriefRetry = vi.fn();
     const engine = createMockEngine(async (request, attempt) => {
       expect(request.response_format?.schema).toBe(
@@ -156,7 +189,112 @@ describe("createWebGpuModelAdapter", () => {
     expect(engine.chat.completions.create).toHaveBeenCalledTimes(2);
   });
 
-  it("fails visibly when the retry response is still invalid", async () => {
+  it("returns clean first attempt without retry", async () => {
+    const onBriefRetry = vi.fn();
+    const onBriefFirstAttempt = vi.fn();
+    const engine = createMockEngine(async () => JSON.stringify(VALID_BRIEF_ENVELOPE));
+
+    const adapter = createWebGpuModelAdapter({
+      engine,
+      onBriefRetry,
+      onBriefFirstAttempt,
+    });
+
+    await adapter.generateDecisionBrief(BRIEF_INPUT);
+
+    expect(onBriefFirstAttempt).toHaveBeenCalledWith({
+      parsePass: true,
+      semanticQualityPass: true,
+      placeholderLeakageDetected: false,
+      retryReasonCategories: [],
+    });
+    expect(onBriefRetry).not.toHaveBeenCalled();
+    expect(engine.chat.completions.create).toHaveBeenCalledTimes(1);
+  });
+
+  it("triggers exactly one retry when the first attempt contains placeholders", async () => {
+    const onBriefRetry = vi.fn();
+    const onBriefFirstAttempt = vi.fn();
+    const engine = createMockEngine(async (_request, attempt) => {
+      if (attempt === 1) {
+        return JSON.stringify(createW3PlaceholderLeakedBriefResult());
+      }
+
+      return JSON.stringify(VALID_BRIEF_ENVELOPE);
+    });
+
+    const adapter = createWebGpuModelAdapter({
+      engine,
+      onBriefRetry,
+      onBriefFirstAttempt,
+    });
+
+    const result = await adapter.generateDecisionBrief(BRIEF_INPUT);
+
+    expect(result.markdown).toContain("Assign Marcus");
+    expect(onBriefFirstAttempt).toHaveBeenCalledWith(
+      expect.objectContaining({
+        parsePass: true,
+        semanticQualityPass: false,
+        placeholderLeakageDetected: true,
+      }),
+    );
+    expect(onBriefRetry).toHaveBeenCalledTimes(1);
+    expect(engine.chat.completions.create).toHaveBeenCalledTimes(2);
+  });
+
+  it("returns a successful grounded retry", async () => {
+    const engine = createMockEngine(async (_request, attempt) => {
+      if (attempt === 1) {
+        return JSON.stringify(createW3PlaceholderLeakedBriefResult());
+      }
+
+      return JSON.stringify(VALID_BRIEF_ENVELOPE);
+    });
+
+    const adapter = createWebGpuModelAdapter({ engine });
+    const result = await adapter.generateDecisionBrief(BRIEF_INPUT);
+
+    expect(result.decisionTrace.entries.length).toBeGreaterThan(1);
+  });
+
+  it("throws a typed quality error when the retry also fails", async () => {
+    const engine = createMockEngine(async () =>
+      JSON.stringify(createW3PlaceholderLeakedBriefResult()),
+    );
+
+    const adapter = createWebGpuModelAdapter({ engine });
+
+    await expect(adapter.generateDecisionBrief(BRIEF_INPUT)).rejects.toMatchObject({
+      name: "GenerationQualityError",
+      message: expect.stringMatching(/incomplete Decision Brief/i),
+    });
+    expect(engine.chat.completions.create).toHaveBeenCalledTimes(2);
+  });
+
+  it("uses quality retry prompt without forbidden placeholders", async () => {
+    const prompts: string[] = [];
+    const engine = createMockEngine(async (request, attempt) => {
+      prompts.push(String(request.messages?.[0]?.content ?? ""));
+
+      if (attempt === 1) {
+        return JSON.stringify(createW3PlaceholderLeakedBriefResult());
+      }
+
+      return JSON.stringify(VALID_BRIEF_ENVELOPE);
+    });
+
+    const adapter = createWebGpuModelAdapter({ engine });
+    await adapter.generateDecisionBrief(BRIEF_INPUT);
+
+    expect(prompts).toHaveLength(2);
+    for (const forbidden of FORBIDDEN_WEBGPU_PROMPT_PLACEHOLDER_STRINGS) {
+      expect(prompts[1]).not.toContain(forbidden);
+    }
+    expect(prompts[1]).toContain("Regenerate the complete result");
+  });
+
+  it("fails visibly when the Capture Layer retry response is still invalid", async () => {
     const engine = createMockEngine(async () => "{ still invalid");
 
     const adapter = createWebGpuModelAdapter({ engine });

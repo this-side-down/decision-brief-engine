@@ -90,9 +90,10 @@ describe("generationRunTelemetry", () => {
       captureOutcome: "success",
       captureError: null,
       briefDurationMs: 20_000,
-      briefRetryCount: 0,
-      briefOutcome: "success",
-      briefError: null,
+      briefRetryCount: 1,
+      briefOutcome: "error",
+      briefError:
+        "Browser generation returned an incomplete Decision Brief. Try again or use Mock demo.",
       webGpuEval: {
         modelId: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
         webLlmVersion: "0.2.84",
@@ -100,6 +101,10 @@ describe("generationRunTelemetry", () => {
         briefSchemaVersion: "decision-brief-result-v1",
         captureFirstAttemptSchemaPass: false,
         briefFirstAttemptSchemaPass: true,
+        briefFirstAttemptSemanticPass: false,
+        briefFirstAttemptPlaceholderLeakage: true,
+        briefQualityRetryReasonCategories: ["placeholder_leakage"],
+        briefQualityFailureCategories: ["placeholder_leakage"],
       },
     });
 
@@ -109,7 +114,14 @@ describe("generationRunTelemetry", () => {
     );
     expect(lines).toContain("Capture first attempt schema: fail");
     expect(lines).toContain("Decision Brief first attempt schema: pass");
+    expect(lines).toContain("Decision Brief first attempt semantic quality: fail");
+    expect(lines).toContain("Decision Brief placeholder leakage: detected on first attempt");
+    expect(lines).toContain(
+      "Decision Brief quality retry reason: placeholder_leakage",
+    );
+    expect(lines).toContain("Decision Brief quality failure: placeholder_leakage");
     expect(lines).toContain("Capture Layer: 45s (1 retry)");
+    expect(lines).toContain("Decision Brief: failed (1 retry)");
   });
 
   it("only enables telemetry for real-generation modes", () => {

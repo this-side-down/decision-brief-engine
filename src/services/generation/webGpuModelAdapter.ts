@@ -12,7 +12,10 @@ import {
   assertGenerationNotCancelled,
   cancelWebGpuGeneration,
 } from "./webGpuEngine";
-import { GenerationCancelledError } from "./webGpuErrors";
+import {
+  GenerationCancelledError,
+  GenerationQualityError,
+} from "./webGpuErrors";
 import { getWebGpuConfig } from "./webGpuConfig";
 import {
   CAPTURE_LAYER_RESPONSE_FORMAT,
@@ -21,12 +24,19 @@ import {
   WEBGPU_DECISION_BRIEF_RESULT_SCHEMA_VERSION,
   WEB_LLM_PACKAGE_VERSION,
 } from "./webGpuGenerationSchemas";
+import {
+  buildDecisionBriefQualityRetrySuffix,
+  evaluateDecisionBriefSemanticAcceptance,
+} from "./decisionBriefSemanticAcceptance";
 
 const JSON_RETRY_SUFFIX =
   "\n\nReturn ONLY valid JSON. No markdown fences, no commentary, no reasoning.";
 
 export type WebGpuFirstAttemptResult = {
   parsePass: boolean;
+  semanticQualityPass?: boolean | null;
+  placeholderLeakageDetected?: boolean;
+  retryReasonCategories?: string[];
 };
 
 export type WebGpuEvalContext = {
@@ -94,6 +104,108 @@ async function completeStructuredPrompt(
   }
 }
 
+function recordBriefFirstAttemptOutcome(
+  callback: WebGpuAdapterOptions["onBriefFirstAttempt"],
+  options: WebGpuFirstAttemptResult,
+): void {
+  callback?.(options);
+}
+
+function throwBriefRetryFailure(
+  failureCategories: readonly string[],
+): never {
+  throw new GenerationQualityError(undefined, failureCategories);
+}
+
+async function generateDecisionBriefWithQualityGate(
+  engine: MLCEngineInterface,
+  input: GenerateDecisionBriefInput,
+  options: {
+    signal?: AbortSignal;
+    onBriefRetry?: () => void;
+    onBriefFirstAttempt?: (result: WebGpuFirstAttemptResult) => void;
+  },
+): Promise<DecisionBriefResult> {
+  const prompt = buildDecisionBriefPrompt(input, { mode: "structured_response" });
+  const rawText = await completeStructuredPrompt(engine, {
+    prompt,
+    responseFormat: DECISION_BRIEF_RESULT_RESPONSE_FORMAT,
+    signal: options.signal,
+  });
+
+  let firstResult: DecisionBriefResult | null = null;
+  let firstSemanticFailureCategories: string[] = ["parse_schema"];
+
+  try {
+    firstResult = parseDecisionBriefResultJson(rawText);
+    const semantic = evaluateDecisionBriefSemanticAcceptance({
+      result: firstResult,
+      captureLayer: input.captureLayer,
+    });
+    firstSemanticFailureCategories = semantic.failureCategories;
+
+    recordBriefFirstAttemptOutcome(options.onBriefFirstAttempt, {
+      parsePass: true,
+      semanticQualityPass: semantic.accepted,
+      placeholderLeakageDetected: semantic.failureCategories.includes(
+        "placeholder_leakage",
+      ),
+      retryReasonCategories: semantic.accepted ? [] : semantic.failureCategories,
+    });
+
+    if (semantic.accepted) {
+      return firstResult;
+    }
+  } catch (firstError) {
+    if (firstError instanceof GenerationCancelledError) {
+      throw firstError;
+    }
+
+    recordBriefFirstAttemptOutcome(options.onBriefFirstAttempt, {
+      parsePass: false,
+      semanticQualityPass: null,
+      placeholderLeakageDetected: false,
+      retryReasonCategories: ["parse_schema"],
+    });
+  }
+
+  options.onBriefRetry?.();
+
+  const retrySuffix = firstResult
+    ? buildDecisionBriefQualityRetrySuffix(firstSemanticFailureCategories)
+    : JSON_RETRY_SUFFIX;
+
+  try {
+    const retryText = await completeStructuredPrompt(engine, {
+      prompt: `${prompt}${retrySuffix}`,
+      responseFormat: DECISION_BRIEF_RESULT_RESPONSE_FORMAT,
+      signal: options.signal,
+    });
+    const retryResult = parseDecisionBriefResultJson(retryText);
+    const retrySemantic = evaluateDecisionBriefSemanticAcceptance({
+      result: retryResult,
+      captureLayer: input.captureLayer,
+    });
+
+    if (retrySemantic.accepted) {
+      return retryResult;
+    }
+
+    throwBriefRetryFailure(retrySemantic.failureCategories);
+  } catch (retryError) {
+    if (
+      retryError instanceof GenerationCancelledError ||
+      retryError instanceof GenerationQualityError
+    ) {
+      throw retryError;
+    }
+
+    throwBriefRetryFailure(
+      firstResult ? firstSemanticFailureCategories : ["parse_schema"],
+    );
+  }
+}
+
 export function createWebGpuModelAdapter({
   engine,
   signal,
@@ -139,31 +251,11 @@ export function createWebGpuModelAdapter({
     },
 
     async generateDecisionBrief(input: GenerateDecisionBriefInput): Promise<DecisionBriefResult> {
-      const prompt = buildDecisionBriefPrompt(input);
-      const rawText = await completeStructuredPrompt(engine, {
-        prompt,
-        responseFormat: DECISION_BRIEF_RESULT_RESPONSE_FORMAT,
+      return generateDecisionBriefWithQualityGate(engine, input, {
         signal,
+        onBriefRetry,
+        onBriefFirstAttempt,
       });
-
-      try {
-        const result = parseDecisionBriefResultJson(rawText);
-        onBriefFirstAttempt?.({ parsePass: true });
-        return result;
-      } catch (firstError) {
-        if (firstError instanceof GenerationCancelledError) {
-          throw firstError;
-        }
-
-        onBriefFirstAttempt?.({ parsePass: false });
-        onBriefRetry?.();
-        const retryText = await completeStructuredPrompt(engine, {
-          prompt: `${prompt}${JSON_RETRY_SUFFIX}`,
-          responseFormat: DECISION_BRIEF_RESULT_RESPONSE_FORMAT,
-          signal,
-        });
-        return parseDecisionBriefResultJson(retryText);
-      }
     },
   };
 }

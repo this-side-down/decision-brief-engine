@@ -104,6 +104,8 @@ export function buildCaptureLayerPrompt(
   ].join("\n");
 }
 
+export type DecisionBriefPromptMode = "legacy" | "structured_response";
+
 const DECISION_BRIEF_RESULT_SCHEMA = JSON.stringify(
   {
     markdown: "# Decision Brief\n[full Markdown brief here — newlines as \\n]",
@@ -136,8 +138,65 @@ const DECISION_BRIEF_RESULT_SCHEMA = JSON.stringify(
   2,
 );
 
-export function buildDecisionBriefPrompt(input: GenerateDecisionBriefInput): string {
+function buildDecisionBriefSharedRules(): string[] {
+  return [
+    "Decision Brief rules:",
+    "- The markdown field must contain the complete Decision Brief Markdown as a JSON string value.",
+    "- Start the markdown with # Decision Brief.",
+    "- Use the Capture Layer as the source of truth. Do not reinterpret unsupported facts.",
+    "",
+    "Decision Trace rules:",
+    "- Create one entry for each recommendation in the Decision Brief (kind: recommendation).",
+    "- Create one entry for each suggested next step in the Decision Brief (kind: next_step).",
+    '- kind must be exactly "recommendation" or "next_step".',
+    '- confidence must be exactly "High", "Medium", or "Low".',
+    "- statement must match the corresponding recommendation or next-step text in the markdown.",
+    "- basis.intent must name a specific Capture Layer goal this entry serves. Must not be empty.",
+    "- All basis fields must be present. At least one basis array must be non-empty.",
+    "- Basis fields must be grounded in the Capture Layer. Do not invent facts not present in the Capture Layer.",
+    "- would_change_if must contain at least one specific named condition per entry.",
+    "- would_change_if must not contain generic placeholders such as 'if the situation changes', 'if new information becomes available', 'if circumstances change', or similar empty conditions.",
+    "- If a recommendation cannot be fully supported from the Capture Layer, state that explicitly in missing_context_caveats.",
+    "- Do not copy instructional text, field descriptions, or example placeholders into any output field.",
+  ];
+}
+
+function buildStructuredDecisionBriefResponseInstructions(
+  markdownStructure: string[],
+): string {
+  return [
+    "Return a single JSON object with these top-level fields:",
+    "- markdown: complete Decision Brief Markdown as a JSON string. Start with # Decision Brief.",
+    "- decisionTrace: object with entries (array) and created_at (ISO-8601 timestamp).",
+    "",
+    "Required Decision Brief sections in markdown:",
+    markdownStructure.map((section) => `- ${section}`).join("\n"),
+    "- Confidence (include a Confidence section with High, Medium, or Low calibration)",
+    "",
+    "Each decisionTrace.entries item must include:",
+    "- statement: exact wording of the recommendation or next step from the markdown",
+    '- kind: exactly "recommendation" or "next_step"',
+    "- basis: object with intent (string) and these string arrays: supporting_evidence, assumptions_relied_on, risks_addressed, risks_accepted, constraints_respected, tradeoffs, alternatives_considered, missing_context_caveats",
+    '- confidence: exactly "High", "Medium", or "Low"',
+    "- would_change_if: array with at least one specific named condition",
+    "",
+    "Populate every field with grounded content from the Capture Layer. Output values must be specific decision content, not field labels or instructions.",
+  ].join("\n");
+}
+
+export function buildDecisionBriefPrompt(
+  input: GenerateDecisionBriefInput,
+  options: { mode?: DecisionBriefPromptMode } = {},
+): string {
+  const mode = options.mode ?? "legacy";
   const tone = input.toneGuidance ?? "Concise, executive-ready, direct, and decision-oriented.";
+
+  const responseShapeBlock =
+    mode === "structured_response"
+      ? buildStructuredDecisionBriefResponseInstructions(input.markdownStructure)
+      : ["Return a single JSON object with exactly this shape:", DECISION_BRIEF_RESULT_SCHEMA].join(
+          "\n",
+        );
 
   return [
     "You are a decision brief writer and rationale analyst. Your job is to turn a structured Capture Layer into two artifacts returned together in a single JSON object:",
@@ -150,31 +209,18 @@ export function buildDecisionBriefPrompt(input: GenerateDecisionBriefInput): str
     "Brief type guidance:",
     formatGuidance(input.briefTypeGuidance),
     "",
-    "Decision Brief sections to include:",
-    input.markdownStructure.map((section) => `- ${section}`).join("\n"),
-    "",
+    ...(mode === "legacy"
+      ? [
+          "Decision Brief sections to include:",
+          input.markdownStructure.map((section) => `- ${section}`).join("\n"),
+          "",
+        ]
+      : []),
     `Tone: ${tone}`,
     "",
-    "Return a single JSON object with exactly this shape:",
-    DECISION_BRIEF_RESULT_SCHEMA,
+    responseShapeBlock,
     "",
-    "Decision Brief rules:",
-    "- The markdown field must contain the complete Decision Brief Markdown as a JSON string value.",
-    "- Start the markdown with # Decision Brief.",
-    "- Use the Capture Layer as the source of truth. Do not reinterpret unsupported facts.",
-    "",
-    "Decision Trace rules:",
-    "- Create one entry for each recommendation in the Decision Brief (kind: recommendation).",
-    "- Create one entry for each suggested next step in the Decision Brief (kind: next_step).",
-    '- kind must be exactly "recommendation" or "next_step".',
-    '- confidence must be exactly "High", "Medium", or "Low".',
-    "- statement must match the corresponding recommendation or next step.",
-    "- basis.intent must name the specific goal from the Capture Layer this entry serves. Must not be empty.",
-    "- All basis fields must be present. At least one basis array must be non-empty.",
-    "- Basis fields must be grounded in the Capture Layer. Do not invent facts not present in the Capture Layer.",
-    "- would_change_if must contain at least one specific named condition per entry.",
-    "- would_change_if must not contain generic placeholders such as 'if the situation changes', 'if new information becomes available', 'if circumstances change', or similar empty conditions.",
-    "- If a recommendation cannot be fully supported from the Capture Layer, state that explicitly in missing_context_caveats.",
+    ...buildDecisionBriefSharedRules(),
     NO_REASONING_INSTRUCTION,
     "",
     "Capture Layer JSON:",
