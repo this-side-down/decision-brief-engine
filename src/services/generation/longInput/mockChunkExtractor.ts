@@ -1,4 +1,5 @@
 import { parseDemoExampleId } from "../../../data/demoExamples";
+import { extractGenericMockChunkSignals } from "../genericMockCapture";
 import type { PartialCaptureSignals, ChunkExtractionInput } from "./types";
 import platformRearchitectureChunkSignals from "../../../../fixtures/examples/platform-rearchitecture-review/chunk-partial-signals.json";
 
@@ -9,44 +10,6 @@ const FIXTURE_CHUNK_SIGNALS_BY_EXAMPLE_ID: Record<string, FixtureChunkSignals> =
     "platform-rearchitecture-review":
       platformRearchitectureChunkSignals as FixtureChunkSignals,
   };
-
-function extractHeuristicSignals(
-  input: ChunkExtractionInput,
-): PartialCaptureSignals {
-  const text = input.chunk.text.trim();
-  const sentences = text
-    .split(/(?<=[.!?])\s+/)
-    .map((sentence) => sentence.trim())
-    .filter((sentence) => sentence.length > 0);
-
-  const evidence = sentences.slice(0, 3).map((sentence) => ({
-    text: sentence,
-    sourceChunkId: input.chunk.id,
-    sourceRange: input.chunk.sourceRange,
-  }));
-
-  return {
-    chunkId: input.chunk.id,
-    sourceRange: input.chunk.sourceRange,
-    decision_context: sentences[0] ?? "",
-    implied_decision: "",
-    stated_decision: "",
-    goals: [],
-    stakeholders: [],
-    options_considered: [],
-    constraints: [],
-    risks: [],
-    assumptions: [],
-    evidence,
-    open_questions: [],
-    tensions: [],
-    missing_context: [],
-    suggested_next_steps: [],
-    conflicts: [],
-    unresolved_references: [],
-    confidence: "Medium",
-  };
-}
 
 function parseLongInputFixtureId(sourceLabel?: string): string | null {
   const demoExampleId = parseDemoExampleId(sourceLabel);
@@ -83,7 +46,7 @@ export async function extractMockChunkSignals(
     }
   }
 
-  return extractHeuristicSignals(input);
+  return extractGenericMockChunkSignals(input);
 }
 
 function withPartialDefaults(

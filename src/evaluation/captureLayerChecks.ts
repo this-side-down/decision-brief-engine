@@ -1,11 +1,23 @@
 import type { CaptureLayer } from "../types/captureLayer";
 import { parseCaptureLayerJson } from "../services/generation/parseCaptureLayer";
-import type {
-  SchemaCheckResult,
+import {
+  evaluateStructuralReadiness,
+  type StructuralCheck,
+  type StructuralExpectation,
+  type StructuralReadinessResult,
+} from "../services/generation/captureLayerStructuralReadiness";
+import type { SchemaCheckResult } from "./types";
+
+export {
+  evaluateStructuralReadiness,
+  GENERIC_MOCK_STRUCTURAL_EXPECTATIONS,
+  STANDARD_CAPTURE_LAYER_STRUCTURAL_EXPECTATIONS,
+} from "../services/generation/captureLayerStructuralReadiness";
+export type {
   StructuralCheck,
   StructuralExpectation,
   StructuralReadinessResult,
-} from "./types";
+} from "../services/generation/captureLayerStructuralReadiness";
 
 function stripJsonFences(text: string): string {
   const trimmed = text.trim();
@@ -65,118 +77,6 @@ export function validateCaptureLayerObject(
       captureLayer: null,
     };
   }
-}
-
-function check(id: string, pass: boolean, detail: string): StructuralCheck {
-  return { id, pass, detail };
-}
-
-/**
- * Lightweight automated readiness checks that mirror product-quality dimensions
- * from the manual scorecard without scoring content quality.
- *
- * A Capture Layer may be schema-valid but still not ready for Decision Brief
- * generation if decision/options/risks/questions are hollow.
- */
-export function evaluateStructuralReadiness(
-  captureLayer: CaptureLayer,
-  expectations: StructuralExpectation,
-): StructuralReadinessResult {
-  const checks: StructuralCheck[] = [];
-
-  const hasDecision =
-    captureLayer.stated_decision.trim().length > 0 ||
-    captureLayer.implied_decision.trim().length > 0;
-
-  checks.push(
-    check(
-      "decision_present",
-      !expectations.requireStatedOrImpliedDecision || hasDecision,
-      hasDecision
-        ? "stated_decision or implied_decision is non-empty"
-        : "both stated_decision and implied_decision are empty",
-    ),
-  );
-
-  checks.push(
-    check(
-      "options_count",
-      captureLayer.options_considered.length >= expectations.minOptions,
-      `${captureLayer.options_considered.length} options (min ${expectations.minOptions})`,
-    ),
-  );
-
-  checks.push(
-    check(
-      "stakeholders_count",
-      captureLayer.stakeholders.length >= expectations.minStakeholders,
-      `${captureLayer.stakeholders.length} stakeholders (min ${expectations.minStakeholders})`,
-    ),
-  );
-
-  checks.push(
-    check(
-      "risks_count",
-      captureLayer.risks.length >= expectations.minRisks,
-      `${captureLayer.risks.length} risks (min ${expectations.minRisks})`,
-    ),
-  );
-
-  checks.push(
-    check(
-      "assumptions_count",
-      captureLayer.assumptions.length >= expectations.minAssumptions,
-      `${captureLayer.assumptions.length} assumptions (min ${expectations.minAssumptions})`,
-    ),
-  );
-
-  checks.push(
-    check(
-      "open_questions_count",
-      captureLayer.open_questions.length >= expectations.minOpenQuestions,
-      `${captureLayer.open_questions.length} open questions (min ${expectations.minOpenQuestions})`,
-    ),
-  );
-
-  checks.push(
-    check(
-      "missing_context_count",
-      captureLayer.missing_context.length >= expectations.minMissingContext,
-      `${captureLayer.missing_context.length} missing-context items (min ${expectations.minMissingContext})`,
-    ),
-  );
-
-  const hasRecommendation =
-    captureLayer.recommendation_candidate.trim().length > 0;
-
-  checks.push(
-    check(
-      "recommendation_present",
-      !expectations.requireRecommendationCandidate || hasRecommendation,
-      hasRecommendation
-        ? "recommendation_candidate is non-empty"
-        : "recommendation_candidate is empty",
-    ),
-  );
-
-  const confidenceOk = ["High", "Medium", "Low"].includes(
-    captureLayer.confidence,
-  );
-
-  checks.push(
-    check(
-      "confidence_present",
-      confidenceOk,
-      confidenceOk
-        ? `confidence=${captureLayer.confidence}`
-        : "confidence missing or invalid",
-    ),
-  );
-
-  return {
-    pass: checks.every((item) => item.pass),
-    checks,
-  };
 }
 
 /**

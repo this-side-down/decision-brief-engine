@@ -76,6 +76,7 @@ export type ChunkExtractionInput = {
   briefType: BriefType;
   sourceLabel?: string;
   fullSourceText: string;
+  chunkCount: number;
 };
 
 export type MergeCaptureSignalsInput = {

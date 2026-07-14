@@ -4,6 +4,7 @@ import type {
   SchemaCheckResult,
   StructuralReadinessResult,
 } from "./types";
+import type { StructuralCheck } from "../services/generation/captureLayerStructuralReadiness";
 import { decideProceedToBrief } from "./captureLayerChecks";
 import type { CaptureLayer } from "../types/captureLayer";
 
@@ -67,7 +68,7 @@ export function buildCaptureLayerEvalResult(
 export function formatEvalResultMarkdown(result: CaptureLayerEvalResult): string {
   const structuralLines = result.structuralReadiness.checks
     .map(
-      (check) =>
+      (check: StructuralCheck) =>
         `- ${check.pass ? "PASS" : "FAIL"} \`${check.id}\`: ${check.detail}`,
     )
     .join("\n");

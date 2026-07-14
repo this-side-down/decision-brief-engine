@@ -1,16 +1,9 @@
 import { CAPTURE_INPUT_BUDGET_POLICY } from "./inputBudgetPolicy";
+import { normalizeSourceText } from "./normalizeSourceText";
 import type { ChunkBoundaryKind, SourceChunk, SourceRange } from "./types";
 
 const SPEAKER_TURN_PATTERN = /^(?:\*\*[^*]+\*\*|[A-Z][A-Za-z .'-]{1,40}:)\s*/m;
 const SECTION_HEADER_PATTERN = /^#{1,3}\s+/m;
-
-function normalizeNewlines(text: string): string {
-  return text.replace(/\r\n/g, "\n");
-}
-
-export function normalizeSourceText(rawInputText: string): string {
-  return normalizeNewlines(rawInputText.trim());
-}
 
 function trimSegment(text: string): string {
   return text.replace(/^\s+/, "").replace(/\s+$/, "");

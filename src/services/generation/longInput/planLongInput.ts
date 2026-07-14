@@ -1,5 +1,6 @@
 import { resolveCapturePath } from "./inputBudgetPolicy";
-import { normalizeSourceText, segmentSourceText, validateSourceCoverage } from "./segmentSource";
+import { normalizeSourceText } from "./normalizeSourceText";
+import { segmentSourceText, validateSourceCoverage } from "./segmentSource";
 import type { LongInputPlan } from "./types";
 
 export function planLongInput(rawInputText: string): LongInputPlan {

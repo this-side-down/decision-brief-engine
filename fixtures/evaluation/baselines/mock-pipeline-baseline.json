@@ -1,8 +1,8 @@
 {
   "resultFormatVersion": 1,
-  "runId": "pipeline-2026-07-13T23-43-18-804Z",
-  "timestamp": "2026-07-13T23:43:18.821Z",
-  "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+  "runId": "pipeline-2026-07-14T18-05-06-755Z",
+  "timestamp": "2026-07-14T18:05:06.803Z",
+  "buildCommit": "4de906cfc19065e67969a695d73971195094a35e",
   "generationMode": "mock",
   "modelId": "mockModelAdapter",
   "caseIds": [
@@ -13,13 +13,14 @@
     "ambiguous-stakeholder-conversation",
     "q4-workforce-allocation",
     "local-inference-setup-flow",
-    "household-move-planning"
+    "household-move-planning",
+    "platform-rearchitecture-review"
   ],
   "results": [
     {
-      "runId": "pipeline-2026-07-13T23-43-18-804Z",
-      "timestamp": "2026-07-13T23:43:18.826Z",
-      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "runId": "pipeline-2026-07-14T18-05-06-755Z",
+      "timestamp": "2026-07-14T18:05:06.808Z",
+      "buildCommit": "4de906cfc19065e67969a695d73971195094a35e",
       "fixtureId": "product-prioritization",
       "fixtureName": "Product prioritization meeting",
       "fixtureCategory": "evaluation-fixture",
@@ -188,9 +189,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-13T23-43-18-804Z",
-      "timestamp": "2026-07-13T23:43:18.828Z",
-      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "runId": "pipeline-2026-07-14T18-05-06-755Z",
+      "timestamp": "2026-07-14T18:05:06.811Z",
+      "buildCommit": "4de906cfc19065e67969a695d73971195094a35e",
       "fixtureId": "strategy-tradeoff",
       "fixtureName": "Strategy tradeoff discussion",
       "fixtureCategory": "evaluation-fixture",
@@ -251,7 +252,7 @@
       ],
       "inventedStatedDecisionFinding": null,
       "captureLayerRetryCount": 0,
-      "captureLayerLatencyMs": 0,
+      "captureLayerLatencyMs": 2,
       "decisionBriefAttempted": true,
       "decisionBriefGenerationSuccess": true,
       "decisionBriefLatencyMs": 0,
@@ -334,7 +335,7 @@
         "missing-source-proper-noun: Capture Layer proper noun not found in brief: Explicit.",
         "missing-source-proper-noun: Capture Layer proper noun not found in brief: Confirmed.",
         "missing-source-proper-noun: Capture Layer proper noun not found in brief: Evidence.",
-        "high-capture-reuse: Brief shares 85% token overlap with Capture Layer text."
+        "high-capture-reuse: Brief shares 87% token overlap with Capture Layer text."
       ],
       "deterministicUsableBrief": false,
       "evaluatorNotes": [],
@@ -361,9 +362,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-13T23-43-18-804Z",
-      "timestamp": "2026-07-13T23:43:18.828Z",
-      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "runId": "pipeline-2026-07-14T18-05-06-755Z",
+      "timestamp": "2026-07-14T18:05:06.812Z",
+      "buildCommit": "4de906cfc19065e67969a695d73971195094a35e",
       "fixtureId": "execution-planning",
       "fixtureName": "Execution planning disagreement",
       "fixtureCategory": "evaluation-fixture",
@@ -532,9 +533,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-13T23-43-18-804Z",
-      "timestamp": "2026-07-13T23:43:18.829Z",
-      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "runId": "pipeline-2026-07-14T18-05-06-755Z",
+      "timestamp": "2026-07-14T18:05:06.813Z",
+      "buildCommit": "4de906cfc19065e67969a695d73971195094a35e",
       "fixtureId": "customer-interview-synthesis",
       "fixtureName": "Customer interview synthesis",
       "fixtureCategory": "evaluation-fixture",
@@ -703,9 +704,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-13T23-43-18-804Z",
-      "timestamp": "2026-07-13T23:43:18.830Z",
-      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "runId": "pipeline-2026-07-14T18-05-06-755Z",
+      "timestamp": "2026-07-14T18:05:06.813Z",
+      "buildCommit": "4de906cfc19065e67969a695d73971195094a35e",
       "fixtureId": "ambiguous-stakeholder-conversation",
       "fixtureName": "Ambiguous stakeholder conversation",
       "fixtureCategory": "evaluation-fixture",
@@ -876,9 +877,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-13T23-43-18-804Z",
-      "timestamp": "2026-07-13T23:43:18.831Z",
-      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "runId": "pipeline-2026-07-14T18-05-06-755Z",
+      "timestamp": "2026-07-14T18:05:06.815Z",
+      "buildCommit": "4de906cfc19065e67969a695d73971195094a35e",
       "fixtureId": "q4-workforce-allocation",
       "fixtureName": "Q4 Workforce Allocation",
       "fixtureCategory": "gallery-example",
@@ -1059,9 +1060,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-13T23-43-18-804Z",
-      "timestamp": "2026-07-13T23:43:18.832Z",
-      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "runId": "pipeline-2026-07-14T18-05-06-755Z",
+      "timestamp": "2026-07-14T18:05:06.816Z",
+      "buildCommit": "4de906cfc19065e67969a695d73971195094a35e",
       "fixtureId": "local-inference-setup-flow",
       "fixtureName": "Local Inference Setup Flow",
       "fixtureCategory": "gallery-example",
@@ -1234,9 +1235,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-13T23-43-18-804Z",
-      "timestamp": "2026-07-13T23:43:18.836Z",
-      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "runId": "pipeline-2026-07-14T18-05-06-755Z",
+      "timestamp": "2026-07-14T18:05:06.817Z",
+      "buildCommit": "4de906cfc19065e67969a695d73971195094a35e",
       "fixtureId": "household-move-planning",
       "fixtureName": "Household Move Planning",
       "fixtureCategory": "gallery-example",
@@ -1387,6 +1388,202 @@
         "missing-source-proper-noun: Capture Layer proper noun not found in brief: Final.",
         "missing-source-quantity: Capture Layer quantity not found in brief: 3–4.",
         "high-capture-reuse: Brief shares 91% token overlap with Capture Layer text."
+      ],
+      "deterministicUsableBrief": true,
+      "evaluatorNotes": [],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment."
+      ],
+      "rawErrorCategory": "none",
+      "failureKind": "none",
+      "artifactPaths": null,
+      "webGpu": null,
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    },
+    {
+      "runId": "pipeline-2026-07-14T18-05-06-755Z",
+      "timestamp": "2026-07-14T18:05:06.819Z",
+      "buildCommit": "4de906cfc19065e67969a695d73971195094a35e",
+      "fixtureId": "platform-rearchitecture-review",
+      "fixtureName": "Platform Re-Architecture Review",
+      "fixtureCategory": "gallery-example",
+      "generationMode": "mock",
+      "modelId": "mockModelAdapter",
+      "runtimeLibraryVersion": null,
+      "promptVariant": null,
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": true,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": true,
+          "detail": "4 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": true,
+          "detail": "7 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": true,
+          "detail": "6 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "3 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": true,
+          "detail": "5 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "4 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": true,
+          "detail": "recommendation_candidate is non-empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=Medium"
+        }
+      ],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 0,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": true,
+      "decisionBriefLatencyMs": 0,
+      "decisionTraceSchemaPass": true,
+      "decisionTraceStructuralReadinessPass": true,
+      "decisionTraceFindings": [
+        {
+          "id": "recommendation_coverage",
+          "pass": true,
+          "detail": "a recommendation entry statement corresponds to recommendation_candidate"
+        },
+        {
+          "id": "next_step_count",
+          "pass": true,
+          "detail": "6 next_step entries for 6 suggested_next_steps"
+        },
+        {
+          "id": "next_step_statement_coverage",
+          "pass": true,
+          "detail": "every suggested_next_steps item has a corresponding next_step entry statement"
+        },
+        {
+          "id": "entries_have_intent",
+          "pass": true,
+          "detail": "every entry has a non-empty basis.intent"
+        },
+        {
+          "id": "entries_have_confidence",
+          "pass": true,
+          "detail": "every entry has a valid per-item confidence"
+        },
+        {
+          "id": "entries_have_non_empty_basis",
+          "pass": true,
+          "detail": "every entry has at least one non-empty basis array field"
+        },
+        {
+          "id": "would_change_if_specific",
+          "pass": true,
+          "detail": "every entry has at least one specific, non-generic would_change_if condition"
+        },
+        {
+          "id": "intent_grounded_in_goals",
+          "pass": true,
+          "detail": "every non-empty basis.intent is grounded in captureLayer.goals"
+        },
+        {
+          "id": "basis_grounded_in_capture_layer",
+          "pass": true,
+          "detail": "every basis array item is grounded in the corresponding Capture Layer field"
+        },
+        {
+          "id": "recommendation_alignment",
+          "pass": true,
+          "detail": "Recommendation statement aligns across Capture Layer, Decision Trace, and Decision Brief"
+        },
+        {
+          "id": "next_step_alignment",
+          "pass": true,
+          "detail": "Next-step statements align across Capture Layer, Decision Trace, and Decision Brief"
+        }
+      ],
+      "recommendationAlignmentPass": true,
+      "nextStepAlignmentPass": true,
+      "requiredDecisionBriefSectionsPass": true,
+      "writingHardFailures": [],
+      "writingWarnings": [
+        "sentence-length-warning: Sentence is 27 words (warning range 25-35).",
+        "section-restates-heading: Section begins by restating its heading: Confidence."
+      ],
+      "writingReportOnlyFindings": [
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Platform.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Attendees.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Nina.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Product.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Omar.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Engineering Lead.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Priya.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Platform Lead.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Jonah.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Lena.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Customer Success.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Whether.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Reduce.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Present.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Enable.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Meet.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Product Engineering Lead Platform Lead.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Customer Success Finance Sales Extract.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Lighthouse.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Module.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Invoice.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Two.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Microservices.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Checkout.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Tuesday.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Thursday Northwind.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Independent.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Near.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Architecture.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Verified.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Internal.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: VP.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 95.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 800.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 940.",
+        "high-capture-reuse: Brief shares 86% token overlap with Capture Layer text."
       ],
       "deterministicUsableBrief": true,
       "evaluatorNotes": [],

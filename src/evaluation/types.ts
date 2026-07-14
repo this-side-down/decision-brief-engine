@@ -1,17 +1,13 @@
 import type { CaptureLayer } from "../types/captureLayer";
+import type {
+  StructuralExpectation,
+  StructuralCheck,
+  StructuralReadinessResult,
+} from "../services/generation/captureLayerStructuralReadiness";
+
+export type { StructuralExpectation, StructuralCheck, StructuralReadinessResult };
 
 export type CaptureLayerEvalMode = "mock" | "ollama" | "webgpu";
-
-export type StructuralExpectation = {
-  requireStatedOrImpliedDecision: boolean;
-  minOptions: number;
-  minStakeholders: number;
-  minRisks: number;
-  minAssumptions: number;
-  minOpenQuestions: number;
-  minMissingContext: number;
-  requireRecommendationCandidate: boolean;
-};
 
 export type CaptureLayerEvalCase = {
   id: string;
@@ -29,17 +25,6 @@ export type SchemaCheckResult = {
   validJson: boolean;
   schemaPass: boolean;
   error: string | null;
-};
-
-export type StructuralCheck = {
-  id: string;
-  pass: boolean;
-  detail: string;
-};
-
-export type StructuralReadinessResult = {
-  pass: boolean;
-  checks: StructuralCheck[];
 };
 
 export type CaptureLayerEvalResult = {

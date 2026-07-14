@@ -1,9 +1,14 @@
 import type { CaptureLayer } from "../../../types/captureLayer";
 import { parseCaptureLayerJson } from "../parseCaptureLayer";
+import {
+  evaluateStructuralReadiness,
+  formatStructuralReadinessFailures,
+  resolveLongInputStructuralExpectations,
+} from "../captureLayerStructuralReadiness";
 import { GenerationCancelledError } from "../webGpuErrors";
 import type { GenerateCaptureLayerInput } from "../types";
 import { resolveCapturePath } from "./inputBudgetPolicy";
-import { normalizeSourceText } from "./segmentSource";
+import { normalizeSourceText } from "./normalizeSourceText";
 import {
   LongInputChunkFailureError,
   LongInputMergeFailureError,
@@ -52,6 +57,22 @@ async function delay(ms: number): Promise<void> {
   });
 }
 
+export function assertMergedCaptureLayerReadiness(
+  captureLayer: CaptureLayer,
+  sourceLabel?: string,
+): void {
+  const readiness = evaluateStructuralReadiness(
+    captureLayer,
+    resolveLongInputStructuralExpectations(sourceLabel),
+  );
+
+  if (!readiness.pass) {
+    throw new LongInputMergeFailureError(
+      `Merged Capture Layer failed structural readiness: ${formatStructuralReadinessFailures(readiness)}`,
+    );
+  }
+}
+
 export async function runLongInputCapture(
   options: RunLongInputCaptureOptions,
 ): Promise<CaptureLayer> {
@@ -94,6 +115,7 @@ export async function runLongInputCapture(
         briefType: input.briefType,
         sourceLabel: input.sourceLabel,
         fullSourceText: rawInputText,
+        chunkCount: plan.chunks.length,
       });
       partialResults.push(partial);
     } catch (error) {
@@ -131,8 +153,9 @@ export async function runLongInputCapture(
   assertRunActive(options);
   options.onProgress?.({ phase: "validating" });
 
+  let validatedCaptureLayer: CaptureLayer;
   try {
-    return parseCaptureLayerJson(JSON.stringify(captureLayer));
+    validatedCaptureLayer = parseCaptureLayerJson(JSON.stringify(captureLayer));
   } catch (error) {
     const message =
       error instanceof Error
@@ -140,4 +163,11 @@ export async function runLongInputCapture(
         : "Merged Capture Layer failed validation.";
     throw new LongInputMergeFailureError(message);
   }
+
+  assertMergedCaptureLayerReadiness(
+    validatedCaptureLayer,
+    input.sourceLabel,
+  );
+
+  return validatedCaptureLayer;
 }

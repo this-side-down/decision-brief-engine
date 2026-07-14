@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { planLongInput } from "./planLongInput";
-import { normalizeSourceText, segmentSourceText, validateSourceCoverage } from "./segmentSource";
+import { normalizeSourceText } from "./normalizeSourceText";
+import { segmentSourceText, validateSourceCoverage } from "./segmentSource";
 
 describe("platform fixture segmentation preview", () => {
   it("segments the long-form fixture into multiple chunks", () => {

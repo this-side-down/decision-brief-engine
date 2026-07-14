@@ -1,4 +1,4 @@
-import { normalizeSourceText } from "./segmentSource";
+import { normalizeSourceText } from "./normalizeSourceText";
 
 /**
  * Runtime-agnostic Capture Layer input budget. Keeps ordinary inputs on the
@@ -25,18 +25,4 @@ export function resolveCapturePath(rawInputText: string): CapturePath {
   return length > CAPTURE_INPUT_BUDGET_POLICY.singlePassMaxRawChars
     ? "hierarchical"
     : "single_pass";
-}
-
-export function effectiveSinglePassRawInputBudget(): number {
-  const policy = CAPTURE_INPUT_BUDGET_POLICY;
-  return Math.max(
-    0,
-    policy.singlePassMaxRawChars -
-      policy.promptOverheadChars -
-      policy.structuredOutputReserveChars,
-  );
-}
-
-export function effectiveChunkRawInputBudget(): number {
-  return CAPTURE_INPUT_BUDGET_POLICY.chunkTargetMaxRawChars;
 }

@@ -17,7 +17,8 @@ import {
 import { mergePartialCaptureSignals } from "./mergePartialSignals";
 import { mockLongInputCaptureCapability } from "./mockChunkExtractor";
 import { planLongInput } from "./planLongInput";
-import { runLongInputCapture } from "./runLongInputCapture";
+import type { CaptureLayer } from "../../../types/captureLayer";
+import { assertMergedCaptureLayerReadiness, runLongInputCapture } from "./runLongInputCapture";
 import { segmentSourceText, validateSourceCoverage } from "./segmentSource";
 import { formatLongInputProgressMessage } from "./types";
 
@@ -302,6 +303,35 @@ describe("long-input merge and orchestration", () => {
         .trim()
         .length,
     ).toBeGreaterThan(CAPTURE_INPUT_BUDGET_POLICY.singlePassMaxRawChars);
+  });
+
+  it("rejects schema-valid but structurally incomplete merged Capture Layers", () => {
+    const hollowCaptureLayer: CaptureLayer = {
+      source_summary: "Summary only.",
+      decision_context: "Some context.",
+      stated_decision: "",
+      implied_decision: "Clarify the primary product decision.",
+      goals: [],
+      stakeholders: [],
+      options_considered: [],
+      constraints: [],
+      risks: [],
+      assumptions: [],
+      evidence: ["Evidence item one.", "Evidence item two."],
+      open_questions: [],
+      tensions: [],
+      recommendation_candidate: "",
+      confidence: "Medium",
+      missing_context: [],
+      suggested_next_steps: [],
+    };
+
+    expect(() =>
+      assertMergedCaptureLayerReadiness(hollowCaptureLayer, "custom pasted notes"),
+    ).toThrow(LongInputMergeFailureError);
+    expect(() =>
+      assertMergedCaptureLayerReadiness(hollowCaptureLayer, "custom pasted notes"),
+    ).toThrow(/structural readiness/i);
   });
 
   it("emits progress transitions through the orchestration callback", async () => {
