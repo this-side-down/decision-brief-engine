@@ -23,8 +23,15 @@ import { useTimedStatusMessage } from "./hooks/useTimedStatusMessage";
 import { generateCaptureLayerForSession } from "./services/generation/generateCaptureLayer";
 import { generateDecisionBriefForSession } from "./services/generation/generateDecisionBrief";
 import { getOllamaConfig } from "./services/generation/ollamaConfig";
-import { GenerationCancelledError, GenerationQualityError } from "./services/generation/webGpuErrors";
+import { GenerationCancelledError, GenerationQualityError, InputTooLargeError } from "./services/generation/webGpuErrors";
 import { getWebGpuEvalContext } from "./services/generation/webGpuModelAdapter";
+import { CAPTURE_LAYER_FIELDS } from "./services/generation/types";
+import {
+  evaluateWebGpuCaptureInputBudget,
+  formatWebGpuInputBudgetDiagnostic,
+  isWebGpuContextWindowExceededError,
+  WEBGPU_INPUT_TOO_LARGE_USER_MESSAGE,
+} from "./services/generation/webGpuInputBudget";
 import type { BriefSession, BriefType, BriefTypeId } from "./types/brief";
 import type { CaptureLayer } from "./types/captureLayer";
 import {
@@ -231,7 +238,33 @@ export function App() {
   );
   const hasRawInput = briefSession.rawInput.text.trim().length > 0;
   const hasBriefType = briefSession.briefType !== null;
-  const canGenerateCaptureLayer = hasRawInput && hasBriefType;
+  const webGpuCaptureInputBudget = useMemo(() => {
+    if (!isWebGpuMode || !hasBriefType || !briefSession.briefType) {
+      return null;
+    }
+
+    return evaluateWebGpuCaptureInputBudget({
+      rawInputText: briefSession.rawInput.text,
+      briefType: briefSession.briefType,
+      briefTypeGuidance: briefSession.briefType.guidance,
+      captureLayerFields: [...CAPTURE_LAYER_FIELDS],
+      sourceLabel: briefSession.rawInput.sourceLabel,
+    });
+  }, [
+    briefSession.briefType,
+    briefSession.rawInput.sourceLabel,
+    briefSession.rawInput.text,
+    hasBriefType,
+    isWebGpuMode,
+  ]);
+  const isWebGpuInputWithinBudget =
+    !isWebGpuMode || webGpuCaptureInputBudget?.withinBudget !== false;
+  const webGpuInputOverLimit =
+    isWebGpuMode &&
+    webGpuCaptureInputBudget !== null &&
+    !webGpuCaptureInputBudget.withinBudget;
+  const canGenerateCaptureLayer =
+    hasRawInput && hasBriefType && isWebGpuInputWithinBudget;
   const isGeneratingCaptureLayer =
     briefSession.status === "generating_capture";
   const canGenerateDecisionBrief = briefSession.captureLayer !== null;
@@ -365,6 +398,79 @@ export function App() {
     }));
   }
 
+  function presentCaptureGenerationFailure(error: unknown): {
+    sessionMessage: string;
+    telemetryMessage: string;
+    notifyMessage: string;
+  } {
+    if (error instanceof InputTooLargeError) {
+      return {
+        sessionMessage: error.message,
+        telemetryMessage: error.diagnosticDetail,
+        notifyMessage: error.message,
+      };
+    }
+
+    if (isWebGpuMode && isWebGpuContextWindowExceededError(error)) {
+      return {
+        sessionMessage: WEBGPU_INPUT_TOO_LARGE_USER_MESSAGE,
+        telemetryMessage:
+          error instanceof Error ? error.message : "context_window_exceeded",
+        notifyMessage: WEBGPU_INPUT_TOO_LARGE_USER_MESSAGE,
+      };
+    }
+
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Unable to generate Capture Layer.";
+
+    return {
+      sessionMessage: message,
+      telemetryMessage: message,
+      notifyMessage: isWebGpuMode
+        ? "Could not generate a valid Capture Layer. Your notes are unchanged."
+        : message,
+    };
+  }
+
+  function rejectOversizedWebGpuCaptureInput(
+    snapshot: PendingCaptureGenerate,
+  ): boolean {
+    if (!isWebGpuMode) {
+      return false;
+    }
+
+    const budget = evaluateWebGpuCaptureInputBudget({
+      rawInputText: snapshot.rawInputText,
+      briefType: snapshot.briefType,
+      briefTypeGuidance: snapshot.briefType.guidance,
+      captureLayerFields: [...CAPTURE_LAYER_FIELDS],
+      sourceLabel: snapshot.sourceLabel,
+    });
+
+    if (budget.withinBudget) {
+      return false;
+    }
+
+    const failure = presentCaptureGenerationFailure(
+      new InputTooLargeError(
+        WEBGPU_INPUT_TOO_LARGE_USER_MESSAGE,
+        formatWebGpuInputBudgetDiagnostic(budget),
+      ),
+    );
+
+    setBriefSession((currentSession) => ({
+      ...currentSession,
+      status: "error",
+      errors: [failure.sessionMessage],
+      errorStep: "capture",
+      updatedAt: new Date().toISOString(),
+    }));
+    notifyCaptureFailed(failure.notifyMessage);
+    return true;
+  }
+
   async function runCaptureGeneration(snapshot: PendingCaptureGenerate) {
     const abortController = isWebGpuMode ? beginGenerationAbort() : null;
 
@@ -424,27 +530,18 @@ export function App() {
         return;
       }
 
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Unable to generate Capture Layer.";
+      const failure = presentCaptureGenerationFailure(error);
 
-      telemetry.completeCapture(
-        error instanceof Error ? error : new Error(message),
-      );
+      telemetry.completeCapture(new Error(failure.telemetryMessage));
 
       setBriefSession((currentSession) => ({
         ...currentSession,
         status: "error",
-        errors: [message],
+        errors: [failure.sessionMessage],
         errorStep: "capture",
         updatedAt: new Date().toISOString(),
       }));
-      notifyCaptureFailed(
-        isWebGpuMode
-          ? "Could not generate a valid Capture Layer. Your notes are unchanged."
-          : message,
-      );
+      notifyCaptureFailed(failure.notifyMessage);
     } finally {
       if (abortController) {
         endGenerationAbort();
@@ -563,9 +660,17 @@ export function App() {
     };
 
     if (isWebGpuMode && !isEngineReady) {
+      if (rejectOversizedWebGpuCaptureInput(snapshot)) {
+        return;
+      }
+
       updatePendingGenerate(snapshot);
       telemetry.startModelLoad();
       openDownloadDisclosure();
+      return;
+    }
+
+    if (rejectOversizedWebGpuCaptureInput(snapshot)) {
       return;
     }
 
@@ -607,6 +712,10 @@ export function App() {
     updatePendingGenerate(null);
 
     if (nextPending.action === "capture") {
+      if (rejectOversizedWebGpuCaptureInput(nextPending)) {
+        return;
+      }
+
       void runCaptureGeneration(nextPending);
       return;
     }
@@ -774,13 +883,19 @@ export function App() {
                   />
                   <p
                     className={`text-xs ${
-                      hasRawInput ? "text-slate-500" : "text-amber-700"
+                      webGpuInputOverLimit
+                        ? "text-amber-700"
+                        : hasRawInput
+                          ? "text-slate-500"
+                          : "text-amber-700"
                     }`}
                     id="raw-input-help-generated"
                   >
-                    {hasRawInput
-                      ? "Editing raw notes resets Capture Layer and Decision Brief."
-                      : "Paste messy notes before regenerating."}
+                    {webGpuInputOverLimit
+                      ? WEBGPU_INPUT_TOO_LARGE_USER_MESSAGE
+                      : hasRawInput
+                        ? "Editing raw notes resets Capture Layer and Decision Brief."
+                        : "Paste messy notes before regenerating."}
                   </p>
                 </div>
               </details>
@@ -873,13 +988,19 @@ export function App() {
               />
               <p
                 className={`mt-2 shrink-0 text-xs ${
-                  hasRawInput ? "text-slate-500" : "text-amber-700"
+                  webGpuInputOverLimit
+                    ? "text-amber-700"
+                    : hasRawInput
+                      ? "text-slate-500"
+                      : "text-amber-700"
                 }`}
                 id="raw-input-help"
               >
-                {hasRawInput
-                  ? "Raw notes are stored locally for this session."
-                  : "Paste messy notes before generating a Capture Layer."}
+                {webGpuInputOverLimit
+                  ? WEBGPU_INPUT_TOO_LARGE_USER_MESSAGE
+                  : hasRawInput
+                    ? "Raw notes are stored locally for this session."
+                    : "Paste messy notes before generating a Capture Layer."}
               </p>
             </section>
 
@@ -978,9 +1099,11 @@ export function App() {
               disabled={!canGenerateCaptureLayer || isGeneratingCaptureLayer}
               onClick={handleGenerateCaptureLayer}
               title={
-                canGenerateCaptureLayer
-                  ? "Ready for the future Capture Layer generation step."
-                  : "Add raw notes and select a brief type first."
+                webGpuInputOverLimit
+                  ? "Input is too large for Live in browser. Shorten your notes or switch to Local Ollama."
+                  : canGenerateCaptureLayer
+                    ? "Ready for the future Capture Layer generation step."
+                    : "Add raw notes and select a brief type first."
               }
               type="button"
             >
