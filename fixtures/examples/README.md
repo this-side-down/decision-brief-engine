@@ -21,5 +21,8 @@ Each example lives under `fixtures/examples/<example-id>/`:
 | `q4-workforce-allocation` | Strategy | Q4 Workforce Allocation |
 | `local-inference-setup-flow` | Product | Local Inference Setup Flow |
 | `household-move-planning` | Execution | Household Move Planning |
+| `platform-rearchitecture-review` | Product | Platform Re-Architecture Review |
 
 The evaluation harness (`construction-strategy`) reads the Strategy messy notes from `q4-workforce-allocation/messy-notes.md`.
+
+`platform-rearchitecture-review` is the public long-form Mock demonstration fixture for v0.3.0 long-input capture work (#147).

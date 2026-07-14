@@ -4,7 +4,8 @@ import type { PipelineCaseCategory } from "./resultTypes";
 export type PipelineGalleryId =
   | "q4-workforce-allocation"
   | "local-inference-setup-flow"
-  | "household-move-planning";
+  | "household-move-planning"
+  | "platform-rearchitecture-review";
 
 export type PipelineEvalCase = {
   id: string;
@@ -125,9 +126,19 @@ const GALLERY_CASES: PipelineEvalCase[] = [
     structuralExpectations: STANDARD_STRUCTURAL_EXPECTATIONS,
     expectEmptyStatedDecision: false,
   },
+  {
+    id: "platform-rearchitecture-review",
+    name: "Platform Re-Architecture Review",
+    category: "gallery-example",
+    briefTypeId: "product",
+    galleryId: "platform-rearchitecture-review",
+    sourceLabel: demoSourceLabel("platform-rearchitecture-review"),
+    structuralExpectations: STANDARD_STRUCTURAL_EXPECTATIONS,
+    expectEmptyStatedDecision: true,
+  },
 ];
 
-/** Canonical eight cases for the full-pipeline harness (#126). */
+/** Canonical nine cases for the full-pipeline harness (#126, #147). */
 export const PIPELINE_EVAL_CASES: PipelineEvalCase[] = [
   ...EVALUATION_FIXTURE_CASES,
   ...GALLERY_CASES,

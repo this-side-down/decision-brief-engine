@@ -20,12 +20,13 @@ const DEFAULT_STRUCTURAL_EXPECTATIONS = {
 };
 
 describe("exampleFixtures", () => {
-  it("includes three durable public demo examples", () => {
-    expect(EXAMPLE_FIXTURES).toHaveLength(3);
+  it("includes four durable public demo examples", () => {
+    expect(EXAMPLE_FIXTURES).toHaveLength(4);
     expect(EXAMPLE_FIXTURES.map((fixture) => fixture.metadata.id).sort()).toEqual(
       [
         "household-move-planning",
         "local-inference-setup-flow",
+        "platform-rearchitecture-review",
         "q4-workforce-allocation",
       ],
     );

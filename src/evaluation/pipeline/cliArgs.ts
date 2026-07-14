@@ -118,8 +118,8 @@ Usage:
 
 Options:
   --mode=mock|ollama|webgpu   Generation path (default: mock)
-  --fixture=<id>              Run one case (repeatable). Default: all eight cases
-  --all                       Run all eight cases (default)
+  --fixture=<id>              Run one case (repeatable). Default: all nine cases
+  --all                       Run all nine cases (default)
   --output=<path>             Write run summary JSON
   --json                      Print machine-readable JSON to stdout
   --model=<ollama-model>      Override Ollama model for this run

@@ -1,0 +1,11 @@
+{
+  "id": "platform-rearchitecture-review",
+  "title": "Platform Re-Architecture Review",
+  "briefTypeId": "product",
+  "description": "Long-form product transcript with distributed evidence, repeated latency signals, conflicting architecture views, and an unresolved Helix platform term.",
+  "positioning": [
+    "Long-form decision capture",
+    "Chunked mock demonstration",
+    "Conflicting architecture options"
+  ]
+}

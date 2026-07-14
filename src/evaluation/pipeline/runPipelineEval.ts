@@ -6,6 +6,7 @@ import {
   PRODUCT_DECISION_BRIEF,
   STRATEGY_DECISION_BRIEF,
 } from "../../data/briefTypes";
+import { generateCaptureLayerForSession } from "../../services/generation/generateCaptureLayer";
 import { mockModelAdapter } from "../../services/generation/mockModelAdapter";
 import { ollamaModelAdapter } from "../../services/generation/ollamaModelAdapter";
 import { getOllamaConfig } from "../../services/generation/ollamaConfig";
@@ -253,12 +254,12 @@ export async function runSinglePipelineEval(options: {
 
   const captureStarted = Date.now();
   try {
-    captureLayer = await adapter.generateCaptureLayer({
+    captureLayer = await generateCaptureLayerForSession({
       rawInputText: loaded.rawInputText,
       briefType,
-      briefTypeGuidance: briefType.guidance,
-      captureLayerFields: [...CAPTURE_LAYER_FIELDS],
       sourceLabel: loaded.sourceLabel,
+      adapter,
+      mode: options.mode,
     });
     captureLatencyMs = Date.now() - captureStarted;
   } catch (error) {

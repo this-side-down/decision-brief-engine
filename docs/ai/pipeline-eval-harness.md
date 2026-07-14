@@ -16,7 +16,7 @@ The older Capture Layer-only CLI (`npm run eval:capture`) remains available for 
 ## Commands
 
 ```sh
-# Mock (CI-friendly baseline; all eight cases by default)
+# Mock (CI-friendly baseline; all nine cases by default)
 npm run eval:pipeline -- --mode=mock
 npm run eval:pipeline -- --mode=mock --json
 npm run eval:pipeline -- --mode=mock --output=fixtures/evaluation/baselines/mock-pipeline-baseline.json
@@ -43,7 +43,7 @@ Optional flags: `--all`, `--fixture=<id>` (repeatable), `--output=<path>`, `--js
 | `1` | CLI usage / argument error (`failureKind: "harness_execution"`). |
 | `2` | Infrastructure or execution failure (for example Ollama unreachable, WebGPU mode requested, case load failure). Distinct from product-quality failures. |
 
-## Cases (eight; never silently skipped)
+## Cases (nine; never silently skipped)
 
 ### Evaluation fixtures
 
@@ -62,14 +62,15 @@ Optional flags: `--all`, `--fixture=<id>` (repeatable), `--output=<path>`, `--js
 | `q4-workforce-allocation` | `fixtures/examples/q4-workforce-allocation/` |
 | `local-inference-setup-flow` | `fixtures/examples/local-inference-setup-flow/` |
 | `household-move-planning` | `fixtures/examples/household-move-planning/` |
+| `platform-rearchitecture-review` | `fixtures/examples/platform-rearchitecture-review/` (hierarchical Mock capture path) |
 
-Evaluation fixtures are loaded with an **evaluation-only adapter** (`loadEvaluationFixtureInput`) that does not change product fixtures. Gallery cases use `demo:<id>` source labels so Mock returns the authored demo Capture Layer / brief / Decision Trace.
+Evaluation fixtures are loaded with an **evaluation-only adapter** (`loadEvaluationFixtureInput`) that does not change product fixtures. Gallery cases use `demo:<id>` source labels. For `platform-rearchitecture-review`, Capture Layer generation routes through `generateCaptureLayerForSession` hierarchical Mock orchestration; authored brief and Decision Trace fixtures still supply downstream alignment checks.
 
 ## Pipeline steps
 
 For each case:
 
-1. Generate Capture Layer (Mock or Ollama adapter).
+1. Generate Capture Layer (Mock or Ollama adapter via `generateCaptureLayerForSession`; long-form gallery input uses hierarchical Mock orchestration).
 2. Record first-attempt parse outcome and retry count (0 for Mock/Ollama; WebGPU imports may be >0).
 3. Existing Capture Layer parse/schema validation.
 4. Existing structural-readiness checks.
@@ -132,7 +133,7 @@ Committed record:
 
 Expected Mock shape:
 
-- **Gallery cases** (`demo:` source labels) should clear deterministic gates when authored fixtures still pass product validators.
+- **Gallery cases** (`demo:` source labels) should clear deterministic gates when authored fixtures still pass product validators. `platform-rearchitecture-review` exercises the hierarchical Mock capture path and should record as deterministic usable.
 - **Evaluation fixtures** intentionally use non-demo Mock generation (synthetic Capture Layers). They often fail structural readiness / usable-brief deterministically. That is a **fixture/harness coverage finding**, not a reason to weaken validators or invent richer Mock outputs for non-gallery notes.
 
 Review failures before changing fixture content.

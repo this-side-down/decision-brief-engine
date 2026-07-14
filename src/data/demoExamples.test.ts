@@ -9,15 +9,17 @@ import {
 import { EXAMPLE_FIXTURES } from "./exampleFixtures";
 
 describe("demoExamples", () => {
-  it("exposes one example per brief type with updated titles", () => {
-    expect(DEMO_EXAMPLES).toHaveLength(3);
+  it("exposes durable public demo examples including the long-form product fixture", () => {
+    expect(DEMO_EXAMPLES).toHaveLength(4);
     expect(DEMO_EXAMPLES.map((example) => example.title).sort()).toEqual([
       "Household Move Planning",
       "Local Inference Setup Flow",
+      "Platform Re-Architecture Review",
       "Q4 Workforce Allocation",
     ]);
     expect(DEMO_EXAMPLES.map((example) => example.briefTypeId).sort()).toEqual([
       "execution",
+      "product",
       "product",
       "strategy",
     ]);

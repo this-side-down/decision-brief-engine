@@ -1,6 +1,11 @@
 import type { CaptureLayer } from "../types/captureLayer";
 import type { BriefTypeId } from "../types/brief";
 import type { DecisionTrace } from "../types/decisionTrace";
+import platformRearchitectureCaptureLayer from "../../fixtures/examples/platform-rearchitecture-review/expected-capture-layer.json";
+import platformRearchitectureBrief from "../../fixtures/examples/platform-rearchitecture-review/expected-decision-brief.md?raw";
+import platformRearchitectureDecisionTrace from "../../fixtures/examples/platform-rearchitecture-review/expected-decision-trace.json";
+import platformRearchitectureMetadata from "../../fixtures/examples/platform-rearchitecture-review/metadata.json";
+import platformRearchitectureNotes from "../../fixtures/examples/platform-rearchitecture-review/messy-notes.md?raw";
 import householdMoveCaptureLayer from "../../fixtures/examples/household-move-planning/expected-capture-layer.json";
 import householdMoveBrief from "../../fixtures/examples/household-move-planning/expected-decision-brief.md?raw";
 import householdMoveDecisionTrace from "../../fixtures/examples/household-move-planning/expected-decision-trace.json";
@@ -20,7 +25,8 @@ import q4WorkforceNotes from "../../fixtures/examples/q4-workforce-allocation/me
 export type DemoExampleId =
   | "q4-workforce-allocation"
   | "local-inference-setup-flow"
-  | "household-move-planning";
+  | "household-move-planning"
+  | "platform-rearchitecture-review";
 
 export type ExampleFixtureMetadata = {
   id: DemoExampleId;
@@ -59,6 +65,13 @@ const EXAMPLE_FIXTURE_ENTRIES: ExampleFixture[] = [
     expectedCaptureLayer: householdMoveCaptureLayer as CaptureLayer,
     expectedDecisionBrief: householdMoveBrief.trim(),
     expectedDecisionTrace: householdMoveDecisionTrace as DecisionTrace,
+  },
+  {
+    metadata: platformRearchitectureMetadata as ExampleFixtureMetadata,
+    rawNotes: platformRearchitectureNotes.trim(),
+    expectedCaptureLayer: platformRearchitectureCaptureLayer as CaptureLayer,
+    expectedDecisionBrief: platformRearchitectureBrief.trim(),
+    expectedDecisionTrace: platformRearchitectureDecisionTrace as DecisionTrace,
   },
 ];
 

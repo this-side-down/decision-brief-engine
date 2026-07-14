@@ -8,9 +8,16 @@ This project uses pre-1.0 versioning (`v0.x.y`) for capability milestones rather
 
 ### Planned
 
-- WebGPU Capture Layer quality gate and structural readiness improvements before any public ungating.
-- Deeper eval and benchmarking across low- and high-powered device profiles.
-- Public hosted inference (out of scope until separate data-handling and deployment review).
+- **v0.3.0 — Long-Form Decision Capture:** hierarchical processing of realistic long decision material with complete source coverage, auditable merge behavior, Mock demonstration, and Local Ollama validation (#136).
+- This release slice adds the deterministic Mock long-input Capture Layer path (#147), including planning, chunk contracts, merge orchestration, synthetic long-form demo material, and regression coverage.
+- Previously merged browser reliability, diagnostics, schema, and evaluation work remain gated internal infrastructure per the closed #75 decision.
+
+### Runtime posture (unchanged)
+
+- Mock demo remains the public default.
+- Local Ollama remains the real-generation quality baseline.
+- Browser WebGPU remains experimental and gated.
+- Hosted inference remains deferred.
 
 ## v0.2.1 — Decision Brief Workspace and Writing Quality Polish
 

@@ -1,0 +1,179 @@
+{
+  "chunk-001": {
+    "chunkId": "chunk-001",
+    "sourceRange": { "start": 0, "end": 0 },
+    "decision_context": "The team is under enterprise latency pressure while debating Helix modular-monolith versus splitting core services now.",
+    "implied_decision": "Whether to pursue Helix modular-monolith or split core services now.",
+    "stated_decision": "",
+    "goals": [
+      "Reduce checkout and invoice latency for enterprise accounts",
+      "Present a phased architecture and cost story to finance and exec staff"
+    ],
+    "stakeholders": ["VP Product", "Engineering Lead", "Platform Lead", "SRE", "Customer Success", "Finance"],
+    "options_considered": [
+      "Extract payments and catalog services into microservices now",
+      "Adopt Helix modular monolith and defer service split"
+    ],
+    "constraints": ["Finance wants phased infrastructure spend, not a big-bang budget hit"],
+    "risks": ["Incorrect bottleneck diagnosis leading to the wrong architecture move"],
+    "assumptions": [],
+    "evidence": [
+      {
+        "text": "P95 checkout latency remains above the 800ms target on peak days",
+        "sourceChunkId": "chunk-001",
+        "sourceRange": { "start": 0, "end": 0 }
+      },
+      {
+        "text": "Enterprise accounts raised latency complaints again this quarter",
+        "sourceChunkId": "chunk-001",
+        "sourceRange": { "start": 0, "end": 0 }
+      }
+    ],
+    "open_questions": [],
+    "tensions": [],
+    "recommendation_candidate": "",
+    "confidence": "Medium",
+    "missing_context": [],
+    "suggested_next_steps": [],
+    "conflicts": [],
+    "unresolved_references": []
+  },
+  "chunk-002": {
+    "chunkId": "chunk-002",
+    "sourceRange": { "start": 0, "end": 0 },
+    "goals": ["Enable safer independent deploys without overwhelming the platform team"],
+    "stakeholders": ["Sales"],
+    "options_considered": [
+      "Stay on the monolith and invest only in performance guardrails",
+      "Hybrid Helix core plus one extracted invoice worker service"
+    ],
+    "constraints": [
+      "14-person platform team with flat SRE headcount",
+      "Sales messaging must not promise a rewrite timeline the team cannot keep"
+    ],
+    "risks": [
+      "Operational overload if microservices are introduced too early",
+      "Sales overpromising modernization outcomes"
+    ],
+    "assumptions": ["Lighthouse slowdowns may reflect invoice generation rather than checkout alone"],
+    "evidence": [
+      {
+        "text": "Two lighthouse customers reported slowdowns during invoice generation rather than browsing",
+        "sourceChunkId": "chunk-002",
+        "sourceRange": { "start": 0, "end": 0 }
+      },
+      {
+        "text": "Microservices on day one would double operational load for a 14-person platform team",
+        "sourceChunkId": "chunk-002",
+        "sourceRange": { "start": 0, "end": 0 }
+      }
+    ],
+    "open_questions": [
+      "What is the true bottleneck for invoice latency?",
+      "Can Helix deliver independent deploys without new clusters?"
+    ],
+    "tensions": [
+      "Independent deploy goals vs flat SRE headcount and on-call load"
+    ],
+    "missing_context": ["Verified root cause for lighthouse slowdowns"],
+    "suggested_next_steps": [],
+    "conflicts": [
+      {
+        "topic": "Architecture direction",
+        "statementA": "Omar wants microservices extraction now",
+        "statementB": "Priya wants Helix modular monolith first",
+        "sourceChunkIds": ["chunk-002"]
+      }
+    ],
+    "unresolved_references": []
+  },
+  "chunk-003": {
+    "chunkId": "chunk-003",
+    "sourceRange": { "start": 0, "end": 0 },
+    "open_questions": [
+      "Do we have SRE capacity for microservices operations?",
+      "What budget envelope will finance approve?"
+    ],
+    "tensions": ["Near-term invoice remediation vs long-term re-architecture messaging"],
+    "missing_context": ["Finance-approved phased budget envelope"],
+    "suggested_next_steps": ["Define Helix contract boundaries and ownership"],
+    "conflicts": [],
+    "unresolved_references": [
+      {
+        "term": "Helix",
+        "note": "Internal platform codename, target modular-monolith shape, and migration program name are used interchangeably and remain unresolved",
+        "sourceChunkId": "chunk-003"
+      }
+    ],
+    "goals": [],
+    "stakeholders": [],
+    "options_considered": [],
+    "constraints": [],
+    "risks": [],
+    "assumptions": [],
+    "evidence": []
+  },
+  "chunk-004": {
+    "chunkId": "chunk-004",
+    "sourceRange": { "start": 0, "end": 0 },
+    "goals": ["Meet a credible September performance remediation milestone"],
+    "constraints": ["September customer success remediation milestone"],
+    "risks": [
+      "Vague Helix meaning slowing alignment and customer comms",
+      "Budget overrun on infrastructure changes",
+      "Repeating last year's big-refactor morale hit"
+    ],
+    "assumptions": ["Module boundaries will be ignored without tooling enforcement"],
+    "recommendation_candidate": "Pursue Helix modular-monolith with a staged invoice remediation track, paired with tracing and SLO gates, while keeping microservices extraction as a later phase if module boundaries fail.",
+    "suggested_next_steps": [
+      "Publish a one-page decision framing for exec staff",
+      "Confirm invoice bottleneck with profiling",
+      "Model phased infrastructure cost for finance review",
+      "Add tracing coverage requirements before migration kickoff"
+    ],
+    "stakeholders": [],
+    "options_considered": [],
+    "evidence": [],
+    "open_questions": [],
+    "tensions": [],
+    "missing_context": [],
+    "conflicts": [],
+    "unresolved_references": []
+  },
+  "chunk-005": {
+    "chunkId": "chunk-005",
+    "sourceRange": { "start": 0, "end": 0 },
+    "stated_decision": "",
+    "evidence": [
+      {
+        "text": "Checkout P95 was 940ms on Tuesday peak in last week's dashboard",
+        "sourceChunkId": "chunk-005",
+        "sourceRange": { "start": 0, "end": 0 }
+      },
+      {
+        "text": "Invoice generation queue depth doubled during the backfill window on Thursday",
+        "sourceChunkId": "chunk-005",
+        "sourceRange": { "start": 0, "end": 0 }
+      },
+      {
+        "text": "Northwind asked whether modular-monolith means the same uptime promises and the team did not answer",
+        "sourceChunkId": "chunk-005",
+        "sourceRange": { "start": 0, "end": 0 }
+      }
+    ],
+    "open_questions": ["Does modular-monolith preserve the same uptime promises customers expect?"],
+    "missing_context": ["Northwind uptime promise expectations for modular-monolith"],
+    "suggested_next_steps": [
+      "Draft customer messaging focused on remediation milestones rather than architecture jargon"
+    ],
+    "goals": [],
+    "stakeholders": [],
+    "options_considered": [],
+    "constraints": [],
+    "risks": [],
+    "assumptions": ["Invoice batch guardrails can buy time if the backfill issue is fixed"],
+    "tensions": [],
+    "conflicts": [],
+    "unresolved_references": []
+  }
+}
