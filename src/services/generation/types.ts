@@ -1,6 +1,7 @@
 import type { BriefType, BriefTypeGuidance } from "../../types/brief";
 import type { CaptureLayer } from "../../types/captureLayer";
 import type { DecisionTrace } from "../../types/decisionTrace";
+import type { DecisionArtifactDiagnosticsHolder } from "./decisionArtifactDiagnostics";
 
 export type GenerateCaptureLayerInput = {
   rawInputText: string;
@@ -24,11 +25,19 @@ export type DecisionBriefResult = {
   decisionTrace: DecisionTrace;
 };
 
+export type GenerateDecisionBriefOptions = {
+  signal?: AbortSignal;
+  diagnostics?: DecisionArtifactDiagnosticsHolder;
+};
+
 export type ModelAdapter = {
   generateCaptureLayer(
     input: GenerateCaptureLayerInput,
   ): Promise<CaptureLayer>;
-  generateDecisionBrief(input: GenerateDecisionBriefInput): Promise<DecisionBriefResult>;
+  generateDecisionBrief(
+    input: GenerateDecisionBriefInput,
+    options?: GenerateDecisionBriefOptions,
+  ): Promise<DecisionBriefResult>;
 };
 
 export const CAPTURE_LAYER_FIELDS = [

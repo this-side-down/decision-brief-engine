@@ -24,6 +24,10 @@ import { useTimedStatusMessage } from "./hooks/useTimedStatusMessage";
 import { generateCaptureLayerForSession, formatLongInputProgressMessage } from "./services/generation/generateCaptureLayer";
 import { generateDecisionBriefForSession } from "./services/generation/generateDecisionBrief";
 import { getOllamaConfig } from "./services/generation/ollamaConfig";
+import {
+  cancelBriefGeneration,
+  runBriefGenerationLifecycle,
+} from "./utils/briefGenerationLifecycle";
 import { resolveCapturePath } from "./services/generation/longInput/inputBudgetPolicy";
 import { getLongInputCaptureCapability } from "./services/generation/longInput/longInputCapability";
 import {
@@ -242,6 +246,7 @@ export function App() {
   const pendingGenerateRef = useRef<PendingGenerate | null>(null);
   const lastModelLoadDurationRef = useRef<number | null>(null);
   const captureRunIdRef = useRef(0);
+  const briefRunIdRef = useRef(0);
   const [longInputProgressMessage, setLongInputProgressMessage] = useState("");
 
   const selectedBriefTypeId = useMemo(
@@ -628,115 +633,83 @@ export function App() {
       setLongInputProgressMessage("");
     } finally {
       if (abortController) {
-        endGenerationAbort();
+        endGenerationAbort(abortController);
       }
     }
   }
 
   async function runBriefGeneration(snapshot: PendingBriefGenerate) {
-    const abortController = isWebGpuMode ? beginGenerationAbort() : null;
-
-    setBriefSession((currentSession) => ({
-      ...currentSession,
-      status: "generating_brief",
-      errors: [],
-      errorStep: null,
-      updatedAt: new Date().toISOString(),
-    }));
-    telemetry.startBrief();
-    notifyBriefGenerationStarted();
+    const abortController =
+      isWebGpuMode || isOllamaMode ? beginGenerationAbort() : null;
 
     try {
-      const { markdown, decisionTrace } = await generateDecisionBriefForSession({
-        captureLayer: snapshot.captureLayer,
-        briefType: snapshot.briefType,
-        sourceLabel: snapshot.sourceLabel,
-        adapter: getAdapterForGeneration(abortController?.signal, {
-          captureContext: {
-            sourceLabel: snapshot.sourceLabel ?? null,
-            briefTypeId: snapshot.briefType.id,
-            runTimestamp: new Date().toISOString(),
+      await runBriefGenerationLifecycle(
+        () =>
+          generateDecisionBriefForSession({
+            captureLayer: snapshot.captureLayer,
+            briefType: snapshot.briefType,
+            sourceLabel: snapshot.sourceLabel,
+            signal: abortController?.signal,
+            adapter: getAdapterForGeneration(abortController?.signal, {
+              captureContext: {
+                sourceLabel: snapshot.sourceLabel ?? null,
+                briefTypeId: snapshot.briefType.id,
+                runTimestamp: new Date().toISOString(),
+              },
+              onBriefRetry: () => {
+                telemetry.recordBriefRetry();
+              },
+              onBriefFirstAttempt: (result) => {
+                telemetry.recordBriefFirstAttempt(result);
+              },
+              onCompletionDiagnostics: (diagnostics) => {
+                telemetry.recordCompletionDiagnostics(diagnostics);
+              },
+            }),
+          }),
+        snapshot.briefType,
+        {
+          getActiveRunId: () => briefRunIdRef.current,
+          setActiveRunId: (runId) => {
+            briefRunIdRef.current = runId;
           },
-          onBriefRetry: () => {
-            telemetry.recordBriefRetry();
+          setSession: setBriefSession,
+          startTelemetry: telemetry.startBrief,
+          completeTelemetry: telemetry.completeBrief,
+          cancelActiveGeneration,
+          notifyStarted: notifyBriefGenerationStarted,
+          notifyFailed: (error, message) => {
+            notifyBriefFailed(
+              error instanceof GenerationQualityError
+                ? error.message
+                : isWebGpuMode
+                  ? "Decision Brief generation failed. Your Capture Layer is preserved."
+                  : message,
+            );
           },
-          onBriefFirstAttempt: (result) => {
-            telemetry.recordBriefFirstAttempt(result);
+          notifyComplete: () => {
+            setDecisionBriefViewMode("preview");
+            notifyGenerationComplete();
           },
-          onCompletionDiagnostics: (diagnostics) => {
-            telemetry.recordCompletionDiagnostics(diagnostics);
-          },
-        }),
-      });
-
-      if (!markdown.trim()) {
-        throw new Error("Decision Brief generation returned empty Markdown.");
-      }
-
-      const now = new Date().toISOString();
-
-      telemetry.completeBrief(null);
-
-      setBriefSession((currentSession) => ({
-        ...currentSession,
-        decisionTrace,
-        decisionBrief: {
-          markdown,
-          generatedFromCaptureLayer: currentSession.id,
-          briefType: snapshot.briefType,
-          editedByUser: false,
-          createdAt: now,
-          updatedAt: now,
         },
-        status: "brief_ready",
-        errors: [],
-        errorStep: null,
-        updatedAt: now,
-      }));
-      setDecisionBriefViewMode("preview");
-      notifyGenerationComplete();
-    } catch (error) {
-      if (error instanceof GenerationCancelledError) {
-        telemetry.completeBrief(error);
-        setBriefSession((currentSession) => ({
-          ...currentSession,
-          status: "capture_ready",
-          errors: [],
-          errorStep: null,
-          updatedAt: new Date().toISOString(),
-        }));
-        cancelActiveGeneration();
-        return;
-      }
-
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Unable to generate Decision Brief.";
-
-      telemetry.completeBrief(
-        error instanceof Error ? error : new Error(message),
-      );
-
-      setBriefSession((currentSession) => ({
-        ...currentSession,
-        status: "capture_ready",
-        errors: [message],
-        errorStep: "brief",
-        updatedAt: new Date().toISOString(),
-      }));
-      notifyBriefFailed(
-        error instanceof GenerationQualityError
-          ? error.message
-          : isWebGpuMode
-            ? "Decision Brief generation failed. Your Capture Layer is preserved."
-            : message,
       );
     } finally {
       if (abortController) {
-        endGenerationAbort();
+        endGenerationAbort(abortController);
       }
     }
+  }
+
+  function handleCancelBriefGeneration() {
+    cancelBriefGeneration({
+      getActiveRunId: () => briefRunIdRef.current,
+      setActiveRunId: (runId) => {
+        briefRunIdRef.current = runId;
+      },
+      setSession: setBriefSession,
+      completeTelemetry: telemetry.completeBrief,
+      cancelActiveGeneration,
+    });
   }
 
   function handleCancelLongInputCapture() {
@@ -1209,6 +1182,15 @@ export function App() {
               <button
                 className="rounded border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
                 onClick={handleCancelLongInputCapture}
+                type="button"
+              >
+                Cancel
+              </button>
+            ) : null}
+            {isGeneratingDecisionBrief && isOllamaMode ? (
+              <button
+                className="rounded border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
+                onClick={handleCancelBriefGeneration}
                 type="button"
               >
                 Cancel

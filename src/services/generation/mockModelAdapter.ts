@@ -14,6 +14,7 @@ import type {
   DecisionBriefResult,
   GenerateCaptureLayerInput,
   GenerateDecisionBriefInput,
+  GenerateDecisionBriefOptions,
   ModelAdapter,
 } from "./types";
 
@@ -184,7 +185,10 @@ export const mockModelAdapter: ModelAdapter = {
     return buildMockCaptureLayer(input);
   },
 
-  async generateDecisionBrief(input: GenerateDecisionBriefInput): Promise<DecisionBriefResult> {
+  async generateDecisionBrief(
+    input: GenerateDecisionBriefInput,
+    _options?: GenerateDecisionBriefOptions,
+  ): Promise<DecisionBriefResult> {
     const markdown = buildMockDecisionBrief(input);
 
     if (!markdown.trim()) {

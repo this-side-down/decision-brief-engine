@@ -4,6 +4,7 @@ import { getModelAdapter } from "./getModelAdapter";
 import {
   DECISION_BRIEF_MARKDOWN_STRUCTURE,
   type DecisionBriefResult,
+  type GenerateDecisionBriefOptions,
   type ModelAdapter,
 } from "./types";
 
@@ -12,6 +13,8 @@ type GenerateDecisionBriefForSessionInput = {
   briefType: BriefType;
   sourceLabel?: string;
   adapter?: ModelAdapter;
+  signal?: AbortSignal;
+  diagnostics?: GenerateDecisionBriefOptions["diagnostics"];
 };
 
 export async function generateDecisionBriefForSession({
@@ -19,13 +22,18 @@ export async function generateDecisionBriefForSession({
   briefType,
   captureLayer,
   sourceLabel,
+  signal,
+  diagnostics,
 }: GenerateDecisionBriefForSessionInput): Promise<DecisionBriefResult> {
-  return adapter.generateDecisionBrief({
-    captureLayer,
-    briefType,
-    briefTypeGuidance: briefType.guidance,
-    markdownStructure: [...DECISION_BRIEF_MARKDOWN_STRUCTURE],
-    toneGuidance: "Concise, executive-ready, direct, and decision-oriented.",
-    sourceLabel,
-  });
+  return adapter.generateDecisionBrief(
+    {
+      captureLayer,
+      briefType,
+      briefTypeGuidance: briefType.guidance,
+      markdownStructure: [...DECISION_BRIEF_MARKDOWN_STRUCTURE],
+      toneGuidance: "Concise, executive-ready, direct, and decision-oriented.",
+      sourceLabel,
+    },
+    { signal, diagnostics },
+  );
 }

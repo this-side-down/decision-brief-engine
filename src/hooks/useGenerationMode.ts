@@ -380,8 +380,17 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
     return controller;
   }, []);
 
-  const endGenerationAbort = useCallback(() => {
-    generationAbortRef.current = null;
+  const endGenerationAbort = useCallback((controller: AbortController) => {
+    // Only clear the ref if it still points at the controller this run
+    // created. If the user cancelled and immediately started a new run,
+    // generationAbortRef.current already belongs to that new run by the
+    // time this (superseded) run's finally block executes; clearing
+    // unconditionally would clobber the new run's controller and make it
+    // uncancellable. Mirrors the identity check confirmModelDownload()
+    // already uses for loadAbortRef.
+    if (generationAbortRef.current === controller) {
+      generationAbortRef.current = null;
+    }
   }, []);
 
   const getAdapterForGeneration = useCallback(
