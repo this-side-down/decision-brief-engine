@@ -1,8 +1,8 @@
 {
   "resultFormatVersion": 1,
-  "runId": "pipeline-2026-07-14T18-05-06-755Z",
-  "timestamp": "2026-07-14T18:05:06.803Z",
-  "buildCommit": "4de906cfc19065e67969a695d73971195094a35e",
+  "runId": "pipeline-2026-07-14T18-06-21-209Z",
+  "timestamp": "2026-07-14T18:06:21.262Z",
+  "buildCommit": "59b03934f617681e0c2f08344d791ff87eb0b34e",
   "generationMode": "mock",
   "modelId": "mockModelAdapter",
   "caseIds": [
@@ -18,9 +18,9 @@
   ],
   "results": [
     {
-      "runId": "pipeline-2026-07-14T18-05-06-755Z",
-      "timestamp": "2026-07-14T18:05:06.808Z",
-      "buildCommit": "4de906cfc19065e67969a695d73971195094a35e",
+      "runId": "pipeline-2026-07-14T18-06-21-209Z",
+      "timestamp": "2026-07-14T18:06:21.267Z",
+      "buildCommit": "59b03934f617681e0c2f08344d791ff87eb0b34e",
       "fixtureId": "product-prioritization",
       "fixtureName": "Product prioritization meeting",
       "fixtureCategory": "evaluation-fixture",
@@ -189,9 +189,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-14T18-05-06-755Z",
-      "timestamp": "2026-07-14T18:05:06.811Z",
-      "buildCommit": "4de906cfc19065e67969a695d73971195094a35e",
+      "runId": "pipeline-2026-07-14T18-06-21-209Z",
+      "timestamp": "2026-07-14T18:06:21.270Z",
+      "buildCommit": "59b03934f617681e0c2f08344d791ff87eb0b34e",
       "fixtureId": "strategy-tradeoff",
       "fixtureName": "Strategy tradeoff discussion",
       "fixtureCategory": "evaluation-fixture",
@@ -362,9 +362,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-14T18-05-06-755Z",
-      "timestamp": "2026-07-14T18:05:06.812Z",
-      "buildCommit": "4de906cfc19065e67969a695d73971195094a35e",
+      "runId": "pipeline-2026-07-14T18-06-21-209Z",
+      "timestamp": "2026-07-14T18:06:21.271Z",
+      "buildCommit": "59b03934f617681e0c2f08344d791ff87eb0b34e",
       "fixtureId": "execution-planning",
       "fixtureName": "Execution planning disagreement",
       "fixtureCategory": "evaluation-fixture",
@@ -533,9 +533,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-14T18-05-06-755Z",
-      "timestamp": "2026-07-14T18:05:06.813Z",
-      "buildCommit": "4de906cfc19065e67969a695d73971195094a35e",
+      "runId": "pipeline-2026-07-14T18-06-21-209Z",
+      "timestamp": "2026-07-14T18:06:21.272Z",
+      "buildCommit": "59b03934f617681e0c2f08344d791ff87eb0b34e",
       "fixtureId": "customer-interview-synthesis",
       "fixtureName": "Customer interview synthesis",
       "fixtureCategory": "evaluation-fixture",
@@ -704,9 +704,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-14T18-05-06-755Z",
-      "timestamp": "2026-07-14T18:05:06.813Z",
-      "buildCommit": "4de906cfc19065e67969a695d73971195094a35e",
+      "runId": "pipeline-2026-07-14T18-06-21-209Z",
+      "timestamp": "2026-07-14T18:06:21.273Z",
+      "buildCommit": "59b03934f617681e0c2f08344d791ff87eb0b34e",
       "fixtureId": "ambiguous-stakeholder-conversation",
       "fixtureName": "Ambiguous stakeholder conversation",
       "fixtureCategory": "evaluation-fixture",
@@ -877,9 +877,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-14T18-05-06-755Z",
-      "timestamp": "2026-07-14T18:05:06.815Z",
-      "buildCommit": "4de906cfc19065e67969a695d73971195094a35e",
+      "runId": "pipeline-2026-07-14T18-06-21-209Z",
+      "timestamp": "2026-07-14T18:06:21.274Z",
+      "buildCommit": "59b03934f617681e0c2f08344d791ff87eb0b34e",
       "fixtureId": "q4-workforce-allocation",
       "fixtureName": "Q4 Workforce Allocation",
       "fixtureCategory": "gallery-example",
@@ -1060,9 +1060,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-14T18-05-06-755Z",
-      "timestamp": "2026-07-14T18:05:06.816Z",
-      "buildCommit": "4de906cfc19065e67969a695d73971195094a35e",
+      "runId": "pipeline-2026-07-14T18-06-21-209Z",
+      "timestamp": "2026-07-14T18:06:21.275Z",
+      "buildCommit": "59b03934f617681e0c2f08344d791ff87eb0b34e",
       "fixtureId": "local-inference-setup-flow",
       "fixtureName": "Local Inference Setup Flow",
       "fixtureCategory": "gallery-example",
@@ -1235,9 +1235,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-14T18-05-06-755Z",
-      "timestamp": "2026-07-14T18:05:06.817Z",
-      "buildCommit": "4de906cfc19065e67969a695d73971195094a35e",
+      "runId": "pipeline-2026-07-14T18-06-21-209Z",
+      "timestamp": "2026-07-14T18:06:21.277Z",
+      "buildCommit": "59b03934f617681e0c2f08344d791ff87eb0b34e",
       "fixtureId": "household-move-planning",
       "fixtureName": "Household Move Planning",
       "fixtureCategory": "gallery-example",
@@ -1413,9 +1413,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-14T18-05-06-755Z",
-      "timestamp": "2026-07-14T18:05:06.819Z",
-      "buildCommit": "4de906cfc19065e67969a695d73971195094a35e",
+      "runId": "pipeline-2026-07-14T18-06-21-209Z",
+      "timestamp": "2026-07-14T18:06:21.279Z",
+      "buildCommit": "59b03934f617681e0c2f08344d791ff87eb0b34e",
       "fixtureId": "platform-rearchitecture-review",
       "fixtureName": "Platform Re-Architecture Review",
       "fixtureCategory": "gallery-example",
@@ -1476,7 +1476,7 @@
       ],
       "inventedStatedDecisionFinding": null,
       "captureLayerRetryCount": 0,
-      "captureLayerLatencyMs": 0,
+      "captureLayerLatencyMs": 1,
       "decisionBriefAttempted": true,
       "decisionBriefGenerationSuccess": true,
       "decisionBriefLatencyMs": 0,
