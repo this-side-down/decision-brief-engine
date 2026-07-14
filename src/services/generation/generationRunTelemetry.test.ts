@@ -99,6 +99,7 @@ describe("generationRunTelemetry", () => {
         webLlmVersion: "0.2.84",
         captureSchemaVersion: "capture-layer-v1",
         briefSchemaVersion: "decision-brief-result-v1",
+        briefPromptMode: "structured_response",
         captureFirstAttemptSchemaPass: false,
         briefFirstAttemptSchemaPass: true,
         briefFirstAttemptSemanticPass: false,
@@ -162,6 +163,43 @@ describe("generationRunTelemetry", () => {
     expect(lines).toContain("Decision Brief: failed (1 retry)");
     expect(lines.join("\n")).not.toContain('{"markdown"');
     expect(lines.join("\n")).not.toContain("full markdown brief here");
+  });
+
+  it("includes markdown_only experiment mode in Run Details when present", () => {
+    const lines = formatRunDetailsLines({
+      runtimeMode: "webgpu",
+      runtimeLabel: "Live in browser",
+      modelLoadDurationMs: null,
+      captureDurationMs: 45_000,
+      captureRetryCount: 0,
+      captureOutcome: "success",
+      captureError: null,
+      briefDurationMs: 20_000,
+      briefRetryCount: 0,
+      briefOutcome: "success",
+      briefError: null,
+      webGpuEval: {
+        modelId: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+        webLlmVersion: "0.2.84",
+        captureSchemaVersion: "capture-layer-v1",
+        briefSchemaVersion: "decision-brief-markdown-only-v1",
+        briefPromptMode: "markdown_only",
+        captureFirstAttemptSchemaPass: true,
+        briefFirstAttemptSchemaPass: true,
+        briefFirstAttemptSemanticPass: true,
+        briefFirstAttemptPlaceholderLeakage: false,
+        briefQualityRetryReasonCategories: null,
+        briefQualityFailureCategories: null,
+        briefFirstAttemptCompletionDiagnostics: null,
+        briefFirstAttemptSemanticFindings: null,
+        briefQualityFailureFindings: null,
+        completionDiagnostics: [],
+      },
+    });
+
+    expect(lines).toContain(
+      "Decision Brief experiment mode: markdown_only (Decision Trace checks not applicable)",
+    );
   });
 
   it("only enables telemetry for real-generation modes", () => {

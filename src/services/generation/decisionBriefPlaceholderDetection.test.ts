@@ -15,7 +15,10 @@ import {
   buildDecisionBriefPrompt,
   resolveCapturePromptVariant,
 } from "./prompts";
-import { DECISION_BRIEF_RESULT_RESPONSE_SCHEMA_JSON } from "./webGpuGenerationSchemas";
+import {
+  DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_SCHEMA_JSON,
+  DECISION_BRIEF_RESULT_RESPONSE_SCHEMA_JSON,
+} from "./webGpuGenerationSchemas";
 import { DECISION_BRIEF_MARKDOWN_STRUCTURE } from "./types";
 
 const fixtureRoot = join(
@@ -70,6 +73,30 @@ describe("buildDecisionBriefPrompt structured WebGPU mode", () => {
       type: "object",
       required: ["markdown", "decisionTrace"],
     });
+  });
+});
+
+describe("buildDecisionBriefPrompt markdown_only WebGPU experiment", () => {
+  it("requests only markdown JSON without Decision Trace instructions", () => {
+    const prompt = buildDecisionBriefPrompt(baseBriefInput, {
+      mode: "markdown_only",
+    });
+
+    expect(prompt).toContain("markdown:");
+    expect(prompt).toContain("Do not include decisionTrace or any other top-level fields.");
+    expect(prompt).not.toContain("Each decisionTrace.entries item");
+    expect(prompt).not.toContain("Decision Trace");
+    expect(prompt).toContain("Recommendation");
+    expect(prompt).toContain("Suggested Next Steps");
+  });
+
+  it("uses a schema without Decision Trace fields", () => {
+    const schema = JSON.parse(DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_SCHEMA_JSON);
+    expect(schema).toMatchObject({
+      type: "object",
+      required: ["markdown"],
+    });
+    expect(schema.properties).not.toHaveProperty("decisionTrace");
   });
 });
 

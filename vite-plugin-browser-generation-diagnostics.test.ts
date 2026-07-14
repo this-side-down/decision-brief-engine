@@ -147,6 +147,7 @@ describe("browserGenerationDiagnosticsPlugin configuration", () => {
         webLlmVersion: "0.2.84",
         captureSchemaVersion: "capture-layer-v1",
         briefSchemaVersion: "decision-brief-result-v1",
+        briefPromptMode: "structured_response",
         configuredMaxTokens: null,
       },
       attempt: {
@@ -225,6 +226,7 @@ describe("Household Move Planning Run Details contract", () => {
         webLlmVersion: "0.2.84",
         captureSchemaVersion: "capture-layer-v1",
         briefSchemaVersion: "decision-brief-result-v1",
+        briefPromptMode: "structured_response",
         captureFirstAttemptSchemaPass: true,
         briefFirstAttemptSchemaPass: true,
         briefFirstAttemptSemanticPass: false,

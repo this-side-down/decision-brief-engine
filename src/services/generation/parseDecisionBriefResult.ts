@@ -4,10 +4,7 @@ import {
   stripDecisionTraceJsonFences,
   validateDecisionTraceObject,
 } from "./parseDecisionTrace";
-
-function emptyDecisionTrace(): DecisionTrace {
-  return { entries: [], created_at: new Date().toISOString() };
-}
+import { emptyDecisionTrace } from "./parseDecisionBriefResultHelpers";
 
 /**
  * Parses and validates the combined Decision Brief result envelope returned by real model adapters.

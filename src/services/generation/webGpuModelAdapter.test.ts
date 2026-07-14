@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ChatCompletionRequest, MLCEngineInterface } from "@mlc-ai/web-llm";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { STRATEGY_DECISION_BRIEF } from "../../data/briefTypes";
 import q4CaptureLayer from "../../../fixtures/examples/q4-workforce-allocation/expected-capture-layer.json";
 import q4DecisionTrace from "../../../fixtures/examples/q4-workforce-allocation/expected-decision-trace.json";
@@ -23,9 +23,11 @@ import {
 } from "./webGpuErrors";
 import {
   CAPTURE_LAYER_RESPONSE_SCHEMA_JSON,
+  DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_SCHEMA_JSON,
   DECISION_BRIEF_RESULT_RESPONSE_SCHEMA_JSON,
 } from "./webGpuGenerationSchemas";
-import { createWebGpuModelAdapter } from "./webGpuModelAdapter";
+import { WEBGPU_DECISION_BRIEF_PROMPT_MODE_ENV } from "./webGpuDecisionBriefExperiment";
+import { getWebGpuEvalContext, createWebGpuModelAdapter } from "./webGpuModelAdapter";
 
 type MockCreateHandler = (
   request: ChatCompletionRequest,
@@ -232,6 +234,7 @@ describe("createWebGpuModelAdapter", () => {
       semanticQualityPass: true,
       placeholderLeakageDetected: false,
       retryReasonCategories: [],
+      briefPromptMode: "structured_response",
       completionDiagnostics: expect.objectContaining({
         generationStage: "brief",
         attemptNumber: 1,
@@ -433,6 +436,102 @@ describe("createWebGpuModelAdapter", () => {
     ).rejects.toBeInstanceOf(InputTooLargeError);
 
     expect(engine.chat.completions.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("createWebGpuModelAdapter markdown_only experiment", () => {
+  const previousMode = process.env[WEBGPU_DECISION_BRIEF_PROMPT_MODE_ENV];
+
+  afterEach(() => {
+    if (previousMode === undefined) {
+      delete process.env[WEBGPU_DECISION_BRIEF_PROMPT_MODE_ENV];
+    } else {
+      process.env[WEBGPU_DECISION_BRIEF_PROMPT_MODE_ENV] = previousMode;
+    }
+  });
+
+  it("exposes markdown_only in eval context when configured", () => {
+    process.env[WEBGPU_DECISION_BRIEF_PROMPT_MODE_ENV] = "markdown_only";
+
+    expect(getWebGpuEvalContext()).toEqual(
+      expect.objectContaining({
+        briefPromptMode: "markdown_only",
+        briefSchemaVersion: "decision-brief-markdown-only-v1",
+      }),
+    );
+  });
+
+  it("requests markdown-only schema without Decision Trace", async () => {
+    process.env[WEBGPU_DECISION_BRIEF_PROMPT_MODE_ENV] = "markdown_only";
+
+    const engine = createMockEngine(async (request) => {
+      expect(request.response_format).toEqual({
+        type: "json_object",
+        schema: DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_SCHEMA_JSON,
+      });
+      return JSON.stringify({ markdown: Q4_BRIEF_MARKDOWN });
+    });
+
+    const onBriefFirstAttempt = vi.fn();
+    const adapter = createWebGpuModelAdapter({ engine, onBriefFirstAttempt });
+    const result = await adapter.generateDecisionBrief(BRIEF_INPUT);
+
+    expect(result.markdown).toContain("# Decision Brief");
+    expect(result.decisionTrace.entries).toEqual([]);
+    expect(onBriefFirstAttempt).toHaveBeenCalledWith(
+      expect.objectContaining({
+        briefPromptMode: "markdown_only",
+        semanticFindings: expect.objectContaining({
+          traceReadinessFailures: [],
+        }),
+      }),
+    );
+    expect(engine.chat.completions.create).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not record Decision Trace readiness as passing in markdown_only mode", async () => {
+    process.env[WEBGPU_DECISION_BRIEF_PROMPT_MODE_ENV] = "markdown_only";
+
+    const engine = createMockEngine(async () =>
+      JSON.stringify({ markdown: Q4_BRIEF_MARKDOWN }),
+    );
+    const onBriefFirstAttempt = vi.fn();
+    const adapter = createWebGpuModelAdapter({ engine, onBriefFirstAttempt });
+
+    await adapter.generateDecisionBrief(BRIEF_INPUT);
+
+    const findings = onBriefFirstAttempt.mock.calls[0][0].semanticFindings;
+    expect(findings.traceReadinessFailures).toEqual([]);
+    expect(onBriefFirstAttempt.mock.calls[0][0].retryReasonCategories ?? []).not.toContain(
+      "decision_trace_readiness",
+    );
+  });
+
+  it("still detects Markdown quality failures in markdown_only mode", async () => {
+    process.env[WEBGPU_DECISION_BRIEF_PROMPT_MODE_ENV] = "markdown_only";
+
+    const leakedMarkdown = createW3PlaceholderLeakedBriefResult().markdown;
+
+    const engine = createMockEngine(async (_request, attempt) => {
+      if (attempt === 1) {
+        return JSON.stringify({ markdown: leakedMarkdown });
+      }
+
+      return JSON.stringify({ markdown: Q4_BRIEF_MARKDOWN });
+    });
+
+    const onBriefFirstAttempt = vi.fn();
+    const adapter = createWebGpuModelAdapter({ engine, onBriefFirstAttempt });
+    await adapter.generateDecisionBrief(BRIEF_INPUT);
+
+    expect(onBriefFirstAttempt).toHaveBeenCalledWith(
+      expect.objectContaining({
+        briefPromptMode: "markdown_only",
+        semanticQualityPass: false,
+        placeholderLeakageDetected: true,
+      }),
+    );
+    expect(engine.chat.completions.create).toHaveBeenCalledTimes(2);
   });
 });
 

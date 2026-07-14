@@ -104,7 +104,7 @@ export function buildCaptureLayerPrompt(
   ].join("\n");
 }
 
-export type DecisionBriefPromptMode = "legacy" | "structured_response";
+export type DecisionBriefPromptMode = "legacy" | "structured_response" | "markdown_only";
 
 const DECISION_BRIEF_RESULT_SCHEMA = JSON.stringify(
   {
@@ -184,12 +184,60 @@ function buildStructuredDecisionBriefResponseInstructions(
   ].join("\n");
 }
 
+function buildMarkdownOnlyDecisionBriefResponseInstructions(
+  markdownStructure: string[],
+): string {
+  return [
+    "Return a single JSON object with one top-level field:",
+    "- markdown: complete Decision Brief Markdown as a JSON string. Start with # Decision Brief.",
+    "",
+    "Required Decision Brief sections in markdown:",
+    markdownStructure.map((section) => `- ${section}`).join("\n"),
+    "- Confidence (include a Confidence section with High, Medium, or Low calibration)",
+    "",
+    "Do not include decisionTrace or any other top-level fields.",
+    "Populate markdown with grounded content from the Capture Layer. Output values must be specific decision content, not field labels or instructions.",
+    "- The recommendation in the Decision Brief must correspond to recommendation_candidate from the Capture Layer.",
+    "- Every suggested_next_steps item from the Capture Layer must appear in Suggested Next Steps.",
+  ].join("\n");
+}
+
+function buildMarkdownOnlyDecisionBriefRules(): string[] {
+  return [
+    "Decision Brief rules:",
+    "- The markdown field must contain the complete Decision Brief Markdown as a JSON string value.",
+    "- Start the markdown with # Decision Brief.",
+    "- Use the Capture Layer as the source of truth. Do not reinterpret unsupported facts.",
+    "- Do not copy instructional text, field descriptions, or example placeholders into any output field.",
+  ];
+}
+
 export function buildDecisionBriefPrompt(
   input: GenerateDecisionBriefInput,
   options: { mode?: DecisionBriefPromptMode } = {},
 ): string {
   const mode = options.mode ?? "legacy";
   const tone = input.toneGuidance ?? "Concise, executive-ready, direct, and decision-oriented.";
+
+  if (mode === "markdown_only") {
+    return [
+      "You are a decision brief writer. Your job is to turn a structured Capture Layer into a concise Markdown Decision Brief returned as a single JSON object.",
+      "",
+      `Brief type: ${input.briefType.id}`,
+      "Brief type guidance:",
+      formatGuidance(input.briefTypeGuidance),
+      "",
+      `Tone: ${tone}`,
+      "",
+      buildMarkdownOnlyDecisionBriefResponseInstructions(input.markdownStructure),
+      "",
+      ...buildMarkdownOnlyDecisionBriefRules(),
+      NO_REASONING_INSTRUCTION,
+      "",
+      "Capture Layer JSON:",
+      JSON.stringify(input.captureLayer, null, 2),
+    ].join("\n");
+  }
 
   const responseShapeBlock =
     mode === "structured_response"

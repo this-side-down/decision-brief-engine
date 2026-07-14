@@ -8,6 +8,10 @@ export const WEBGPU_CAPTURE_LAYER_SCHEMA_VERSION = "capture-layer-v1";
 export const WEBGPU_DECISION_BRIEF_RESULT_SCHEMA_VERSION =
   "decision-brief-result-v1";
 
+/** Evaluation-only markdown-only Decision Brief schema (#141 experiment). */
+export const WEBGPU_DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_VERSION =
+  "decision-brief-markdown-only-v1";
+
 /** Installed @mlc-ai/web-llm version used for evaluation comparison. */
 export const WEB_LLM_PACKAGE_VERSION = "0.2.84";
 
@@ -114,12 +118,25 @@ export const DECISION_BRIEF_RESULT_JSON_SCHEMA = {
   required: ["markdown", "decisionTrace"],
 } as const;
 
+/** Evaluation-only schema: Markdown Decision Brief without Decision Trace. */
+export const DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA = {
+  type: "object",
+  properties: {
+    markdown: { type: "string" },
+  },
+  required: ["markdown"],
+} as const;
+
 export const CAPTURE_LAYER_RESPONSE_SCHEMA_JSON = JSON.stringify(
   CAPTURE_LAYER_JSON_SCHEMA,
 );
 
 export const DECISION_BRIEF_RESULT_RESPONSE_SCHEMA_JSON = JSON.stringify(
   DECISION_BRIEF_RESULT_JSON_SCHEMA,
+);
+
+export const DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_SCHEMA_JSON = JSON.stringify(
+  DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA,
 );
 
 export function buildWebGpuJsonResponseFormat(schemaJson: string): ResponseFormat {
@@ -136,3 +153,6 @@ export const CAPTURE_LAYER_RESPONSE_FORMAT = buildWebGpuJsonResponseFormat(
 export const DECISION_BRIEF_RESULT_RESPONSE_FORMAT = buildWebGpuJsonResponseFormat(
   DECISION_BRIEF_RESULT_RESPONSE_SCHEMA_JSON,
 );
+
+export const DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_FORMAT =
+  buildWebGpuJsonResponseFormat(DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_SCHEMA_JSON);

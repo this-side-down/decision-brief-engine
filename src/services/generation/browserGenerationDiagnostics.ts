@@ -114,6 +114,7 @@ export type BrowserGenerationRawCaptureArtifact = {
     webLlmVersion: string;
     captureSchemaVersion: string;
     briefSchemaVersion: string;
+    briefPromptMode: "structured_response" | "markdown_only";
     configuredMaxTokens: number | null;
   };
   attempt: {
