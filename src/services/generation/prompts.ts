@@ -162,6 +162,20 @@ export function buildChunkExtractionRetryPrompt(
   ].join("\n");
 }
 
+export function buildDecisionBriefRetryPrompt(
+  input: GenerateDecisionBriefInput,
+  failureMessage: string,
+): string {
+  return [
+    buildDecisionBriefPrompt(input, { mode: "structured_response" }),
+    "",
+    "The previous response failed the structured-output contract.",
+    `Failure: ${failureMessage}`,
+    "Return corrected JSON only. Include non-empty markdown and a valid decisionTrace object.",
+    NO_REASONING_INSTRUCTION,
+  ].join("\n");
+}
+
 export type DecisionBriefPromptMode = "legacy" | "structured_response" | "markdown_only";
 
 const DECISION_BRIEF_RESULT_SCHEMA = JSON.stringify(

@@ -131,5 +131,6 @@ export function buildWebGpuPipelineResult(input: {
     artifactPaths: null,
     webGpu,
     longInputDiagnostics: null,
+    decisionArtifactDiagnostics: null,
   });
 }

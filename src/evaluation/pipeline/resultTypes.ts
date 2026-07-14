@@ -71,6 +71,14 @@ export type LongInputCaptureDiagnostics = {
   validationLatencyMs: number | null;
 };
 
+export type DecisionArtifactDiagnostics = {
+  strategy: "combined" | "split_stage";
+  briefRetryCount: number;
+  traceRetryCount: number | null;
+  briefGenerationLatencyMs: number | null;
+  traceGenerationLatencyMs: number | null;
+};
+
 export type PipelineEvalResult = {
   resultFormatVersion: typeof PIPELINE_RESULT_FORMAT_VERSION;
   runId: string;
@@ -118,6 +126,7 @@ export type PipelineEvalResult = {
   } | null;
   webGpu: WebGpuRuntimeProfile | null;
   longInputDiagnostics: LongInputCaptureDiagnostics | null;
+  decisionArtifactDiagnostics: DecisionArtifactDiagnostics | null;
 };
 
 export type PipelineRunSummary = {

@@ -9,6 +9,7 @@ import {
 import { generateCaptureLayerForSession } from "../../services/generation/generateCaptureLayer";
 import { mockModelAdapter } from "../../services/generation/mockModelAdapter";
 import { ollamaModelAdapter } from "../../services/generation/ollamaModelAdapter";
+import { ollamaDecisionArtifactDiagnosticsHolder } from "../../services/generation/ollamaDecisionBriefGeneration";
 import { getOllamaConfig } from "../../services/generation/ollamaConfig";
 import { validateDecisionTraceObject } from "../../services/generation/parseDecisionTrace";
 import {
@@ -259,6 +260,7 @@ export async function runSinglePipelineEval(options: {
       artifactPaths: null,
       webGpu: null,
       longInputDiagnostics: null,
+      decisionArtifactDiagnostics: null,
     });
   }
 
@@ -349,6 +351,7 @@ export async function runSinglePipelineEval(options: {
       "Decision Brief skipped because Capture Layer schema/parse gate did not pass.",
     );
   } else if (validatedCapture) {
+    ollamaDecisionArtifactDiagnosticsHolder.value = null;
     const briefStarted = Date.now();
     try {
       const briefResult = await adapter.generateDecisionBrief({
@@ -467,7 +470,7 @@ export async function runSinglePipelineEval(options: {
     generationMode: options.mode,
     modelId,
     runtimeLibraryVersion,
-    promptVariant: options.mode === "ollama" ? "default" : null,
+    promptVariant: options.mode === "ollama" ? "structured_response_combined" : null,
     captureLayerFirstAttemptParsePass: schema.validJson,
     captureLayerFinalParsePass: schema.validJson,
     captureLayerSchemaPass: schema.schemaPass,
@@ -504,6 +507,10 @@ export async function runSinglePipelineEval(options: {
       longInputDiagnosticsHolder.value,
       validatedCapture !== null,
     ),
+    decisionArtifactDiagnostics:
+      options.mode === "ollama"
+        ? ollamaDecisionArtifactDiagnosticsHolder.value
+        : null,
   });
 
   return result;
