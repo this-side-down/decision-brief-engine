@@ -4,12 +4,15 @@ import {
   applyModelLoadFailureTransition,
   applyModelLoadProgressUpdate,
   applyModelLoadSuccessTransition,
+  createModelDownloadActivitySnapshot,
   createModelLoadAttemptState,
   formatModelDownloadFailureMessage,
+  formatModelLoadTimeoutMessage,
   formatDownloadingStatusMessage,
   resolveBrowserInferenceDownloadUi,
   resolveBrowserInferenceStatusMessage,
   sanitizeModelDownloadErrorDetail,
+  updateModelDownloadActivitySnapshot,
   type ModelLoadUiSnapshot,
 } from "./modelLoadAttempt";
 
@@ -112,6 +115,7 @@ describe("applyModelLoadProgressUpdate", () => {
   it("applies progress for an active attempt", () => {
     const state = createModelLoadAttemptState();
     const attemptId = state.beginAttempt();
+    const activitySnapshot = createModelDownloadActivitySnapshot(1_000);
     const applyUpdate = vi.fn();
 
     const applied = applyModelLoadProgressUpdate({
@@ -119,13 +123,17 @@ describe("applyModelLoadProgressUpdate", () => {
       attemptId,
       aborted: false,
       progress: { progress: 0.42, text: "Fetching shard" },
+      activitySnapshot,
       applyUpdate,
     });
 
     expect(applied).toBe(true);
     expect(applyUpdate).toHaveBeenCalledWith(
       { progress: 0.42, text: "Fetching shard" },
-      "Downloading model for live browser generation… 42%",
+      expect.objectContaining({
+        lastProgressValue: 0.42,
+        lastPhaseText: "Fetching shard",
+      }),
     );
   });
 
@@ -141,10 +149,37 @@ describe("applyModelLoadProgressUpdate", () => {
         attemptId,
         aborted: false,
         progress: { progress: 0.9, text: "Late callback" },
+        activitySnapshot: createModelDownloadActivitySnapshot(1_000),
         applyUpdate,
       }),
     ).toBe(false);
     expect(applyUpdate).not.toHaveBeenCalled();
+  });
+
+  it("ignores late progress after terminal settlement and preserves last-progress timestamp", () => {
+    const state = createModelLoadAttemptState();
+    const attemptId = state.beginAttempt();
+    const snapshot = createModelDownloadActivitySnapshot(1_000);
+    const updated = updateModelDownloadActivitySnapshot(
+      snapshot,
+      { progress: 0.2, text: "Fetching shard" },
+      2_000,
+    );
+    state.trySettleAttempt(attemptId);
+    const applyUpdate = vi.fn();
+
+    expect(
+      applyModelLoadProgressUpdate({
+        attemptState: state,
+        attemptId,
+        aborted: false,
+        progress: { progress: 0.9, text: "Late callback" },
+        activitySnapshot: updated,
+        applyUpdate,
+      }),
+    ).toBe(false);
+
+    expect(updated.lastProgressAt).toBe(2_000);
   });
 
   it("allows a fresh retry attempt to report progress normally", () => {
@@ -160,6 +195,7 @@ describe("applyModelLoadProgressUpdate", () => {
         attemptId: firstAttemptId,
         aborted: false,
         progress: { progress: 0.5, text: "Stale" },
+        activitySnapshot: createModelDownloadActivitySnapshot(1_000),
         applyUpdate,
       }),
     ).toBe(false);
@@ -170,6 +206,7 @@ describe("applyModelLoadProgressUpdate", () => {
         attemptId: retryAttemptId,
         aborted: false,
         progress: { progress: 0.1, text: "Retry started" },
+        activitySnapshot: createModelDownloadActivitySnapshot(5_000),
         applyUpdate,
       }),
     ).toBe(true);
@@ -227,6 +264,28 @@ describe("applyModelLoadSuccessTransition", () => {
 });
 
 describe("applyModelLoadFailureTransition", () => {
+  it("reaches download_failed for timeout without cancellation copy", () => {
+    const state = createModelLoadAttemptState();
+    const attemptId = state.beginAttempt();
+    const ui = createUiSnapshot();
+    const onTerminal = vi.fn();
+
+    expect(
+      applyModelLoadFailureTransition({
+        attemptState: state,
+        attemptId,
+        error: new ModelLoadTimeoutError(),
+        ui,
+        onTerminal,
+      }),
+    ).toBe(true);
+
+    expect(onTerminal).toHaveBeenCalledTimes(1);
+    expect(ui.inferenceUiState).toBe("download_failed");
+    expect(ui.statusMessage).toBe(formatModelLoadTimeoutMessage());
+    expect(ui.statusMessage).not.toContain("cancelled");
+  });
+
   it("reaches download_failed for the current attempt", () => {
     const state = createModelLoadAttemptState();
     const attemptId = state.beginAttempt();
@@ -398,11 +457,12 @@ describe("formatModelDownloadFailureMessage", () => {
     expect(message).not.toContain("https://");
   });
 
-  it("prefixes timeout failures", () => {
-    expect(
-      formatModelDownloadFailureMessage(new ModelLoadTimeoutError()),
-    ).toBe(
-      "Model download failed. Model load timed out. Try again on a stable connection.",
+  it("reports timeout with explicit timed-out copy", () => {
+    expect(formatModelDownloadFailureMessage(new ModelLoadTimeoutError())).toBe(
+      formatModelLoadTimeoutMessage(),
+    );
+    expect(formatModelLoadTimeoutMessage()).toBe(
+      "Model download timed out before the browser model was ready.",
     );
   });
 });
