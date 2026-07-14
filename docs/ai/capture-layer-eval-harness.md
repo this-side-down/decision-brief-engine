@@ -10,6 +10,8 @@ Provide a repeatable way to judge Capture Layer quality across:
 
 This harness exists so model or prompt changes in later work (for example #73) can be compared against the same Capture Layer gate instead of one-off impressions.
 
+For **current-contract full-pipeline evaluation** (Capture Layer + Decision Trace + alignment + Decision Brief writing across all five evaluation fixtures and three gallery examples), use [`pipeline-eval-harness.md`](pipeline-eval-harness.md) and `npm run eval:pipeline` (#126 / #117 Phase 1).
+
 It does **not** ungate public WebGPU or certify production quality by itself. Prompt/model variant comparison for the gated browser path is documented in [`browser-model-prompt-variant-eval.md`](browser-model-prompt-variant-eval.md) (#73).
 
 ## Pass / fail criteria
@@ -160,6 +162,7 @@ Covers schema parsing helpers, structural readiness, and the mock construction S
 
 ## Related documents
 
+- [Full-pipeline evaluation harness](pipeline-eval-harness.md)
 - [Browser model / prompt variant eval (#73)](browser-model-prompt-variant-eval.md)
 - [Browser model quality gate](browser-model-quality-gate.md)
 - [Evaluation plan](evaluation-plan.md)

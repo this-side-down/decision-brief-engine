@@ -4,15 +4,44 @@ Structured results template for [#57](https://github.com/this-side-down/decision
 
 Use this file with:
 
+- [Full-pipeline evaluation harness](../../docs/ai/pipeline-eval-harness.md) (#126)
 - [Capture Layer evaluation harness](../../docs/ai/capture-layer-eval-harness.md) (#72)
 - [Browser model / prompt variant eval](../../docs/ai/browser-model-prompt-variant-eval.md) (#73)
 - [Browser model quality gate](../../docs/ai/browser-model-quality-gate.md)
 - [Manual scorecard](manual-scorecard.md)
 - Evaluation fixtures in this directory
+- Machine-readable Mock baseline: [`baselines/mock-pipeline-baseline.json`](baselines/mock-pipeline-baseline.json)
 
-First comparable case for mock / Ollama / WebGPU rows: **construction Strategy** (`strategy-tradeoff.md` / built-in example). Use `npm run eval:capture` for mock and Ollama schema + structural gates; record WebGPU manually with the same fields.
+First comparable case for mock / Ollama / WebGPU rows: **construction Strategy** (`strategy-tradeoff.md` / built-in example). Use `npm run eval:pipeline` for current-contract full-pipeline gates (preferred) or `npm run eval:capture` for Capture Layer-only smoke; record WebGPU manually into the same pipeline result format after #124 recovers. W3 has **not** run.
 
 Do not commit model weights. Do not treat placeholder rows as completed evaluation until manually filled. Public WebGPU remains gated; Mock demo stays the public default.
+
+---
+
+## #126 full-pipeline harness baselines (2026-07-13)
+
+Commands:
+
+```sh
+npm run eval:pipeline -- --mode=mock --output=fixtures/evaluation/baselines/mock-pipeline-baseline.json
+npm run health:ollama
+npm run eval:pipeline -- --mode=ollama --output=fixtures/evaluation/baselines/ollama-pipeline-baseline.json
+```
+
+### Mock (`mock-pipeline-baseline.json`)
+
+| Fixture | Deterministic usable | Notes |
+| --- | --- | --- |
+| Five evaluation fixtures | No | Non-demo Mock paths return synthetic Capture Layers; structural readiness + template brief writing hard-fail (`bare-confidence`, etc.). Expected coverage finding — do not weaken validators to green these. |
+| Three gallery examples | Yes | Authored `demo:` fixtures pass Capture Layer, Decision Trace, alignment, and writing hard gates. Manual scores remain null. |
+
+### Ollama `qwen3:4b` (`ollama-pipeline-baseline.json`)
+
+| Fixture | Deterministic usable | Notes |
+| --- | --- | --- |
+| All eight | No | Capture Layer often schema-valid; Decision Brief generation frequently failed (empty markdown envelope) or timed out at 120s. Timeouts recorded as `failureKind: infrastructure`; empty brief envelopes as `product_quality` / `brief_generation`. Manual scores remain null. |
+
+W3 WebGPU scored run remains **blocked by #124**. Do not invent browser results.
 
 ---
 

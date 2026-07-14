@@ -1,0 +1,1417 @@
+{
+  "resultFormatVersion": 1,
+  "runId": "pipeline-2026-07-13T23-43-18-804Z",
+  "timestamp": "2026-07-13T23:43:18.821Z",
+  "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+  "generationMode": "mock",
+  "modelId": "mockModelAdapter",
+  "caseIds": [
+    "product-prioritization",
+    "strategy-tradeoff",
+    "execution-planning",
+    "customer-interview-synthesis",
+    "ambiguous-stakeholder-conversation",
+    "q4-workforce-allocation",
+    "local-inference-setup-flow",
+    "household-move-planning"
+  ],
+  "results": [
+    {
+      "runId": "pipeline-2026-07-13T23-43-18-804Z",
+      "timestamp": "2026-07-13T23:43:18.826Z",
+      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "fixtureId": "product-prioritization",
+      "fixtureName": "Product prioritization meeting",
+      "fixtureCategory": "evaluation-fixture",
+      "generationMode": "mock",
+      "modelId": "mockModelAdapter",
+      "runtimeLibraryVersion": null,
+      "promptVariant": null,
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": false,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": false,
+          "detail": "2 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": false,
+          "detail": "3 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": false,
+          "detail": "2 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "2 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": false,
+          "detail": "2 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "3 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": false,
+          "detail": "recommendation_candidate is empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=Medium"
+        }
+      ],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 0,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": true,
+      "decisionBriefLatencyMs": 0,
+      "decisionTraceSchemaPass": true,
+      "decisionTraceStructuralReadinessPass": true,
+      "decisionTraceFindings": [
+        {
+          "id": "recommendation_coverage",
+          "pass": true,
+          "detail": "recommendation_candidate is empty; recommendation coverage not required"
+        },
+        {
+          "id": "next_step_count",
+          "pass": true,
+          "detail": "2 next_step entries for 2 suggested_next_steps"
+        },
+        {
+          "id": "next_step_statement_coverage",
+          "pass": true,
+          "detail": "every suggested_next_steps item has a corresponding next_step entry statement"
+        },
+        {
+          "id": "entries_have_intent",
+          "pass": true,
+          "detail": "every entry has a non-empty basis.intent"
+        },
+        {
+          "id": "entries_have_confidence",
+          "pass": true,
+          "detail": "every entry has a valid per-item confidence"
+        },
+        {
+          "id": "entries_have_non_empty_basis",
+          "pass": true,
+          "detail": "every entry has at least one non-empty basis array field"
+        },
+        {
+          "id": "would_change_if_specific",
+          "pass": true,
+          "detail": "every entry has at least one specific, non-generic would_change_if condition"
+        },
+        {
+          "id": "intent_grounded_in_goals",
+          "pass": true,
+          "detail": "every non-empty basis.intent is grounded in captureLayer.goals"
+        },
+        {
+          "id": "basis_grounded_in_capture_layer",
+          "pass": true,
+          "detail": "every basis array item is grounded in the corresponding Capture Layer field"
+        },
+        {
+          "id": "recommendation_alignment",
+          "pass": true,
+          "detail": "Recommendation statement aligns across Capture Layer, Decision Trace, and Decision Brief"
+        },
+        {
+          "id": "next_step_alignment",
+          "pass": true,
+          "detail": "Next-step statements align across Capture Layer, Decision Trace, and Decision Brief"
+        }
+      ],
+      "recommendationAlignmentPass": true,
+      "nextStepAlignmentPass": true,
+      "requiredDecisionBriefSectionsPass": true,
+      "writingHardFailures": [
+        "bare-confidence: Confidence section states a label without an explanation."
+      ],
+      "writingWarnings": [
+        "section-restates-heading: Section begins by restating its heading: Confidence."
+      ],
+      "writingReportOnlyFindings": [
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Clarify.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: User.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Affected.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Reviewer Option.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Speed.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Explicit.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Confirmed.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Evidence.",
+        "high-capture-reuse: Brief shares 87% token overlap with Capture Layer text."
+      ],
+      "deterministicUsableBrief": false,
+      "evaluatorNotes": [],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment.",
+        "Mock adapter returns synthetic Capture Layers for non-gallery eval fixtures; gallery cases use authored demo fixtures via demo: sourceLabel."
+      ],
+      "rawErrorCategory": "none",
+      "failureKind": "product_quality",
+      "artifactPaths": null,
+      "webGpu": null,
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    },
+    {
+      "runId": "pipeline-2026-07-13T23-43-18-804Z",
+      "timestamp": "2026-07-13T23:43:18.828Z",
+      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "fixtureId": "strategy-tradeoff",
+      "fixtureName": "Strategy tradeoff discussion",
+      "fixtureCategory": "evaluation-fixture",
+      "generationMode": "mock",
+      "modelId": "mockModelAdapter",
+      "runtimeLibraryVersion": null,
+      "promptVariant": null,
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": false,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": false,
+          "detail": "2 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": false,
+          "detail": "3 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": false,
+          "detail": "2 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "2 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": false,
+          "detail": "2 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "3 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": false,
+          "detail": "recommendation_candidate is empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=Medium"
+        }
+      ],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 0,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": true,
+      "decisionBriefLatencyMs": 0,
+      "decisionTraceSchemaPass": true,
+      "decisionTraceStructuralReadinessPass": true,
+      "decisionTraceFindings": [
+        {
+          "id": "recommendation_coverage",
+          "pass": true,
+          "detail": "recommendation_candidate is empty; recommendation coverage not required"
+        },
+        {
+          "id": "next_step_count",
+          "pass": true,
+          "detail": "2 next_step entries for 2 suggested_next_steps"
+        },
+        {
+          "id": "next_step_statement_coverage",
+          "pass": true,
+          "detail": "every suggested_next_steps item has a corresponding next_step entry statement"
+        },
+        {
+          "id": "entries_have_intent",
+          "pass": true,
+          "detail": "every entry has a non-empty basis.intent"
+        },
+        {
+          "id": "entries_have_confidence",
+          "pass": true,
+          "detail": "every entry has a valid per-item confidence"
+        },
+        {
+          "id": "entries_have_non_empty_basis",
+          "pass": true,
+          "detail": "every entry has at least one non-empty basis array field"
+        },
+        {
+          "id": "would_change_if_specific",
+          "pass": true,
+          "detail": "every entry has at least one specific, non-generic would_change_if condition"
+        },
+        {
+          "id": "intent_grounded_in_goals",
+          "pass": true,
+          "detail": "every non-empty basis.intent is grounded in captureLayer.goals"
+        },
+        {
+          "id": "basis_grounded_in_capture_layer",
+          "pass": true,
+          "detail": "every basis array item is grounded in the corresponding Capture Layer field"
+        },
+        {
+          "id": "recommendation_alignment",
+          "pass": true,
+          "detail": "Recommendation statement aligns across Capture Layer, Decision Trace, and Decision Brief"
+        },
+        {
+          "id": "next_step_alignment",
+          "pass": true,
+          "detail": "Next-step statements align across Capture Layer, Decision Trace, and Decision Brief"
+        }
+      ],
+      "recommendationAlignmentPass": true,
+      "nextStepAlignmentPass": true,
+      "requiredDecisionBriefSectionsPass": false,
+      "writingHardFailures": [
+        "empty-section: Required section is empty: Summary.",
+        "bare-confidence: Confidence section states a label without an explanation."
+      ],
+      "writingWarnings": [
+        "section-restates-heading: Section begins by restating its heading: Confidence."
+      ],
+      "writingReportOnlyFindings": [
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Clarify.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Strategic.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Business.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Affected.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Reviewer Option.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Speed.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Explicit.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Confirmed.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Evidence.",
+        "high-capture-reuse: Brief shares 85% token overlap with Capture Layer text."
+      ],
+      "deterministicUsableBrief": false,
+      "evaluatorNotes": [],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment.",
+        "Mock adapter returns synthetic Capture Layers for non-gallery eval fixtures; gallery cases use authored demo fixtures via demo: sourceLabel."
+      ],
+      "rawErrorCategory": "none",
+      "failureKind": "product_quality",
+      "artifactPaths": null,
+      "webGpu": null,
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    },
+    {
+      "runId": "pipeline-2026-07-13T23-43-18-804Z",
+      "timestamp": "2026-07-13T23:43:18.828Z",
+      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "fixtureId": "execution-planning",
+      "fixtureName": "Execution planning disagreement",
+      "fixtureCategory": "evaluation-fixture",
+      "generationMode": "mock",
+      "modelId": "mockModelAdapter",
+      "runtimeLibraryVersion": null,
+      "promptVariant": null,
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": false,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": false,
+          "detail": "2 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": false,
+          "detail": "3 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": false,
+          "detail": "2 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "2 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": false,
+          "detail": "2 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "3 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": false,
+          "detail": "recommendation_candidate is empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=Medium"
+        }
+      ],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 0,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": true,
+      "decisionBriefLatencyMs": 0,
+      "decisionTraceSchemaPass": true,
+      "decisionTraceStructuralReadinessPass": true,
+      "decisionTraceFindings": [
+        {
+          "id": "recommendation_coverage",
+          "pass": true,
+          "detail": "recommendation_candidate is empty; recommendation coverage not required"
+        },
+        {
+          "id": "next_step_count",
+          "pass": true,
+          "detail": "2 next_step entries for 2 suggested_next_steps"
+        },
+        {
+          "id": "next_step_statement_coverage",
+          "pass": true,
+          "detail": "every suggested_next_steps item has a corresponding next_step entry statement"
+        },
+        {
+          "id": "entries_have_intent",
+          "pass": true,
+          "detail": "every entry has a non-empty basis.intent"
+        },
+        {
+          "id": "entries_have_confidence",
+          "pass": true,
+          "detail": "every entry has a valid per-item confidence"
+        },
+        {
+          "id": "entries_have_non_empty_basis",
+          "pass": true,
+          "detail": "every entry has at least one non-empty basis array field"
+        },
+        {
+          "id": "would_change_if_specific",
+          "pass": true,
+          "detail": "every entry has at least one specific, non-generic would_change_if condition"
+        },
+        {
+          "id": "intent_grounded_in_goals",
+          "pass": true,
+          "detail": "every non-empty basis.intent is grounded in captureLayer.goals"
+        },
+        {
+          "id": "basis_grounded_in_capture_layer",
+          "pass": true,
+          "detail": "every basis array item is grounded in the corresponding Capture Layer field"
+        },
+        {
+          "id": "recommendation_alignment",
+          "pass": true,
+          "detail": "Recommendation statement aligns across Capture Layer, Decision Trace, and Decision Brief"
+        },
+        {
+          "id": "next_step_alignment",
+          "pass": true,
+          "detail": "Next-step statements align across Capture Layer, Decision Trace, and Decision Brief"
+        }
+      ],
+      "recommendationAlignmentPass": true,
+      "nextStepAlignmentPass": true,
+      "requiredDecisionBriefSectionsPass": true,
+      "writingHardFailures": [
+        "bare-confidence: Confidence section states a label without an explanation."
+      ],
+      "writingWarnings": [
+        "sentence-length-warning: Sentence is 31 words (warning range 25-35).",
+        "section-restates-heading: Section begins by restating its heading: Confidence."
+      ],
+      "writingReportOnlyFindings": [
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Clarify.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Affected.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Reviewer Option.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Speed.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Explicit.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Confirmed.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Evidence.",
+        "high-capture-reuse: Brief shares 88% token overlap with Capture Layer text."
+      ],
+      "deterministicUsableBrief": false,
+      "evaluatorNotes": [],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment.",
+        "Mock adapter returns synthetic Capture Layers for non-gallery eval fixtures; gallery cases use authored demo fixtures via demo: sourceLabel."
+      ],
+      "rawErrorCategory": "none",
+      "failureKind": "product_quality",
+      "artifactPaths": null,
+      "webGpu": null,
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    },
+    {
+      "runId": "pipeline-2026-07-13T23-43-18-804Z",
+      "timestamp": "2026-07-13T23:43:18.829Z",
+      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "fixtureId": "customer-interview-synthesis",
+      "fixtureName": "Customer interview synthesis",
+      "fixtureCategory": "evaluation-fixture",
+      "generationMode": "mock",
+      "modelId": "mockModelAdapter",
+      "runtimeLibraryVersion": null,
+      "promptVariant": null,
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": false,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": false,
+          "detail": "2 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": false,
+          "detail": "3 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": false,
+          "detail": "2 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "2 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": false,
+          "detail": "2 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "3 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": false,
+          "detail": "recommendation_candidate is empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=Medium"
+        }
+      ],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 0,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": true,
+      "decisionBriefLatencyMs": 0,
+      "decisionTraceSchemaPass": true,
+      "decisionTraceStructuralReadinessPass": true,
+      "decisionTraceFindings": [
+        {
+          "id": "recommendation_coverage",
+          "pass": true,
+          "detail": "recommendation_candidate is empty; recommendation coverage not required"
+        },
+        {
+          "id": "next_step_count",
+          "pass": true,
+          "detail": "2 next_step entries for 2 suggested_next_steps"
+        },
+        {
+          "id": "next_step_statement_coverage",
+          "pass": true,
+          "detail": "every suggested_next_steps item has a corresponding next_step entry statement"
+        },
+        {
+          "id": "entries_have_intent",
+          "pass": true,
+          "detail": "every entry has a non-empty basis.intent"
+        },
+        {
+          "id": "entries_have_confidence",
+          "pass": true,
+          "detail": "every entry has a valid per-item confidence"
+        },
+        {
+          "id": "entries_have_non_empty_basis",
+          "pass": true,
+          "detail": "every entry has at least one non-empty basis array field"
+        },
+        {
+          "id": "would_change_if_specific",
+          "pass": true,
+          "detail": "every entry has at least one specific, non-generic would_change_if condition"
+        },
+        {
+          "id": "intent_grounded_in_goals",
+          "pass": true,
+          "detail": "every non-empty basis.intent is grounded in captureLayer.goals"
+        },
+        {
+          "id": "basis_grounded_in_capture_layer",
+          "pass": true,
+          "detail": "every basis array item is grounded in the corresponding Capture Layer field"
+        },
+        {
+          "id": "recommendation_alignment",
+          "pass": true,
+          "detail": "Recommendation statement aligns across Capture Layer, Decision Trace, and Decision Brief"
+        },
+        {
+          "id": "next_step_alignment",
+          "pass": true,
+          "detail": "Next-step statements align across Capture Layer, Decision Trace, and Decision Brief"
+        }
+      ],
+      "recommendationAlignmentPass": true,
+      "nextStepAlignmentPass": true,
+      "requiredDecisionBriefSectionsPass": true,
+      "writingHardFailures": [
+        "bare-confidence: Confidence section states a label without an explanation."
+      ],
+      "writingWarnings": [
+        "section-restates-heading: Section begins by restating its heading: Confidence."
+      ],
+      "writingReportOnlyFindings": [
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Clarify.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: User.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Affected.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Reviewer Option.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Speed.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Explicit.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Confirmed.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Evidence.",
+        "high-capture-reuse: Brief shares 86% token overlap with Capture Layer text."
+      ],
+      "deterministicUsableBrief": false,
+      "evaluatorNotes": [],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment.",
+        "Mock adapter returns synthetic Capture Layers for non-gallery eval fixtures; gallery cases use authored demo fixtures via demo: sourceLabel."
+      ],
+      "rawErrorCategory": "none",
+      "failureKind": "product_quality",
+      "artifactPaths": null,
+      "webGpu": null,
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    },
+    {
+      "runId": "pipeline-2026-07-13T23-43-18-804Z",
+      "timestamp": "2026-07-13T23:43:18.830Z",
+      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "fixtureId": "ambiguous-stakeholder-conversation",
+      "fixtureName": "Ambiguous stakeholder conversation",
+      "fixtureCategory": "evaluation-fixture",
+      "generationMode": "mock",
+      "modelId": "mockModelAdapter",
+      "runtimeLibraryVersion": null,
+      "promptVariant": null,
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": false,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": false,
+          "detail": "2 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": false,
+          "detail": "3 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": false,
+          "detail": "2 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "2 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": false,
+          "detail": "2 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "3 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": false,
+          "detail": "recommendation_candidate is empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=Medium"
+        }
+      ],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 0,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": true,
+      "decisionBriefLatencyMs": 0,
+      "decisionTraceSchemaPass": true,
+      "decisionTraceStructuralReadinessPass": true,
+      "decisionTraceFindings": [
+        {
+          "id": "recommendation_coverage",
+          "pass": true,
+          "detail": "recommendation_candidate is empty; recommendation coverage not required"
+        },
+        {
+          "id": "next_step_count",
+          "pass": true,
+          "detail": "2 next_step entries for 2 suggested_next_steps"
+        },
+        {
+          "id": "next_step_statement_coverage",
+          "pass": true,
+          "detail": "every suggested_next_steps item has a corresponding next_step entry statement"
+        },
+        {
+          "id": "entries_have_intent",
+          "pass": true,
+          "detail": "every entry has a non-empty basis.intent"
+        },
+        {
+          "id": "entries_have_confidence",
+          "pass": true,
+          "detail": "every entry has a valid per-item confidence"
+        },
+        {
+          "id": "entries_have_non_empty_basis",
+          "pass": true,
+          "detail": "every entry has at least one non-empty basis array field"
+        },
+        {
+          "id": "would_change_if_specific",
+          "pass": true,
+          "detail": "every entry has at least one specific, non-generic would_change_if condition"
+        },
+        {
+          "id": "intent_grounded_in_goals",
+          "pass": true,
+          "detail": "every non-empty basis.intent is grounded in captureLayer.goals"
+        },
+        {
+          "id": "basis_grounded_in_capture_layer",
+          "pass": true,
+          "detail": "every basis array item is grounded in the corresponding Capture Layer field"
+        },
+        {
+          "id": "recommendation_alignment",
+          "pass": true,
+          "detail": "Recommendation statement aligns across Capture Layer, Decision Trace, and Decision Brief"
+        },
+        {
+          "id": "next_step_alignment",
+          "pass": true,
+          "detail": "Next-step statements align across Capture Layer, Decision Trace, and Decision Brief"
+        }
+      ],
+      "recommendationAlignmentPass": true,
+      "nextStepAlignmentPass": true,
+      "requiredDecisionBriefSectionsPass": true,
+      "writingHardFailures": [
+        "bare-confidence: Confidence section states a label without an explanation."
+      ],
+      "writingWarnings": [
+        "sentence-length-warning: Sentence is 25 words (warning range 25-35).",
+        "section-restates-heading: Section begins by restating its heading: Confidence."
+      ],
+      "writingReportOnlyFindings": [
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Clarify.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Strategic.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Business.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Affected.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Reviewer Option.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Speed.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Explicit.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Confirmed.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Evidence.",
+        "high-capture-reuse: Brief shares 86% token overlap with Capture Layer text."
+      ],
+      "deterministicUsableBrief": false,
+      "evaluatorNotes": [],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment.",
+        "Mock adapter returns synthetic Capture Layers for non-gallery eval fixtures; gallery cases use authored demo fixtures via demo: sourceLabel."
+      ],
+      "rawErrorCategory": "none",
+      "failureKind": "product_quality",
+      "artifactPaths": null,
+      "webGpu": null,
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    },
+    {
+      "runId": "pipeline-2026-07-13T23-43-18-804Z",
+      "timestamp": "2026-07-13T23:43:18.831Z",
+      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "fixtureId": "q4-workforce-allocation",
+      "fixtureName": "Q4 Workforce Allocation",
+      "fixtureCategory": "gallery-example",
+      "generationMode": "mock",
+      "modelId": "mockModelAdapter",
+      "runtimeLibraryVersion": null,
+      "promptVariant": null,
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": true,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": true,
+          "detail": "6 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": true,
+          "detail": "6 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": true,
+          "detail": "6 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "4 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": true,
+          "detail": "6 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "5 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": true,
+          "detail": "recommendation_candidate is non-empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=Medium"
+        }
+      ],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 0,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": true,
+      "decisionBriefLatencyMs": 0,
+      "decisionTraceSchemaPass": true,
+      "decisionTraceStructuralReadinessPass": true,
+      "decisionTraceFindings": [
+        {
+          "id": "recommendation_coverage",
+          "pass": true,
+          "detail": "a recommendation entry statement corresponds to recommendation_candidate"
+        },
+        {
+          "id": "next_step_count",
+          "pass": true,
+          "detail": "6 next_step entries for 6 suggested_next_steps"
+        },
+        {
+          "id": "next_step_statement_coverage",
+          "pass": true,
+          "detail": "every suggested_next_steps item has a corresponding next_step entry statement"
+        },
+        {
+          "id": "entries_have_intent",
+          "pass": true,
+          "detail": "every entry has a non-empty basis.intent"
+        },
+        {
+          "id": "entries_have_confidence",
+          "pass": true,
+          "detail": "every entry has a valid per-item confidence"
+        },
+        {
+          "id": "entries_have_non_empty_basis",
+          "pass": true,
+          "detail": "every entry has at least one non-empty basis array field"
+        },
+        {
+          "id": "would_change_if_specific",
+          "pass": true,
+          "detail": "every entry has at least one specific, non-generic would_change_if condition"
+        },
+        {
+          "id": "intent_grounded_in_goals",
+          "pass": true,
+          "detail": "every non-empty basis.intent is grounded in captureLayer.goals"
+        },
+        {
+          "id": "basis_grounded_in_capture_layer",
+          "pass": true,
+          "detail": "every basis array item is grounded in the corresponding Capture Layer field"
+        },
+        {
+          "id": "recommendation_alignment",
+          "pass": true,
+          "detail": "Recommendation statement aligns across Capture Layer, Decision Trace, and Decision Brief"
+        },
+        {
+          "id": "next_step_alignment",
+          "pass": true,
+          "detail": "Next-step statements align across Capture Layer, Decision Trace, and Decision Brief"
+        }
+      ],
+      "recommendationAlignmentPass": true,
+      "nextStepAlignmentPass": true,
+      "requiredDecisionBriefSectionsPass": true,
+      "writingHardFailures": [],
+      "writingWarnings": [
+        "section-restates-heading: Section begins by restating its heading: Confidence."
+      ],
+      "writingReportOnlyFindings": [
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Internal.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Whether.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Staff.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Avoid.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Protect.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Make.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Operations General Superintendent Project Executive.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Senior.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Talent Safety.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Training Project Controls.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Scheduling Reassign.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Marcus Safety.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Core.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Promoting Carlos.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Traveling.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Subcontracting.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Protecting.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Confirmed.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Candidate.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Certification.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Real.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: GC.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: VP.",
+        "high-capture-reuse: Brief shares 93% token overlap with Capture Layer text."
+      ],
+      "deterministicUsableBrief": true,
+      "evaluatorNotes": [],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment."
+      ],
+      "rawErrorCategory": "none",
+      "failureKind": "none",
+      "artifactPaths": null,
+      "webGpu": null,
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    },
+    {
+      "runId": "pipeline-2026-07-13T23-43-18-804Z",
+      "timestamp": "2026-07-13T23:43:18.832Z",
+      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "fixtureId": "local-inference-setup-flow",
+      "fixtureName": "Local Inference Setup Flow",
+      "fixtureCategory": "gallery-example",
+      "generationMode": "mock",
+      "modelId": "mockModelAdapter",
+      "runtimeLibraryVersion": null,
+      "promptVariant": null,
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": true,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": true,
+          "detail": "4 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": true,
+          "detail": "6 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": true,
+          "detail": "4 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "3 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": true,
+          "detail": "4 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "4 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": true,
+          "detail": "recommendation_candidate is non-empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=Medium"
+        }
+      ],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 0,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": true,
+      "decisionBriefLatencyMs": 0,
+      "decisionTraceSchemaPass": true,
+      "decisionTraceStructuralReadinessPass": true,
+      "decisionTraceFindings": [
+        {
+          "id": "recommendation_coverage",
+          "pass": true,
+          "detail": "a recommendation entry statement corresponds to recommendation_candidate"
+        },
+        {
+          "id": "next_step_count",
+          "pass": true,
+          "detail": "4 next_step entries for 4 suggested_next_steps"
+        },
+        {
+          "id": "next_step_statement_coverage",
+          "pass": true,
+          "detail": "every suggested_next_steps item has a corresponding next_step entry statement"
+        },
+        {
+          "id": "entries_have_intent",
+          "pass": true,
+          "detail": "every entry has a non-empty basis.intent"
+        },
+        {
+          "id": "entries_have_confidence",
+          "pass": true,
+          "detail": "every entry has a valid per-item confidence"
+        },
+        {
+          "id": "entries_have_non_empty_basis",
+          "pass": true,
+          "detail": "every entry has at least one non-empty basis array field"
+        },
+        {
+          "id": "would_change_if_specific",
+          "pass": true,
+          "detail": "every entry has at least one specific, non-generic would_change_if condition"
+        },
+        {
+          "id": "intent_grounded_in_goals",
+          "pass": true,
+          "detail": "every non-empty basis.intent is grounded in captureLayer.goals"
+        },
+        {
+          "id": "basis_grounded_in_capture_layer",
+          "pass": true,
+          "detail": "every basis array item is grounded in the corresponding Capture Layer field"
+        },
+        {
+          "id": "recommendation_alignment",
+          "pass": true,
+          "detail": "Recommendation statement aligns across Capture Layer, Decision Trace, and Decision Brief"
+        },
+        {
+          "id": "next_step_alignment",
+          "pass": true,
+          "detail": "Next-step statements align across Capture Layer, Decision Trace, and Decision Brief"
+        }
+      ],
+      "recommendationAlignmentPass": true,
+      "nextStepAlignmentPass": true,
+      "requiredDecisionBriefSectionsPass": true,
+      "writingHardFailures": [],
+      "writingWarnings": [
+        "section-restates-heading: Section begins by restating its heading: Confidence."
+      ],
+      "writingReportOnlyFindings": [
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Product.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Decide.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Whether.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Make.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Reduce.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Keep.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Avoid.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Product Engineering Design Support Internal.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Power.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Most.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Support.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Three.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: An.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Design.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Quantified.",
+        "high-capture-reuse: Brief shares 92% token overlap with Capture Layer text."
+      ],
+      "deterministicUsableBrief": true,
+      "evaluatorNotes": [],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment."
+      ],
+      "rawErrorCategory": "none",
+      "failureKind": "none",
+      "artifactPaths": null,
+      "webGpu": null,
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    },
+    {
+      "runId": "pipeline-2026-07-13T23-43-18-804Z",
+      "timestamp": "2026-07-13T23:43:18.836Z",
+      "buildCommit": "edc877be1e475b2b3ba7bb03ab1cc0dd2a49d054",
+      "fixtureId": "household-move-planning",
+      "fixtureName": "Household Move Planning",
+      "fixtureCategory": "gallery-example",
+      "generationMode": "mock",
+      "modelId": "mockModelAdapter",
+      "runtimeLibraryVersion": null,
+      "promptVariant": null,
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": true,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": true,
+          "detail": "4 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": true,
+          "detail": "6 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": true,
+          "detail": "5 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "4 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": true,
+          "detail": "5 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "4 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": true,
+          "detail": "recommendation_candidate is non-empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=Medium"
+        }
+      ],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 0,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": true,
+      "decisionBriefLatencyMs": 0,
+      "decisionTraceSchemaPass": true,
+      "decisionTraceStructuralReadinessPass": true,
+      "decisionTraceFindings": [
+        {
+          "id": "recommendation_coverage",
+          "pass": true,
+          "detail": "a recommendation entry statement corresponds to recommendation_candidate"
+        },
+        {
+          "id": "next_step_count",
+          "pass": true,
+          "detail": "5 next_step entries for 5 suggested_next_steps"
+        },
+        {
+          "id": "next_step_statement_coverage",
+          "pass": true,
+          "detail": "every suggested_next_steps item has a corresponding next_step entry statement"
+        },
+        {
+          "id": "entries_have_intent",
+          "pass": true,
+          "detail": "every entry has a non-empty basis.intent"
+        },
+        {
+          "id": "entries_have_confidence",
+          "pass": true,
+          "detail": "every entry has a valid per-item confidence"
+        },
+        {
+          "id": "entries_have_non_empty_basis",
+          "pass": true,
+          "detail": "every entry has at least one non-empty basis array field"
+        },
+        {
+          "id": "would_change_if_specific",
+          "pass": true,
+          "detail": "every entry has at least one specific, non-generic would_change_if condition"
+        },
+        {
+          "id": "intent_grounded_in_goals",
+          "pass": true,
+          "detail": "every non-empty basis.intent is grounded in captureLayer.goals"
+        },
+        {
+          "id": "basis_grounded_in_capture_layer",
+          "pass": true,
+          "detail": "every basis array item is grounded in the corresponding Capture Layer field"
+        },
+        {
+          "id": "recommendation_alignment",
+          "pass": true,
+          "detail": "Recommendation statement aligns across Capture Layer, Decision Trace, and Decision Brief"
+        },
+        {
+          "id": "next_step_alignment",
+          "pass": true,
+          "detail": "Next-step statements align across Capture Layer, Decision Trace, and Decision Brief"
+        }
+      ],
+      "recommendationAlignmentPass": true,
+      "nextStepAlignmentPass": true,
+      "requiredDecisionBriefSectionsPass": true,
+      "writingHardFailures": [],
+      "writingWarnings": [
+        "sentence-length-warning: Sentence is 27 words (warning range 25-35).",
+        "section-restates-heading: Section begins by restating its heading: Confidence."
+      ],
+      "writingReportOnlyFindings": [
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Household.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Whether.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Meet.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Stay.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Movers Veterinarian Parents.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Pet.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Movers.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Parents.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Boarding.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Partner.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Overlap.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Mid.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Booking.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Selling.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Confirmed.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Final.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 3–4.",
+        "high-capture-reuse: Brief shares 91% token overlap with Capture Layer text."
+      ],
+      "deterministicUsableBrief": true,
+      "evaluatorNotes": [],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment."
+      ],
+      "rawErrorCategory": "none",
+      "failureKind": "none",
+      "artifactPaths": null,
+      "webGpu": null,
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    }
+  ],
+  "infrastructureFailure": false,
+  "harnessExecutionError": null
+}

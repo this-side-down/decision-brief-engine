@@ -10,6 +10,8 @@ They cover:
 - Local Ollama output quality signals
 - Experimental browser WebGPU Capture Layer quality (manual)
 
+For the current-contract full-pipeline harness (#126), see [`docs/ai/pipeline-eval-harness.md`](../../docs/ai/pipeline-eval-harness.md) and committed baselines under [`baselines/`](baselines/).
+
 They do not compare outputs to proprietary hosted models.
 
 ## Capture Layer harness (#72)

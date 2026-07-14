@@ -10,8 +10,8 @@ This document does **not** ungate public WebGPU, add a model picker, or change t
 
 | ID | Runtime | Model | Prompt variant | How to run |
 | --- | --- | --- | --- | --- |
-| M0 | Mock | `mockModelAdapter` | n/a (typed object) | `npm run eval:capture -- --mode=mock` |
-| O1 | Ollama | `qwen3:4b` (default) | `default` | `npm run eval:capture -- --mode=ollama` |
+| M0 | Mock | `mockModelAdapter` | n/a (typed object) | `npm run eval:capture -- --mode=mock` or `npm run eval:pipeline -- --mode=mock` |
+| O1 | Ollama | `qwen3:4b` (default) | `default` | `npm run eval:capture -- --mode=ollama` or `npm run eval:pipeline -- --mode=ollama` |
 | W1 | WebGPU / WebLLM | `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` | `default` | Manual; `VITE_ENABLE_WEBGPU_INFERENCE=true` |
 | W2 | WebGPU / WebLLM | same 1.5B | `schema_skeleton` | Manual; also set `VITE_CAPTURE_PROMPT_VARIANT=schema_skeleton` |
 | W3 | WebGPU / WebLLM | same 1.5B | `default` + schema-constrained output | Manual; `VITE_ENABLE_WEBGPU_INFERENCE=true`; omit `VITE_CAPTURE_PROMPT_VARIANT` |
@@ -66,6 +66,7 @@ See [WebGPU model delivery diagnostic](webgpu-model-delivery-diagnostic.md) for 
 
 ## Related
 
+- [Full-pipeline evaluation harness](pipeline-eval-harness.md)
 - [Capture Layer evaluation harness](capture-layer-eval-harness.md)
 - [Browser model quality gate](browser-model-quality-gate.md)
 - [WebGPU model delivery diagnostic](webgpu-model-delivery-diagnostic.md)
