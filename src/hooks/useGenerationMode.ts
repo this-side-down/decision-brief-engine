@@ -14,6 +14,8 @@ import {
 import { getModelAdapter } from "../services/generation/getModelAdapter";
 import type { ModelAdapter } from "../services/generation/types";
 import type { WebGpuFirstAttemptResult } from "../services/generation/webGpuModelAdapter";
+import type { WebGpuGenerationCaptureContext } from "../services/generation/webGpuModelAdapter";
+import type { StructuredCompletionDiagnostics } from "../services/generation/browserGenerationDiagnostics";
 import {
   cancelWebGpuGeneration,
   cancelWebGpuLoad,
@@ -386,20 +388,26 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
     (
       signal?: AbortSignal,
       callbacks?: {
+        captureContext?: WebGpuGenerationCaptureContext;
         onCaptureRetry?: () => void;
         onBriefRetry?: () => void;
         onCaptureFirstAttempt?: (result: { parsePass: boolean }) => void;
         onBriefFirstAttempt?: (result: WebGpuFirstAttemptResult) => void;
+        onCompletionDiagnostics?: (
+          diagnostics: StructuredCompletionDiagnostics,
+        ) => void;
       },
     ): ModelAdapter => {
       return getModelAdapter({
         mode: effectiveMode,
         engine,
         signal,
+        captureContext: callbacks?.captureContext,
         onCaptureRetry: callbacks?.onCaptureRetry,
         onBriefRetry: callbacks?.onBriefRetry,
         onCaptureFirstAttempt: callbacks?.onCaptureFirstAttempt,
         onBriefFirstAttempt: callbacks?.onBriefFirstAttempt,
+        onCompletionDiagnostics: callbacks?.onCompletionDiagnostics,
       });
     },
     [effectiveMode, engine],

@@ -4,6 +4,8 @@ import type {
   DECISION_TRACE_SCHEMA_VERSION,
   PIPELINE_RESULT_FORMAT_VERSION,
 } from "./constants";
+import type { StructuredCompletionDiagnostics } from "../../services/generation/browserGenerationDiagnostics";
+import type { SemanticAcceptanceDetailedFindings } from "../../services/generation/decisionBriefSemanticAcceptance";
 
 export type PipelineGenerationMode = "mock" | "ollama" | "webgpu";
 
@@ -51,6 +53,8 @@ export type WebGpuRuntimeProfile = {
   warmLoadMs: number | null;
   deliveryBlocker: string | null;
   unsupportedDevice: boolean | null;
+  completionDiagnostics?: StructuredCompletionDiagnostics[];
+  briefSemanticFindings?: SemanticAcceptanceDetailedFindings | null;
 };
 
 export type PipelineEvalResult = {

@@ -267,6 +267,10 @@ describe("run details telemetry transitions", () => {
           briefFirstAttemptPlaceholderLeakage: true,
           briefQualityRetryReasonCategories: ["placeholder_leakage"],
           briefQualityFailureCategories: ["placeholder_leakage"],
+          briefFirstAttemptCompletionDiagnostics: null,
+          briefFirstAttemptSemanticFindings: null,
+          briefQualityFailureFindings: null,
+          completionDiagnostics: [],
         },
       }),
     }).state;

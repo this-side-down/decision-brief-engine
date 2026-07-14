@@ -1,5 +1,9 @@
 import type { GenerationMode } from "./generationMode";
 import { getGenerationModeLabel } from "./generationMode";
+import type { StructuredCompletionDiagnostics } from "./browserGenerationDiagnostics";
+import { formatStructuredCompletionDiagnosticsSummary } from "./browserGenerationDiagnostics";
+import type { SemanticAcceptanceDetailedFindings } from "./decisionBriefSemanticAcceptance";
+import { formatSemanticAcceptanceFindingLines } from "./decisionBriefSemanticAcceptance";
 
 export type GenerationStep =
   | "idle"
@@ -21,6 +25,10 @@ export type WebGpuGenerationEval = {
   briefFirstAttemptPlaceholderLeakage: boolean | null;
   briefQualityRetryReasonCategories: string[] | null;
   briefQualityFailureCategories: string[] | null;
+  briefFirstAttemptCompletionDiagnostics: StructuredCompletionDiagnostics | null;
+  briefFirstAttemptSemanticFindings: SemanticAcceptanceDetailedFindings | null;
+  briefQualityFailureFindings: SemanticAcceptanceDetailedFindings | null;
+  completionDiagnostics: StructuredCompletionDiagnostics[];
 };
 
 export type GenerationRunRecord = {
@@ -164,6 +172,18 @@ function formatFirstAttemptSummary(value: boolean | null): string {
   return value ? "pass" : "fail";
 }
 
+function emptySemanticFindings(): SemanticAcceptanceDetailedFindings {
+  return {
+    missingRequiredSections: [],
+    traceReadinessFailures: [],
+    alignmentFailures: [],
+    writingHardFailures: [],
+    placeholderFindings: [],
+    uncoveredRecommendationStatements: [],
+    uncoveredNextStepStatements: [],
+  };
+}
+
 export function formatRunDetailsLines(record: GenerationRunRecord): string[] {
   const lines = [`Runtime: ${record.runtimeLabel}`];
 
@@ -208,6 +228,33 @@ export function formatRunDetailsLines(record: GenerationRunRecord): string[] {
       lines.push(
         `Decision Brief quality failure: ${evalRecord.briefQualityFailureCategories.join(", ")}`,
       );
+    }
+
+    if (evalRecord.briefFirstAttemptCompletionDiagnostics) {
+      lines.push(
+        `Decision Brief first attempt completion: ${formatStructuredCompletionDiagnosticsSummary(
+          evalRecord.briefFirstAttemptCompletionDiagnostics,
+        )}`,
+      );
+    }
+
+    if (evalRecord.briefFirstAttemptSemanticPass === false) {
+      for (const findingLine of formatSemanticAcceptanceFindingLines(
+        evalRecord.briefFirstAttemptSemanticFindings ?? emptySemanticFindings(),
+      )) {
+        lines.push(`Decision Brief first attempt finding: ${findingLine}`);
+      }
+    }
+
+    if (
+      evalRecord.briefQualityFailureCategories &&
+      evalRecord.briefQualityFailureCategories.length > 0
+    ) {
+      for (const findingLine of formatSemanticAcceptanceFindingLines(
+        evalRecord.briefQualityFailureFindings ?? emptySemanticFindings(),
+      )) {
+        lines.push(`Decision Brief quality finding: ${findingLine}`);
+      }
     }
   }
 

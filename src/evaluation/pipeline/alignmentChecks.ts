@@ -54,6 +54,12 @@ export function evaluateArtifactAlignment(options: {
   recommendationAlignmentPass: boolean;
   nextStepAlignmentPass: boolean;
   findings: StructuralCheck[];
+  uncoveredNextStepStatements: string[];
+  recommendationMismatchSources: {
+    capture: string;
+    brief: string;
+    trace: string;
+  } | null;
 } {
   const { captureLayer, decisionTrace, briefMarkdown } = options;
   const findings: StructuralCheck[] = [];
@@ -129,5 +135,13 @@ export function evaluateArtifactAlignment(options: {
     recommendationAlignmentPass,
     nextStepAlignmentPass,
     findings,
+    uncoveredNextStepStatements: uncoveredCaptureSteps,
+    recommendationMismatchSources: recommendationAlignmentPass
+      ? null
+      : {
+          capture: captureRecommendation,
+          brief: briefRecommendation,
+          trace: normalizeRecommendationText(traceRecommendation),
+        },
   };
 }

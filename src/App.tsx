@@ -506,12 +506,20 @@ export function App() {
         briefType: snapshot.briefType,
         sourceLabel: snapshot.sourceLabel,
         adapter: getAdapterForGeneration(abortController?.signal, {
+          captureContext: {
+            sourceLabel: snapshot.sourceLabel ?? null,
+            briefTypeId: snapshot.briefType.id,
+            runTimestamp: new Date().toISOString(),
+          },
           onCaptureRetry: () => {
             telemetry.recordCaptureRetry();
             notifyCaptureRetry();
           },
           onCaptureFirstAttempt: ({ parsePass }) => {
             telemetry.recordCaptureFirstAttempt(parsePass);
+          },
+          onCompletionDiagnostics: (diagnostics) => {
+            telemetry.recordCompletionDiagnostics(diagnostics);
           },
         }),
       });
@@ -581,11 +589,19 @@ export function App() {
         briefType: snapshot.briefType,
         sourceLabel: snapshot.sourceLabel,
         adapter: getAdapterForGeneration(abortController?.signal, {
+          captureContext: {
+            sourceLabel: snapshot.sourceLabel ?? null,
+            briefTypeId: snapshot.briefType.id,
+            runTimestamp: new Date().toISOString(),
+          },
           onBriefRetry: () => {
             telemetry.recordBriefRetry();
           },
           onBriefFirstAttempt: (result) => {
             telemetry.recordBriefFirstAttempt(result);
+          },
+          onCompletionDiagnostics: (diagnostics) => {
+            telemetry.recordCompletionDiagnostics(diagnostics);
           },
         }),
       });

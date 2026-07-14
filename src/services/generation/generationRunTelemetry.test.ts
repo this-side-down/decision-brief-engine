@@ -105,9 +105,40 @@ describe("generationRunTelemetry", () => {
         briefFirstAttemptPlaceholderLeakage: true,
         briefQualityRetryReasonCategories: ["placeholder_leakage"],
         briefQualityFailureCategories: ["placeholder_leakage"],
+        briefFirstAttemptCompletionDiagnostics: {
+          promptTokens: 900,
+          completionTokens: 300,
+          totalTokens: 1200,
+          finishReason: "stop",
+          configuredMaxTokens: null,
+          modelId: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+          webLlmVersion: "0.2.84",
+          generationStage: "brief",
+          attemptNumber: 1,
+        },
+        briefFirstAttemptSemanticFindings: {
+          missingRequiredSections: [],
+          traceReadinessFailures: [],
+          alignmentFailures: [],
+          writingHardFailures: [],
+          placeholderFindings: [
+            {
+              fieldPath: "markdown",
+              category: "markdown_template",
+              description: "Template phrase detected",
+            },
+          ],
+          uncoveredRecommendationStatements: [],
+          uncoveredNextStepStatements: [],
+        },
+        briefQualityFailureFindings: null,
+        completionDiagnostics: [],
       },
     });
 
+    expect(lines.some((line) => line.includes("Decision Brief first attempt completion:"))).toBe(
+      true,
+    );
     expect(lines).toContain("WebLLM: 0.2.84 (Qwen2.5-1.5B-Instruct-q4f16_1-MLC)");
     expect(lines).toContain(
       "Structured output schemas: capture-layer-v1 / decision-brief-result-v1",
@@ -120,8 +151,17 @@ describe("generationRunTelemetry", () => {
       "Decision Brief quality retry reason: placeholder_leakage",
     );
     expect(lines).toContain("Decision Brief quality failure: placeholder_leakage");
+    expect(
+      lines.some((line) =>
+        line.includes(
+          "Decision Brief first attempt finding: Placeholder leakage (markdown_template)",
+        ),
+      ),
+    ).toBe(true);
     expect(lines).toContain("Capture Layer: 45s (1 retry)");
     expect(lines).toContain("Decision Brief: failed (1 retry)");
+    expect(lines.join("\n")).not.toContain('{"markdown"');
+    expect(lines.join("\n")).not.toContain("full markdown brief here");
   });
 
   it("only enables telemetry for real-generation modes", () => {

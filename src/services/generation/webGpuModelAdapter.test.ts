@@ -42,7 +42,29 @@ function createMockEngine(handler: MockCreateHandler): MLCEngineInterface {
           attempt += 1;
           const content = await handler(request, attempt);
           return {
-            choices: [{ message: { content } }],
+            choices: [
+              {
+                index: 0,
+                finish_reason: "stop",
+                message: { role: "assistant", content },
+              },
+            ],
+            usage: {
+              prompt_tokens: 100 + attempt,
+              completion_tokens: 50 * attempt,
+              total_tokens: 150 * attempt,
+              extra: {
+                e2e_latency_s: 1,
+                prefill_tokens_per_s: 1,
+                decode_tokens_per_s: 1,
+                time_to_first_token_s: 0.1,
+                time_per_output_token_s: 0.01,
+              },
+            },
+            model: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+            id: "chatcmpl-test",
+            object: "chat.completion",
+            created: 0,
           };
         }),
       },
@@ -193,12 +215,14 @@ describe("createWebGpuModelAdapter", () => {
   it("returns clean first attempt without retry", async () => {
     const onBriefRetry = vi.fn();
     const onBriefFirstAttempt = vi.fn();
+    const onCompletionDiagnostics = vi.fn();
     const engine = createMockEngine(async () => JSON.stringify(VALID_BRIEF_ENVELOPE));
 
     const adapter = createWebGpuModelAdapter({
       engine,
       onBriefRetry,
       onBriefFirstAttempt,
+      onCompletionDiagnostics,
     });
 
     await adapter.generateDecisionBrief(BRIEF_INPUT);
@@ -208,7 +232,19 @@ describe("createWebGpuModelAdapter", () => {
       semanticQualityPass: true,
       placeholderLeakageDetected: false,
       retryReasonCategories: [],
+      completionDiagnostics: expect.objectContaining({
+        generationStage: "brief",
+        attemptNumber: 1,
+        promptTokens: 101,
+        completionTokens: 50,
+      }),
+      semanticFindings: expect.objectContaining({
+        missingRequiredSections: [],
+      }),
     });
+    expect(onCompletionDiagnostics).toHaveBeenCalledWith(
+      expect.objectContaining({ generationStage: "brief", attemptNumber: 1 }),
+    );
     expect(onBriefRetry).not.toHaveBeenCalled();
     expect(engine.chat.completions.create).toHaveBeenCalledTimes(1);
   });
@@ -257,6 +293,34 @@ describe("createWebGpuModelAdapter", () => {
     const result = await adapter.generateDecisionBrief(BRIEF_INPUT);
 
     expect(result.decisionTrace.entries.length).toBeGreaterThan(1);
+  });
+
+  it("records retry attempt diagnostics separately from first attempt", async () => {
+    const onCompletionDiagnostics = vi.fn();
+    const engine = createMockEngine(async (_request, attempt) => {
+      if (attempt === 1) {
+        return JSON.stringify(createW3PlaceholderLeakedBriefResult());
+      }
+
+      return JSON.stringify(VALID_BRIEF_ENVELOPE);
+    });
+
+    const adapter = createWebGpuModelAdapter({
+      engine,
+      onCompletionDiagnostics,
+    });
+
+    await adapter.generateDecisionBrief(BRIEF_INPUT);
+
+    expect(onCompletionDiagnostics).toHaveBeenCalledTimes(2);
+    expect(onCompletionDiagnostics.mock.calls[0][0]).toMatchObject({
+      generationStage: "brief",
+      attemptNumber: 1,
+    });
+    expect(onCompletionDiagnostics.mock.calls[1][0]).toMatchObject({
+      generationStage: "brief_retry",
+      attemptNumber: 2,
+    });
   });
 
   it("throws a typed quality error when the retry also fails", async () => {

@@ -9,17 +9,23 @@ import { ollamaModelAdapter } from "./ollamaModelAdapter";
 import {
   createWebGpuModelAdapter,
   type WebGpuFirstAttemptResult,
+  type WebGpuGenerationCaptureContext,
 } from "./webGpuModelAdapter";
+import type { StructuredCompletionDiagnostics } from "./browserGenerationDiagnostics";
 import type { ModelAdapter } from "./types";
 
 type GetModelAdapterOptions = {
   mode?: GenerationMode;
   engine?: MLCEngineInterface | null;
   signal?: AbortSignal;
+  captureContext?: WebGpuGenerationCaptureContext;
   onCaptureRetry?: () => void;
   onBriefRetry?: () => void;
   onCaptureFirstAttempt?: (result: WebGpuFirstAttemptResult) => void;
   onBriefFirstAttempt?: (result: WebGpuFirstAttemptResult) => void;
+  onCompletionDiagnostics?: (
+    diagnostics: StructuredCompletionDiagnostics,
+  ) => void;
 };
 
 export function getModelAdapter(options: GetModelAdapterOptions = {}): ModelAdapter {
@@ -37,10 +43,12 @@ export function getModelAdapter(options: GetModelAdapterOptions = {}): ModelAdap
     return createWebGpuModelAdapter({
       engine: options.engine,
       signal: options.signal,
+      captureContext: options.captureContext,
       onCaptureRetry: options.onCaptureRetry,
       onBriefRetry: options.onBriefRetry,
       onCaptureFirstAttempt: options.onCaptureFirstAttempt,
       onBriefFirstAttempt: options.onBriefFirstAttempt,
+      onCompletionDiagnostics: options.onCompletionDiagnostics,
     });
   }
 

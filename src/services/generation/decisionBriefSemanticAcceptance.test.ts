@@ -54,9 +54,10 @@ describe("evaluateDecisionBriefSemanticAcceptance", () => {
 
     expect(result.accepted).toBe(false);
     expect(result.failureCategories).toContain("required_sections");
+    expect(result.detailedFindings.missingRequiredSections.length).toBeGreaterThan(0);
   });
 
-  it("fails hollow Decision Trace readiness", () => {
+  it("reports concrete trace readiness failures", () => {
     const result = evaluateDecisionBriefSemanticAcceptance({
       result: {
         markdown: Q4_BRIEF_MARKDOWN,
@@ -88,9 +89,10 @@ describe("evaluateDecisionBriefSemanticAcceptance", () => {
 
     expect(result.accepted).toBe(false);
     expect(result.failureCategories).toContain("decision_trace_readiness");
+    expect(result.detailedFindings.traceReadinessFailures.length).toBeGreaterThan(0);
   });
 
-  it("fails recommendation misalignment", () => {
+  it("reports alignment source statements on recommendation failure", () => {
     const misalignedTrace = structuredClone(q4DecisionTrace);
     misalignedTrace.entries[0].statement =
       "Completely unrelated recommendation text that matches nothing.";
@@ -105,9 +107,13 @@ describe("evaluateDecisionBriefSemanticAcceptance", () => {
 
     expect(result.accepted).toBe(false);
     expect(result.failureCategories).toContain("recommendation_alignment");
+    expect(result.detailedFindings.alignmentFailures.length).toBeGreaterThan(0);
+    expect(
+      result.detailedFindings.uncoveredRecommendationStatements.length,
+    ).toBeGreaterThan(0);
   });
 
-  it("fails next-step misalignment", () => {
+  it("reports uncovered next steps on next-step misalignment", () => {
     const misalignedTrace = structuredClone(q4DecisionTrace);
     misalignedTrace.entries = misalignedTrace.entries.filter(
       (entry) => entry.kind === "recommendation",
@@ -123,9 +129,10 @@ describe("evaluateDecisionBriefSemanticAcceptance", () => {
 
     expect(result.accepted).toBe(false);
     expect(result.failureCategories).toContain("next_step_alignment");
+    expect(result.detailedFindings.alignmentFailures.length).toBeGreaterThan(0);
   });
 
-  it("fails writing hard failures", () => {
+  it("reports writing rule IDs for hard failures", () => {
     const markdown = Q4_BRIEF_MARKDOWN.replace(
       "## Summary",
       "## Summary\n\nMoving forward, assign Marcus immediately.",
@@ -141,6 +148,7 @@ describe("evaluateDecisionBriefSemanticAcceptance", () => {
 
     expect(result.accepted).toBe(false);
     expect(result.failureCategories).toContain("writing_hard_failure");
+    expect(result.detailedFindings.writingHardFailures[0]?.ruleId).toBeTruthy();
   });
 
   it("does not fail on warnings alone", () => {
