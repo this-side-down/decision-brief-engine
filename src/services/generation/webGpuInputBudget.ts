@@ -28,6 +28,8 @@ export const WEBGPU_ESTIMATE_CHARS_PER_TOKEN = 3;
 
 export type WebGpuTokenCountingMethod = "conservative_estimate";
 
+export type WebGpuRawInputFeedbackThreshold = "normal" | "near_limit" | "over_limit";
+
 export type WebGpuCaptureInputBudgetResult = {
   withinBudget: boolean;
   contextWindowSize: number;
@@ -39,6 +41,23 @@ export type WebGpuCaptureInputBudgetResult = {
   countingMethod: WebGpuTokenCountingMethod;
 };
 
+export type WebGpuRawInputFeedback = {
+  threshold: WebGpuRawInputFeedbackThreshold;
+  characterCount: number;
+  formattedCharacterCount: string;
+  displayLine: string;
+  statusLabel: string;
+  liveRegionMessage: string;
+  approximateCharacterExcess: number | null;
+  withinBudget: boolean;
+};
+
+/**
+ * Warn when estimated raw-input tokens reach this share of the browser budget.
+ * Uses token share rather than a fixed character maximum to avoid false precision.
+ */
+export const WEBGPU_NEAR_LIMIT_RAW_INPUT_TOKEN_RATIO = 0.85;
+
 export type PrebuiltModelRecord = {
   model_id: string;
   overrides?: {
@@ -48,6 +67,139 @@ export type PrebuiltModelRecord = {
 
 export const WEBGPU_INPUT_TOO_LARGE_USER_MESSAGE =
   "Live in browser works best with short-to-medium notes. This input exceeds the browser model limit. Shorten or split your notes, or switch to Local Ollama for longer transcripts.";
+
+export function formatCharacterCount(count: number): string {
+  return count.toLocaleString("en-US");
+}
+
+export function roundApproximateCharacterCount(value: number): number {
+  if (value <= 0) {
+    return 0;
+  }
+
+  if (value < 100) {
+    return Math.ceil(value / 10) * 10;
+  }
+
+  return Math.ceil(value / 100) * 100;
+}
+
+export function estimateApproximateCharacterExcess(
+  budget: WebGpuCaptureInputBudgetResult,
+): number {
+  const tokenExcess = Math.max(
+    0,
+    budget.estimatedRawInputTokens - budget.maxRawInputTokens,
+  );
+
+  return roundApproximateCharacterCount(
+    tokenExcess * WEBGPU_ESTIMATE_CHARS_PER_TOKEN,
+  );
+}
+
+export function resolveWebGpuRawInputFeedbackThreshold(
+  budget: WebGpuCaptureInputBudgetResult,
+): WebGpuRawInputFeedbackThreshold {
+  if (!budget.withinBudget) {
+    return "over_limit";
+  }
+
+  if (
+    budget.maxRawInputTokens > 0 &&
+    budget.estimatedRawInputTokens >=
+      budget.maxRawInputTokens * WEBGPU_NEAR_LIMIT_RAW_INPUT_TOKEN_RATIO
+  ) {
+    return "near_limit";
+  }
+
+  return "normal";
+}
+
+export function resolveWebGpuRawInputFeedback(
+  budget: WebGpuCaptureInputBudgetResult,
+  rawInputText: string,
+): WebGpuRawInputFeedback {
+  const characterCount = rawInputText.length;
+  const formattedCharacterCount = formatCharacterCount(characterCount);
+  const threshold = resolveWebGpuRawInputFeedbackThreshold(budget);
+
+  if (threshold === "over_limit") {
+    const approximateCharacterExcess = estimateApproximateCharacterExcess(budget);
+
+    return {
+      threshold,
+      characterCount,
+      formattedCharacterCount,
+      displayLine: `${formattedCharacterCount} characters · about ${formatCharacterCount(approximateCharacterExcess)} over browser limit`,
+      statusLabel: "Error: Input exceeds the browser limit.",
+      liveRegionMessage: `Input exceeds the browser limit by about ${formatCharacterCount(approximateCharacterExcess)} characters.`,
+      approximateCharacterExcess,
+      withinBudget: false,
+    };
+  }
+
+  if (threshold === "near_limit") {
+    return {
+      threshold,
+      characterCount,
+      formattedCharacterCount,
+      displayLine: `${formattedCharacterCount} characters · nearing browser limit`,
+      statusLabel: "Warning: Input is nearing the browser limit.",
+      liveRegionMessage: "Input is nearing the browser limit.",
+      approximateCharacterExcess: null,
+      withinBudget: true,
+    };
+  }
+
+  return {
+    threshold,
+    characterCount,
+    formattedCharacterCount,
+    displayLine: `${formattedCharacterCount} characters`,
+    statusLabel: "Within browser note size.",
+    liveRegionMessage: "",
+    approximateCharacterExcess: null,
+    withinBudget: true,
+  };
+}
+
+export function formatWebGpuRawInputFeedbackLine(
+  feedback: WebGpuRawInputFeedback,
+): string {
+  if (feedback.threshold === "over_limit") {
+    return `Error: ${feedback.displayLine}`;
+  }
+
+  if (feedback.threshold === "near_limit") {
+    return `Warning: ${feedback.displayLine}`;
+  }
+
+  return feedback.displayLine;
+}
+
+export function isWebGpuCaptureGenerationBlocked(
+  isWebGpuMode: boolean,
+  budget: WebGpuCaptureInputBudgetResult | null,
+): boolean {
+  return isWebGpuMode && budget !== null && !budget.withinBudget;
+}
+
+export function canGenerateWebGpuCaptureLayer(options: {
+  hasRawInput: boolean;
+  hasBriefType: boolean;
+  isWebGpuMode: boolean;
+  budget: WebGpuCaptureInputBudgetResult | null;
+}): boolean {
+  if (!options.hasRawInput || !options.hasBriefType) {
+    return false;
+  }
+
+  if (!options.isWebGpuMode) {
+    return true;
+  }
+
+  return options.budget?.withinBudget !== false;
+}
 
 export function estimateTextTokenCount(text: string): number {
   if (!text) {

@@ -6,6 +6,7 @@ import { DecisionBriefPreview } from "./components/DecisionBriefPreview";
 import { DecisionTraceBasis } from "./components/DecisionTraceBasis";
 import { DisclosureChevron } from "./components/DisclosureChevron";
 import { BrowserInferenceStatus } from "./components/generation/BrowserInferenceStatus";
+import { RawInputLengthFeedback } from "./components/generation/RawInputLengthFeedback";
 import { DownloadDisclosureDialog } from "./components/generation/DownloadDisclosureDialog";
 import { GenerationRunStatus } from "./components/generation/GenerationRunStatus";
 import {
@@ -27,9 +28,11 @@ import { GenerationCancelledError, GenerationQualityError, InputTooLargeError } 
 import { getWebGpuEvalContext } from "./services/generation/webGpuModelAdapter";
 import { CAPTURE_LAYER_FIELDS } from "./services/generation/types";
 import {
+  canGenerateWebGpuCaptureLayer,
   evaluateWebGpuCaptureInputBudget,
   formatWebGpuInputBudgetDiagnostic,
   isWebGpuContextWindowExceededError,
+  resolveWebGpuRawInputFeedback,
   WEBGPU_INPUT_TOO_LARGE_USER_MESSAGE,
 } from "./services/generation/webGpuInputBudget";
 import type { BriefSession, BriefType, BriefTypeId } from "./types/brief";
@@ -257,14 +260,24 @@ export function App() {
     hasBriefType,
     isWebGpuMode,
   ]);
-  const isWebGpuInputWithinBudget =
-    !isWebGpuMode || webGpuCaptureInputBudget?.withinBudget !== false;
+  const webGpuRawInputFeedback = useMemo(() => {
+    if (!webGpuCaptureInputBudget) {
+      return null;
+    }
+
+    return resolveWebGpuRawInputFeedback(
+      webGpuCaptureInputBudget,
+      briefSession.rawInput.text,
+    );
+  }, [briefSession.rawInput.text, webGpuCaptureInputBudget]);
   const webGpuInputOverLimit =
-    isWebGpuMode &&
-    webGpuCaptureInputBudget !== null &&
-    !webGpuCaptureInputBudget.withinBudget;
-  const canGenerateCaptureLayer =
-    hasRawInput && hasBriefType && isWebGpuInputWithinBudget;
+    webGpuRawInputFeedback?.threshold === "over_limit";
+  const canGenerateCaptureLayer = canGenerateWebGpuCaptureLayer({
+    hasRawInput,
+    hasBriefType,
+    isWebGpuMode,
+    budget: webGpuCaptureInputBudget,
+  });
   const isGeneratingCaptureLayer =
     briefSession.status === "generating_capture";
   const canGenerateDecisionBrief = briefSession.captureLayer !== null;
@@ -874,29 +887,27 @@ export function App() {
                 </summary>
                 <div className="mt-3 min-w-0 space-y-2">
                   <textarea
-                    aria-describedby="raw-input-help-generated"
+                    aria-describedby={
+                      webGpuRawInputFeedback
+                        ? "raw-input-length-generated raw-input-help-generated"
+                        : "raw-input-help-generated"
+                    }
                     className="min-h-48 w-full resize-y border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500"
                     disabled={isWorkflowLocked}
                     onChange={(event) => updateRawInput(event.target.value)}
                     placeholder="Paste meeting notes or brainstorms..."
                     value={briefSession.rawInput.text}
                   />
-                  <p
-                    className={`text-xs ${
-                      webGpuInputOverLimit
-                        ? "text-amber-700"
-                        : hasRawInput
-                          ? "text-slate-500"
-                          : "text-amber-700"
-                    }`}
-                    id="raw-input-help-generated"
-                  >
-                    {webGpuInputOverLimit
-                      ? WEBGPU_INPUT_TOO_LARGE_USER_MESSAGE
-                      : hasRawInput
+                  <RawInputLengthFeedback
+                    feedback={webGpuRawInputFeedback}
+                    helpId="raw-input-help-generated"
+                    helpText={
+                      hasRawInput
                         ? "Editing raw notes resets Capture Layer and Decision Brief."
-                        : "Paste messy notes before regenerating."}
-                  </p>
+                        : "Paste messy notes before regenerating."
+                    }
+                    lengthFeedbackId="raw-input-length-generated"
+                  />
                 </div>
               </details>
 
@@ -979,29 +990,27 @@ export function App() {
                 </p>
               </div>
               <textarea
-                aria-describedby="raw-input-help"
+                aria-describedby={
+                  webGpuRawInputFeedback
+                    ? "raw-input-length raw-input-help"
+                    : "raw-input-help"
+                }
                 className="min-h-0 flex-1 resize-none border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500"
                 disabled={isWorkflowLocked}
                 onChange={(event) => updateRawInput(event.target.value)}
                 placeholder="Paste meeting notes or brainstorms..."
                 value={briefSession.rawInput.text}
               />
-              <p
-                className={`mt-2 shrink-0 text-xs ${
-                  webGpuInputOverLimit
-                    ? "text-amber-700"
-                    : hasRawInput
-                      ? "text-slate-500"
-                      : "text-amber-700"
-                }`}
-                id="raw-input-help"
-              >
-                {webGpuInputOverLimit
-                  ? WEBGPU_INPUT_TOO_LARGE_USER_MESSAGE
-                  : hasRawInput
+              <RawInputLengthFeedback
+                feedback={webGpuRawInputFeedback}
+                helpId="raw-input-help"
+                helpText={
+                  hasRawInput
                     ? "Raw notes are stored locally for this session."
-                    : "Paste messy notes before generating a Capture Layer."}
-              </p>
+                    : "Paste messy notes before generating a Capture Layer."
+                }
+                lengthFeedbackId="raw-input-length"
+              />
             </section>
 
             <section
