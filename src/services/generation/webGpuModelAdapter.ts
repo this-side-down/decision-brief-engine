@@ -194,14 +194,34 @@ function createRunTimestamp(context?: WebGpuGenerationCaptureContext): string {
   return context?.runTimestamp ?? new Date().toISOString();
 }
 
+function resolveWebGpuDiagnosticArtifactConfiguration(): {
+  briefPromptMode: WebGpuDecisionBriefPromptMode;
+  briefSchemaVersion: string;
+} {
+  const briefPromptMode = resolveWebGpuDecisionBriefPromptMode();
+
+  return {
+    briefPromptMode,
+    briefSchemaVersion:
+      briefPromptMode === "markdown_only"
+        ? WEBGPU_DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_VERSION
+        : WEBGPU_DECISION_BRIEF_RESULT_SCHEMA_VERSION,
+  };
+}
+
 async function maybePersistRawOutput(options: {
   captureContext?: WebGpuGenerationCaptureContext;
   generationStage: BrowserGenerationStage;
   attemptNumber: number;
   diagnostics: StructuredCompletionDiagnostics;
   rawOutput: string;
-  profile: BriefGenerationProfile;
+  artifactConfiguration?: {
+    briefPromptMode: WebGpuDecisionBriefPromptMode;
+    briefSchemaVersion: string;
+  };
 }): Promise<void> {
+  const artifactConfiguration =
+    options.artifactConfiguration ?? resolveWebGpuDiagnosticArtifactConfiguration();
   const runTimestamp = createRunTimestamp(options.captureContext);
   const filename = buildBrowserGenerationDiagnosticFilename({
     runTimestamp,
@@ -218,8 +238,8 @@ async function maybePersistRawOutput(options: {
       modelId: options.diagnostics.modelId,
       webLlmVersion: options.diagnostics.webLlmVersion,
       captureSchemaVersion: WEBGPU_CAPTURE_LAYER_SCHEMA_VERSION,
-      briefSchemaVersion: options.profile.briefSchemaVersion,
-      briefPromptMode: options.profile.briefPromptMode,
+      briefSchemaVersion: artifactConfiguration.briefSchemaVersion,
+      briefPromptMode: artifactConfiguration.briefPromptMode,
       configuredMaxTokens: options.diagnostics.configuredMaxTokens,
     },
     attempt: {
@@ -266,7 +286,7 @@ async function completeStructuredPrompt(
   callbacks: Pick<
     WebGpuAdapterOptions,
     "onCompletionDiagnostics" | "captureContext"
-  > & { profile?: BriefGenerationProfile },
+  >,
 ): Promise<StructuredCompletionResult> {
   assertGenerationNotCancelled(options.signal);
   const { modelId } = getWebGpuConfig();
@@ -292,16 +312,13 @@ async function completeStructuredPrompt(
     const content = response.choices[0]?.message?.content;
     const normalizedContent = typeof content === "string" ? content.trim() : "";
 
-    if (callbacks.profile) {
-      await maybePersistRawOutput({
-        captureContext: callbacks.captureContext,
-        generationStage: options.generationStage,
-        attemptNumber: options.attemptNumber,
-        diagnostics,
-        rawOutput: normalizedContent,
-        profile: callbacks.profile,
-      });
-    }
+    await maybePersistRawOutput({
+      captureContext: callbacks.captureContext,
+      generationStage: options.generationStage,
+      attemptNumber: options.attemptNumber,
+      diagnostics,
+      rawOutput: normalizedContent,
+    });
 
     return {
       content: normalizedContent,
@@ -350,7 +367,7 @@ async function generateDecisionBriefWithQualityGate(
 ): Promise<DecisionBriefResult> {
   const profile = resolveBriefGenerationProfile();
   const prompt = profile.buildPrompt(input);
-  const completionCallbacks = { ...options, profile };
+  const completionCallbacks = { ...options };
 
   const firstCompletion = await completeStructuredPrompt(
     engine,

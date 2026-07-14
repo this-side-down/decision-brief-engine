@@ -25,9 +25,12 @@ import {
   CAPTURE_LAYER_RESPONSE_SCHEMA_JSON,
   DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_SCHEMA_JSON,
   DECISION_BRIEF_RESULT_RESPONSE_SCHEMA_JSON,
+  WEBGPU_CAPTURE_LAYER_SCHEMA_VERSION,
 } from "./webGpuGenerationSchemas";
 import { WEBGPU_DECISION_BRIEF_PROMPT_MODE_ENV } from "./webGpuDecisionBriefExperiment";
 import { getWebGpuEvalContext, createWebGpuModelAdapter } from "./webGpuModelAdapter";
+import { BROWSER_GENERATION_DIAGNOSTICS_ENV } from "./browserGenerationDiagnostics";
+import * as browserGenerationLocalCapture from "./browserGenerationLocalCapture";
 
 type MockCreateHandler = (
   request: ChatCompletionRequest,
@@ -119,6 +122,141 @@ describe("createWebGpuModelAdapter", () => {
 
     expect(captureLayer.stated_decision).toBe(q4CaptureLayer.stated_decision);
     expect(engine.chat.completions.create).toHaveBeenCalledTimes(1);
+  });
+
+  it("persists capture attempt diagnostics when diagnostics are enabled", async () => {
+    const previousDiagnostics = process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV];
+    process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV] = "true";
+
+    const persistSpy = vi
+      .spyOn(browserGenerationLocalCapture, "persistBrowserGenerationDiagnosticArtifact")
+      .mockResolvedValue("capture-artifact.json");
+
+    try {
+      const engine = createMockEngine(async () => JSON.stringify(q4CaptureLayer));
+      const runTimestamp = "2026-07-14T12:00:00.000Z";
+      const adapter = createWebGpuModelAdapter({
+        engine,
+        captureContext: {
+          sourceLabel: "Household Move Planning",
+          briefTypeId: "execution",
+          runTimestamp,
+        },
+      });
+
+      await adapter.generateCaptureLayer(CAPTURE_INPUT);
+
+      expect(persistSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filename: "2026-07-14T12-00-00-000Z-capture-attempt-1.json",
+          artifact: expect.objectContaining({
+            attempt: { generationStage: "capture", attemptNumber: 1 },
+            configuration: expect.objectContaining({
+              captureSchemaVersion: WEBGPU_CAPTURE_LAYER_SCHEMA_VERSION,
+              briefPromptMode: "structured_response",
+              briefSchemaVersion: "decision-brief-result-v1",
+            }),
+            rawOutput: JSON.stringify(q4CaptureLayer),
+          }),
+        }),
+      );
+    } finally {
+      persistSpy.mockRestore();
+      if (previousDiagnostics === undefined) {
+        delete process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV];
+      } else {
+        process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV] = previousDiagnostics;
+      }
+    }
+  });
+
+  it("persists capture_retry diagnostics when the first capture parse fails", async () => {
+    const previousDiagnostics = process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV];
+    process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV] = "true";
+
+    const persistSpy = vi
+      .spyOn(browserGenerationLocalCapture, "persistBrowserGenerationDiagnosticArtifact")
+      .mockResolvedValue("capture-artifact.json");
+
+    try {
+      const engine = createMockEngine(async (_request, attempt) => {
+        if (attempt === 1) {
+          return "{ invalid json";
+        }
+
+        return JSON.stringify(q4CaptureLayer);
+      });
+      const runTimestamp = "2026-07-14T12:00:00.000Z";
+      const adapter = createWebGpuModelAdapter({
+        engine,
+        captureContext: { runTimestamp },
+      });
+
+      await adapter.generateCaptureLayer(CAPTURE_INPUT);
+
+      expect(persistSpy).toHaveBeenCalledTimes(2);
+      expect(persistSpy.mock.calls[0][0]).toMatchObject({
+        filename: "2026-07-14T12-00-00-000Z-capture-attempt-1.json",
+        artifact: {
+          attempt: { generationStage: "capture", attemptNumber: 1 },
+        },
+      });
+      expect(persistSpy.mock.calls[1][0]).toMatchObject({
+        filename: "2026-07-14T12-00-00-000Z-capture_retry-attempt-2.json",
+        artifact: {
+          attempt: { generationStage: "capture_retry", attemptNumber: 2 },
+        },
+      });
+    } finally {
+      persistSpy.mockRestore();
+      if (previousDiagnostics === undefined) {
+        delete process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV];
+      } else {
+        process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV] = previousDiagnostics;
+      }
+    }
+  });
+
+  it("records configured briefPromptMode on capture-stage diagnostic artifacts", async () => {
+    const previousDiagnostics = process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV];
+    const previousPromptMode = process.env[WEBGPU_DECISION_BRIEF_PROMPT_MODE_ENV];
+    process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV] = "true";
+    process.env[WEBGPU_DECISION_BRIEF_PROMPT_MODE_ENV] = "markdown_only";
+
+    const persistSpy = vi
+      .spyOn(browserGenerationLocalCapture, "persistBrowserGenerationDiagnosticArtifact")
+      .mockResolvedValue("capture-artifact.json");
+
+    try {
+      const engine = createMockEngine(async () => JSON.stringify(q4CaptureLayer));
+      const adapter = createWebGpuModelAdapter({ engine });
+
+      await adapter.generateCaptureLayer(CAPTURE_INPUT);
+
+      expect(persistSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          artifact: expect.objectContaining({
+            configuration: expect.objectContaining({
+              briefPromptMode: "markdown_only",
+              briefSchemaVersion: "decision-brief-markdown-only-v1",
+              captureSchemaVersion: WEBGPU_CAPTURE_LAYER_SCHEMA_VERSION,
+            }),
+          }),
+        }),
+      );
+    } finally {
+      persistSpy.mockRestore();
+      if (previousDiagnostics === undefined) {
+        delete process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV];
+      } else {
+        process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV] = previousDiagnostics;
+      }
+      if (previousPromptMode === undefined) {
+        delete process.env[WEBGPU_DECISION_BRIEF_PROMPT_MODE_ENV];
+      } else {
+        process.env[WEBGPU_DECISION_BRIEF_PROMPT_MODE_ENV] = previousPromptMode;
+      }
+    }
   });
 
   it("requests schema-constrained Decision Brief result output", async () => {
