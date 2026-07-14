@@ -172,6 +172,25 @@ Isolation rerun on the benchmark machine (DevTools cache toggle off, site data c
 
 See [WebGPU model delivery diagnostic](../../docs/ai/webgpu-model-delivery-diagnostic.md).
 
+### #128 / #129 macOS model-load timeout UX (2026-07-13)
+
+Separate from the Windows/Xet 403 blocker ([#124](https://github.com/this-side-down/decision-brief-engine/issues/124)):
+
+| Check | Result |
+| --- | --- |
+| Platform | macOS manual W3 attempt |
+| Shard network responses | HTTP 200/206 observed |
+| WebLLM phase text | Remained on `Start to fetch params` for an extended period |
+| Progress bar (before fix) | Empty determinate bar at 0% |
+| Elapsed time | Exceeded 100s without reaching `model_ready` |
+| Configured timeout | 120s (unchanged) |
+| Terminal UI (before fix) | Incorrectly showed `Model download cancelled` |
+| Root cause | Timeout cleanup incremented load generation before `ModelLoadTimeoutError` was classified ([#129](https://github.com/this-side-down/decision-brief-engine/issues/129)) |
+| After fix ([#128](https://github.com/this-side-down/decision-brief-engine/issues/128), [#129](https://github.com/this-side-down/decision-brief-engine/issues/129)) | Timeout and cancellation are distinct; indeterminate/slow/stalled download states surface during active loads |
+| W3 generation result | **Not reached** — model did not reach `model_ready` before timeout; generation still pending |
+
+Do not claim model delivery is fixed on macOS or Windows.
+
 ### #116 prompt variant W3 (schema-constrained default prompt) — manual run pending
 
 | Check | Result |
