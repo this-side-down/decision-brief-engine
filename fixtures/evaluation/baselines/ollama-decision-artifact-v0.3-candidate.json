@@ -1,0 +1,808 @@
+{
+  "resultFormatVersion": 1,
+  "runId": "pipeline-2026-07-14T19-21-12-348Z",
+  "timestamp": "2026-07-14T19:21:12.403Z",
+  "buildCommit": "b9bbbf65c244b67cfe8bb2cf39fbcc3a25ec9ae2",
+  "generationMode": "ollama",
+  "modelId": "ollama:qwen3:4b",
+  "caseIds": [
+    "q4-workforce-allocation",
+    "platform-rearchitecture-review",
+    "regional-launch-readiness-review"
+  ],
+  "results": [
+    {
+      "runId": "pipeline-2026-07-14T19-21-12-348Z",
+      "timestamp": "2026-07-14T19:21:32.951Z",
+      "buildCommit": "b9bbbf65c244b67cfe8bb2cf39fbcc3a25ec9ae2",
+      "fixtureId": "q4-workforce-allocation",
+      "fixtureName": "Q4 Workforce Allocation",
+      "fixtureCategory": "gallery-example",
+      "generationMode": "ollama",
+      "modelId": "ollama:qwen3:4b",
+      "runtimeLibraryVersion": null,
+      "promptVariant": "structured_response_combined",
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": true,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": true,
+          "detail": "6 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": true,
+          "detail": "6 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": true,
+          "detail": "6 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "4 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": true,
+          "detail": "5 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "5 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": true,
+          "detail": "recommendation_candidate is non-empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=High"
+        }
+      ],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 7824,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": true,
+      "decisionBriefLatencyMs": 12718,
+      "decisionTraceSchemaPass": true,
+      "decisionTraceStructuralReadinessPass": false,
+      "decisionTraceFindings": [
+        {
+          "id": "recommendation_coverage",
+          "pass": false,
+          "detail": "no recommendation entry statement corresponds to recommendation_candidate: \"Protect hospital with Marcus if multifamily handoff is feasible and Carlos promotion is supported by Luis and Priya's hiring backstop\""
+        },
+        {
+          "id": "next_step_count",
+          "pass": true,
+          "detail": "5 next_step entries for 5 suggested_next_steps"
+        },
+        {
+          "id": "next_step_statement_coverage",
+          "pass": true,
+          "detail": "every suggested_next_steps item has a corresponding next_step entry statement"
+        },
+        {
+          "id": "entries_have_intent",
+          "pass": true,
+          "detail": "every entry has a non-empty basis.intent"
+        },
+        {
+          "id": "entries_have_confidence",
+          "pass": true,
+          "detail": "every entry has a valid per-item confidence"
+        },
+        {
+          "id": "entries_have_non_empty_basis",
+          "pass": true,
+          "detail": "every entry has at least one non-empty basis array field"
+        },
+        {
+          "id": "would_change_if_specific",
+          "pass": true,
+          "detail": "every entry has at least one specific, non-generic would_change_if condition"
+        },
+        {
+          "id": "intent_grounded_in_goals",
+          "pass": true,
+          "detail": "every non-empty basis.intent is grounded in captureLayer.goals"
+        },
+        {
+          "id": "basis_grounded_in_capture_layer",
+          "pass": false,
+          "detail": "12 basis item(s) not found in the Capture Layer: tradeoffs: \"Preventing senior super burnout vs. maintaining school project stability\"; constraints_respected: \"Maria wants HR hiring path and staffing matrix by Friday\"; alternatives_considered: \"Delay HR hiring until after hospital start date\"; constraints_respected: \"Luis wants training readiness explicit\"; alternatives_considered: \"Delay Carlos promotion until training is complete\""
+        },
+        {
+          "id": "recommendation_alignment",
+          "pass": false,
+          "detail": "Recommendation mismatch — capture=\"Protect hospital with Marcus if multifamily handoff is feasible and Carlos promotion is supported by Luis and Priya's hiring backstop\" brief=\"Reassign Marcus to hospital as soon as multifamily closeout can limp along with PM-led coverage, while promoting Carlos to assistant super on school with Luis owning training plan and backfilling foreman.\" trace=\"Reassign Marcus to hospital as soon as multifamily closeout can limp along with PM-led coverage, while promoting Carlos to assistant super on school with Luis owning training plan and backfilling foreman.\""
+        },
+        {
+          "id": "next_step_alignment",
+          "pass": true,
+          "detail": "Next-step statements align across Capture Layer, Decision Trace, and Decision Brief"
+        }
+      ],
+      "recommendationAlignmentPass": false,
+      "nextStepAlignmentPass": true,
+      "requiredDecisionBriefSectionsPass": true,
+      "writingHardFailures": [
+        "sentence-length: Sentence exceeds 35 words (39).",
+        "sentence-length: Sentence exceeds 35 words (37).",
+        "sentence-length: Sentence exceeds 35 words (36)."
+      ],
+      "writingWarnings": [
+        "sentence-length-warning: Sentence is 28 words (warning range 25-35).",
+        "sentence-length-warning: Sentence is 31 words (warning range 25-35).",
+        "slash-pairs: Document contains 6 slash-pair shorthand instances."
+      ],
+      "writingReportOnlyFindings": [
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Internal.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Attendees.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Ops.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Jim.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: General Superintendent.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Dana.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Project Executive.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Talent.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Safety.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Training.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Goals.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Assumptions.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Missing.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Protect.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Staff.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Avoid.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Prevent.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Make.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Project Controls Reassign Marcus.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: School.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Hospital.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Schedule.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Attrition.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Weak.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Monday Carlos.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Carlos Real.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Urgency.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Cost.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Promotion.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Friday Luis.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: VP.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: OSHA.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 30.",
+        "high-capture-reuse: Brief shares 95% token overlap with Capture Layer text."
+      ],
+      "deterministicUsableBrief": false,
+      "evaluatorNotes": [],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment."
+      ],
+      "rawErrorCategory": "none",
+      "failureKind": "product_quality",
+      "artifactPaths": null,
+      "webGpu": null,
+      "longInputDiagnostics": {
+        "strategy": "single_pass",
+        "chunkCount": null,
+        "sourceCoverageComplete": null,
+        "totalSourceLength": null,
+        "coveredSourceLength": null,
+        "chunkRetryCounts": null,
+        "totalChunkRetries": null,
+        "planningLatencyMs": null,
+        "chunkExtractionLatencyMs": null,
+        "mergeLatencyMs": null,
+        "validationLatencyMs": null
+      },
+      "decisionArtifactDiagnostics": {
+        "strategy": "combined",
+        "briefRetryCount": 0,
+        "traceRetryCount": null,
+        "briefGenerationLatencyMs": 12718,
+        "traceGenerationLatencyMs": null
+      },
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    },
+    {
+      "runId": "pipeline-2026-07-14T19-21-12-348Z",
+      "timestamp": "2026-07-14T19:22:06.136Z",
+      "buildCommit": "b9bbbf65c244b67cfe8bb2cf39fbcc3a25ec9ae2",
+      "fixtureId": "platform-rearchitecture-review",
+      "fixtureName": "Platform Re-Architecture Review",
+      "fixtureCategory": "gallery-example",
+      "generationMode": "ollama",
+      "modelId": "ollama:qwen3:4b",
+      "runtimeLibraryVersion": null,
+      "promptVariant": "structured_response_combined",
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": true,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": true,
+          "detail": "12 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": true,
+          "detail": "16 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": true,
+          "detail": "16 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "13 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": true,
+          "detail": "14 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "22 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": true,
+          "detail": "recommendation_candidate is non-empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=Medium"
+        }
+      ],
+      "inventedStatedDecisionFinding": "Invented stated_decision treated as fact: \"No explicit final decision statement in this chunk Pursue Helix modular-monolith with staged invoice remediation track and tracing/SLO gates No stated final decision today\"",
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 24696,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": true,
+      "decisionBriefLatencyMs": 8487,
+      "decisionTraceSchemaPass": true,
+      "decisionTraceStructuralReadinessPass": false,
+      "decisionTraceFindings": [
+        {
+          "id": "recommendation_coverage",
+          "pass": false,
+          "detail": "no recommendation entry statement corresponds to recommendation_candidate: \"Adopt Helix modular-monolith approach with bounded contexts to maintain deployability without immediate microservices split Proceed with Helix strangler route for invoice generation while maintaining checkout in modular core Hybrid approach with Helix core plus one extracted invoice worker service Pursue Helix modular-monolith with staged invoice remediation track and tracing/SLO gates Bring recommendation and open questions to exec staff next Tuesday\""
+        },
+        {
+          "id": "next_step_count",
+          "pass": false,
+          "detail": "0 next_step entries for 15 suggested_next_steps"
+        },
+        {
+          "id": "next_step_statement_coverage",
+          "pass": false,
+          "detail": "15 suggested_next_steps item(s) without a corresponding next_step entry: \"Define Helix modular-monolith implementation scope\"; \"Conduct cost analysis for phased infrastructure spend\"; \"Identify tracing standards for service splits\""
+        },
+        {
+          "id": "entries_have_intent",
+          "pass": true,
+          "detail": "every entry has a non-empty basis.intent"
+        },
+        {
+          "id": "entries_have_confidence",
+          "pass": true,
+          "detail": "every entry has a valid per-item confidence"
+        },
+        {
+          "id": "entries_have_non_empty_basis",
+          "pass": true,
+          "detail": "every entry has at least one non-empty basis array field"
+        },
+        {
+          "id": "would_change_if_specific",
+          "pass": true,
+          "detail": "every entry has at least one specific, non-generic would_change_if condition"
+        },
+        {
+          "id": "intent_grounded_in_goals",
+          "pass": true,
+          "detail": "every non-empty basis.intent is grounded in captureLayer.goals"
+        },
+        {
+          "id": "basis_grounded_in_capture_layer",
+          "pass": false,
+          "detail": "9 basis item(s) not found in the Capture Layer: supporting_evidence: \"Two lighthouse customers reported slowdowns during invoice generation, not browsing\"; supporting_evidence: \"Enterprise success plan requires performance remediation by September\"; supporting_evidence: \"Invoice generation queue depth doubled during backfill window\"; supporting_evidence: \"Checkout P95 was 940ms on peak days\"; risks_addressed: \"Vague Helix terminology causing misalignment\""
+        },
+        {
+          "id": "recommendation_alignment",
+          "pass": false,
+          "detail": "Recommendation mismatch — capture=\"Adopt Helix modular-monolith approach with bounded contexts to maintain deployability without immediate microservices split Proceed with Helix strangler route for invoice generation while maintaining checkout in modular core Hybrid approach with Helix core plus one extracted invoice worker service Pursue Helix modular-monolith with staged invoice remediation track and tracing/SLO gates Bring recommendation and open questions to exec staff next Tuesday\" brief=\"Pursue Helix modular-monolith with staged invoice remediation track and tracing/SLO gates while keeping microservices extraction as a later phase if module boundaries fail.\" trace=\"The product team should prioritize Helix modular-monolith implementation with staged invoice remediation and tracing/SLO gates to address enterprise latency complaints while maintaining operational stability and customer communication focus.\""
+        },
+        {
+          "id": "next_step_alignment",
+          "pass": false,
+          "detail": "15 next-step mismatch(es); counts capture=15 brief=0 trace=0"
+        }
+      ],
+      "recommendationAlignmentPass": false,
+      "nextStepAlignmentPass": false,
+      "requiredDecisionBriefSectionsPass": false,
+      "writingHardFailures": [
+        "missing-section: Required section is missing: Risks and Constraints.",
+        "missing-section: Required section is missing: Suggested Next Steps.",
+        "missing-section: Required section is missing: Confidence."
+      ],
+      "writingWarnings": [
+        "sentence-length-warning: Sentence is 28 words (warning range 25-35).",
+        "sentence-length-warning: Sentence is 29 words (warning range 25-35)."
+      ],
+      "writingReportOnlyFindings": [
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Attendees.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Nina.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Omar.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Engineering Lead.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Priya.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Platform Lead.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Jonah.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Lena.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Customer Success.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Discussion.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: No.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Prioritize Helix.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Prioritize.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Proceed.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Bring.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Tuesday Address.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Ensure.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Avoid.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Achieve.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Staged.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Improve.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Priya Jonah Lena Nina Omar Sales.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Finance.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Exec.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Latency.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Monolith.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: On.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Team.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Budget.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Flat.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: September.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Current.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Operational.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Incident.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Overfitting.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Unbounded.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Inability.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: September Customer.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Ambiguity.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Sales.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Repeating.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Tracing.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Enterprise.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Two.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Microservices.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Customers.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Renewal.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: We.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: That.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Assumption.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Could.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Thursday What.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Can Helix.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Do.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Who.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Engineering.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Focus.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Immediate.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Architecture.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Phased.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Another.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: If.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Keep.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Set.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Remediation.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Promise September.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Need.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Exact.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Specific.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Definition.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: September Exact.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Proposed.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Still.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Not.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Means.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Unclear.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Assess.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Confirm.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Model.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: VP.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: SRE.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: CPU.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 95.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 800.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 14-.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 940.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 4.",
+        "high-capture-reuse: Brief shares 94% token overlap with Capture Layer text."
+      ],
+      "deterministicUsableBrief": false,
+      "evaluatorNotes": [],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment."
+      ],
+      "rawErrorCategory": "none",
+      "failureKind": "product_quality",
+      "artifactPaths": null,
+      "webGpu": null,
+      "longInputDiagnostics": {
+        "strategy": "hierarchical",
+        "chunkCount": 5,
+        "sourceCoverageComplete": true,
+        "totalSourceLength": 7558,
+        "coveredSourceLength": 7558,
+        "chunkRetryCounts": {
+          "chunk-001": 0,
+          "chunk-002": 0,
+          "chunk-003": 0,
+          "chunk-004": 0,
+          "chunk-005": 0
+        },
+        "totalChunkRetries": 0,
+        "planningLatencyMs": 1,
+        "chunkExtractionLatencyMs": 24693,
+        "mergeLatencyMs": 1,
+        "validationLatencyMs": 0
+      },
+      "decisionArtifactDiagnostics": {
+        "strategy": "combined",
+        "briefRetryCount": 0,
+        "traceRetryCount": null,
+        "briefGenerationLatencyMs": 8487,
+        "traceGenerationLatencyMs": null
+      },
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    },
+    {
+      "runId": "pipeline-2026-07-14T19-21-12-348Z",
+      "timestamp": "2026-07-14T19:23:10.802Z",
+      "buildCommit": "b9bbbf65c244b67cfe8bb2cf39fbcc3a25ec9ae2",
+      "fixtureId": "regional-launch-readiness-review",
+      "fixtureName": "Regional launch readiness review",
+      "fixtureCategory": "evaluation-fixture",
+      "generationMode": "ollama",
+      "modelId": "ollama:qwen3:4b",
+      "runtimeLibraryVersion": null,
+      "promptVariant": "structured_response_combined",
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": true,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": true,
+          "detail": "21 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": true,
+          "detail": "14 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": true,
+          "detail": "22 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "21 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": true,
+          "detail": "24 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "37 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": true,
+          "detail": "recommendation_candidate is non-empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=Medium"
+        }
+      ],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 42292,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": true,
+      "decisionBriefLatencyMs": 22370,
+      "decisionTraceSchemaPass": true,
+      "decisionTraceStructuralReadinessPass": false,
+      "decisionTraceFindings": [
+        {
+          "id": "recommendation_coverage",
+          "pass": false,
+          "detail": "no recommendation entry statement corresponds to recommendation_candidate: \"Stay in controlled pilot to avoid exceeding support capacity and routing issues Pilot-first approach with 12 named lighthouse accounts in Singapore and Sydney for April 14 launch Pilot with 12 accounts using dedicated CSM coverage while maintaining readiness for full launch Proceed with pilot-first approach for Singapore/Sydney accounts (12 total) with explicit 'not yet live' messaging for Malaysia and Philippines before April 14 Proceed with April 14 limited pilot (12 accounts in Singapore and Sydney) with hard stop if SLA degrades below 95% readiness threshold Proceed with April 14 limited pilot (12 accounts) and May 28 expansion contingent on 95% SLA readiness\""
+        },
+        {
+          "id": "next_step_count",
+          "pass": false,
+          "detail": "0 next_step entries for 26 suggested_next_steps"
+        },
+        {
+          "id": "next_step_statement_coverage",
+          "pass": false,
+          "detail": "26 suggested_next_steps item(s) without a corresponding next_step entry: \"Confirm data residency attestation status for all APAC enterprise accounts\"; \"Align on contractor procurement timeline with Support Operations\"; \"Validate tier-2 team readiness for Northstar cases\""
+        },
+        {
+          "id": "entries_have_intent",
+          "pass": true,
+          "detail": "every entry has a non-empty basis.intent"
+        },
+        {
+          "id": "entries_have_confidence",
+          "pass": true,
+          "detail": "every entry has a valid per-item confidence"
+        },
+        {
+          "id": "entries_have_non_empty_basis",
+          "pass": true,
+          "detail": "every entry has at least one non-empty basis array field"
+        },
+        {
+          "id": "would_change_if_specific",
+          "pass": true,
+          "detail": "every entry has at least one specific, non-generic would_change_if condition"
+        },
+        {
+          "id": "intent_grounded_in_goals",
+          "pass": true,
+          "detail": "every non-empty basis.intent is grounded in captureLayer.goals"
+        },
+        {
+          "id": "basis_grounded_in_capture_layer",
+          "pass": false,
+          "detail": "43 basis item(s) not found in the Capture Layer: assumptions_relied_on: \"Pilot scope excludes accounts without residency paperwork\"; risks_addressed: \"Exceeding support capacity\"; risks_addressed: \"Routing issues\"; risks_accepted: \"633 accounts without residency paperwork (handled via pilot scope)\"; constraints_respected: \"Pilot-first approach (12 accounts) vs full launch (40 accounts)\""
+        },
+        {
+          "id": "recommendation_alignment",
+          "pass": false,
+          "detail": "Recommendation mismatch — capture=\"Stay in controlled pilot to avoid exceeding support capacity and routing issues Pilot-first approach with 12 named lighthouse accounts in Singapore and Sydney for April 14 launch Pilot with 12 accounts using dedicated CSM coverage while maintaining readiness for full launch Proceed with pilot-first approach for Singapore/Sydney accounts (12 total) with explicit 'not yet live' messaging for Malaysia and Philippines before April 14 Proceed with April 14 limited pilot (12 accounts in Singapore and Sydney) with hard stop if SLA degrades below 95% readiness threshold Proceed with April 14 limited pilot (12 accounts) and May 28 expansion contingent on 95% SLA readiness\" brief=\"\" trace=\"633 accounts lacking residency paperwork\""
+        },
+        {
+          "id": "next_step_alignment",
+          "pass": false,
+          "detail": "26 next-step mismatch(es); counts capture=26 brief=0 trace=0"
+        }
+      ],
+      "recommendationAlignmentPass": false,
+      "nextStepAlignmentPass": false,
+      "requiredDecisionBriefSectionsPass": false,
+      "writingHardFailures": [
+        "emoji: Decision Brief contains emoji in prose.",
+        "missing-section: Required section is missing: Summary.",
+        "missing-section: Required section is missing: Decision Context.",
+        "missing-section: Required section is missing: Options Considered.",
+        "missing-section: Required section is missing: Recommendation.",
+        "missing-section: Required section is missing: Risks and Constraints.",
+        "missing-section: Required section is missing: Open Questions.",
+        "missing-section: Required section is missing: Suggested Next Steps.",
+        "missing-section: Required section is missing: Confidence."
+      ],
+      "writingWarnings": [
+        "slash-pairs: Document contains 6 slash-pair shorthand instances."
+      ],
+      "writingReportOnlyFindings": [
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Attendees.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Mei.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Customer Success Director.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Field Marketing.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Support Operations.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Anika.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Determining.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Thailand.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Cross.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Team.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Sales.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Proceeding.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Ensure.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Avoid.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Maintain.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Achieve.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Sequence.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Resolve.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Complete.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Establish.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Kyle.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Product Launch.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Anika Kyle Mei Raj Holly Dev Tomas Launch.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Australia.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Vietnam.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: New Zealand.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Delay.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Sydney Include Malaysia.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Exclude Malaysia.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Broader.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Full.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Indonesia.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Singapore Sydney.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Attestation.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Competitor.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Exceeding.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Procurement.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Marketing.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Routing.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Missing.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Unresolved.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Field.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: All.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Repeated.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: If.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Geography.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Option.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Need.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: April Checklist.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: April Confirmed.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Confirmed.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Sending.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Monitoring.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Customer.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: How.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Will.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Who.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Can.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Whether Sales.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: At.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Australian.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Still.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Exact.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Details.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Specific.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Resolution.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Definition.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Means.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Lighthouse.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Confirms.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Align.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Support Operations Validate.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Update.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Finalize India.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Address.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Holly Verify.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Document.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Publish.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Send.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Monitor.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: GM.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: ETA.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: EOD.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 95%,.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 18.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 14,.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 62%.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 27.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 80.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 18-.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 62%,.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 95%..",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 4..",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 27..",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 12,.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 14..",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 12-.",
+        "high-capture-reuse: Brief shares 94% token overlap with Capture Layer text."
+      ],
+      "deterministicUsableBrief": false,
+      "evaluatorNotes": [],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment."
+      ],
+      "rawErrorCategory": "none",
+      "failureKind": "product_quality",
+      "artifactPaths": null,
+      "webGpu": null,
+      "longInputDiagnostics": {
+        "strategy": "hierarchical",
+        "chunkCount": 6,
+        "sourceCoverageComplete": true,
+        "totalSourceLength": 9872,
+        "coveredSourceLength": 9872,
+        "chunkRetryCounts": {
+          "chunk-001": 0,
+          "chunk-002": 0,
+          "chunk-003": 0,
+          "chunk-004": 0,
+          "chunk-005": 0,
+          "chunk-006": 0
+        },
+        "totalChunkRetries": 0,
+        "planningLatencyMs": 0,
+        "chunkExtractionLatencyMs": 42290,
+        "mergeLatencyMs": 2,
+        "validationLatencyMs": 0
+      },
+      "decisionArtifactDiagnostics": {
+        "strategy": "combined",
+        "briefRetryCount": 0,
+        "traceRetryCount": null,
+        "briefGenerationLatencyMs": 22370,
+        "traceGenerationLatencyMs": null
+      },
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    }
+  ],
+  "infrastructureFailure": false,
+  "harnessExecutionError": null
+}
