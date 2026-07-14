@@ -90,3 +90,40 @@ Run Details never includes raw JSON output.
 - **#142** — diagnostics slice (merged; retained here)
 
 Do not treat a passing markdown-only run as approval to ship split-stage production without further evidence.
+
+## Results (2026-07-14)
+
+Manual runs on all three built-in gallery examples after PR #143 merged the gated `markdown_only` infrastructure. Diagnostics enabled; raw artifacts stored locally only (not committed).
+
+### Configuration
+
+| Setting | Value |
+| --- | --- |
+| WebLLM | `@mlc-ai/web-llm@0.2.84` |
+| Model | `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` |
+| Brief prompt mode | `markdown_only` (`VITE_WEBGPU_DECISION_BRIEF_PROMPT_MODE=markdown_only`) |
+| Diagnostics | `VITE_BROWSER_GENERATION_DIAGNOSTICS=true` |
+| Capture Layer | Unchanged production path (`capture-layer-v1`) |
+| Validators | Unchanged markdown-only acceptance gate |
+
+### Gallery example outcomes
+
+| Example | Attempt 1 (prompt / completion / total) | Finish reason | Retry | Final result | Failure categories (final) |
+| --- | --- | --- | --- | --- | --- |
+| Household Move Planning | 1,197 / 242 / 1,439 | `stop` | Yes — 1,260 / 408 / 1,668, `stop` | **FAIL** | `required_sections`, `recommendation_alignment`, `next_step_alignment`, `writing_hard_failure` (missing Confidence; recommendation misalignment; next steps collapsed into prose; sentence-length violations) |
+| Q4 Workforce Allocation | 1,130 / 487 / 1,617 | `stop` | No | **FAIL** | `required_sections`, `recommendation_alignment`, `next_step_alignment`, `writing_hard_failure` |
+| Local Inference Setup Flow | 1,143 / 294 / 1,437 | `stop` | No | **FAIL** | `recommendation_alignment`, `next_step_alignment`, `writing_hard_failure` |
+
+All three examples **FAIL** the documented decision rule. No example reached an accepted attempt that passed all pass criteria.
+
+### Conclusion
+
+- Removing Decision Trace eliminated the context-window truncation observed in `structured_response` mode (Household Move Planning structured run: prompt 1,469; completion 2,627; total 4,096; `finish_reason=length`).
+- It did **not** produce acceptable Markdown across any of the three gallery examples.
+- All failures occurred with `finish_reason=stop` and substantial context headroom — the bottleneck is content completeness, grounding, and structure, not output-budget exhaustion.
+- A production split-stage pipeline is **not yet justified** because the proposed first Markdown stage itself fails on every gallery example tested.
+- **PR #143 does not approve production split-stage architecture.** It ships gated evaluation infrastructure only.
+
+### Next experiment
+
+**Validator-aligned `markdown_only` prompt** — revise the experiment prompt (not production `structured_response`) so section structure, recommendation correspondence, and discrete suggested-next-step representation are explicit requirements aligned with existing validators. Do not implement split-stage production until a markdown-only stage passes the documented decision rule on gallery examples.
