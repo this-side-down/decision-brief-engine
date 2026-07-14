@@ -15,8 +15,15 @@ import {
 import {
   GenerationCancelledError,
   GenerationQualityError,
+  InputTooLargeError,
 } from "./webGpuErrors";
 import { getWebGpuConfig } from "./webGpuConfig";
+import {
+  evaluateWebGpuCaptureInputBudget,
+  formatWebGpuInputBudgetDiagnostic,
+  isWebGpuContextWindowExceededError,
+  WEBGPU_INPUT_TOO_LARGE_USER_MESSAGE,
+} from "./webGpuInputBudget";
 import {
   CAPTURE_LAYER_RESPONSE_FORMAT,
   DECISION_BRIEF_RESULT_RESPONSE_FORMAT,
@@ -72,6 +79,30 @@ type StructuredCompletionOptions = {
   signal?: AbortSignal;
 };
 
+function assertWebGpuCaptureInputWithinBudget(
+  input: GenerateCaptureLayerInput,
+): void {
+  const budget = evaluateWebGpuCaptureInputBudget(input);
+
+  if (!budget.withinBudget) {
+    throw new InputTooLargeError(
+      WEBGPU_INPUT_TOO_LARGE_USER_MESSAGE,
+      formatWebGpuInputBudgetDiagnostic(budget),
+    );
+  }
+}
+
+function rethrowContextWindowErrorAsInputTooLarge(error: unknown): never {
+  if (isWebGpuContextWindowExceededError(error)) {
+    throw new InputTooLargeError(
+      WEBGPU_INPUT_TOO_LARGE_USER_MESSAGE,
+      error instanceof Error ? error.message : "context_window_exceeded",
+    );
+  }
+
+  throw error;
+}
+
 async function completeStructuredPrompt(
   engine: MLCEngineInterface,
   options: StructuredCompletionOptions,
@@ -100,7 +131,7 @@ async function completeStructuredPrompt(
       throw new GenerationCancelledError();
     }
 
-    throw error;
+    rethrowContextWindowErrorAsInputTooLarge(error);
   }
 }
 
@@ -222,12 +253,24 @@ export function createWebGpuModelAdapter({
         throw new Error("Raw input is required to generate a Capture Layer.");
       }
 
+      assertWebGpuCaptureInputWithinBudget(input);
+
       const prompt = buildCaptureLayerPrompt(input);
-      const modelText = await completeStructuredPrompt(engine, {
-        prompt,
-        responseFormat: CAPTURE_LAYER_RESPONSE_FORMAT,
-        signal,
-      });
+      let modelText: string;
+
+      try {
+        modelText = await completeStructuredPrompt(engine, {
+          prompt,
+          responseFormat: CAPTURE_LAYER_RESPONSE_FORMAT,
+          signal,
+        });
+      } catch (error) {
+        if (error instanceof GenerationCancelledError || error instanceof InputTooLargeError) {
+          throw error;
+        }
+
+        rethrowContextWindowErrorAsInputTooLarge(error);
+      }
 
       try {
         const captureLayer = parseCaptureLayerJson(modelText);

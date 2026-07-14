@@ -19,6 +19,7 @@ import { createW3PlaceholderLeakedBriefResult } from "./fixtures/w3PlaceholderLe
 import {
   GenerationCancelledError,
   GenerationQualityError,
+  InputTooLargeError,
 } from "./webGpuErrors";
 import {
   CAPTURE_LAYER_RESPONSE_SCHEMA_JSON,
@@ -354,6 +355,20 @@ describe("createWebGpuModelAdapter", () => {
       GenerationCancelledError,
     );
     expect(engine.interruptGenerate).toHaveBeenCalled();
+  });
+
+  it("rejects oversized Capture Layer input before calling WebLLM", async () => {
+    const engine = createMockEngine(async () => JSON.stringify(q4CaptureLayer));
+    const adapter = createWebGpuModelAdapter({ engine });
+
+    await expect(
+      adapter.generateCaptureLayer({
+        ...CAPTURE_INPUT,
+        rawInputText: "Long transcript.\n".repeat(2500),
+      }),
+    ).rejects.toBeInstanceOf(InputTooLargeError);
+
+    expect(engine.chat.completions.create).not.toHaveBeenCalled();
   });
 });
 

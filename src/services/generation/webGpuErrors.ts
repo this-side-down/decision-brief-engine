@@ -74,3 +74,16 @@ export class GenerationQualityError extends WebGpuInferenceError {
     this.failureCategories = failureCategories;
   }
 }
+
+export class InputTooLargeError extends WebGpuInferenceError {
+  readonly diagnosticDetail: string;
+
+  constructor(
+    message: string,
+    diagnosticDetail: string,
+  ) {
+    super(message);
+    this.name = "InputTooLargeError";
+    this.diagnosticDetail = diagnosticDetail;
+  }
+}
