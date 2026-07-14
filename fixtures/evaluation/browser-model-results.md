@@ -12,7 +12,7 @@ Use this file with:
 - Evaluation fixtures in this directory
 - Machine-readable Mock baseline: [`baselines/mock-pipeline-baseline.json`](baselines/mock-pipeline-baseline.json)
 
-First comparable case for mock / Ollama / WebGPU rows: **construction Strategy** (`strategy-tradeoff.md` / built-in example). Use `npm run eval:pipeline` for current-contract full-pipeline gates (preferred) or `npm run eval:capture` for Capture Layer-only smoke; record WebGPU manually into the same pipeline result format after #124 recovers. W3 has **not** run.
+First comparable case for mock / Ollama / WebGPU rows: **construction Strategy** (`strategy-tradeoff.md` / built-in example). Use `npm run eval:pipeline` for current-contract full-pipeline gates (preferred) or `npm run eval:capture` for Capture Layer-only smoke; record WebGPU manually into the same pipeline result format. Browser generation has been reached on Windows after #124 delivery recovered; W3 schema-constrained runs and subsequent #141 experiments are recorded below. Manual `/16` scorecard totals remain null unless explicitly filled.
 
 Do not commit model weights. Do not treat placeholder rows as completed evaluation until manually filled. Public WebGPU remains gated; Mock demo stays the public default.
 
@@ -41,7 +41,7 @@ npm run eval:pipeline -- --mode=ollama --output=fixtures/evaluation/baselines/ol
 | --- | --- | --- |
 | All eight | No | Capture Layer often schema-valid; Decision Brief generation frequently failed (empty markdown envelope) or timed out at 120s. Timeouts recorded as `failureKind: infrastructure`; empty brief envelopes as `product_quality` / `brief_generation`. Manual scores remain null. |
 
-W3 WebGPU scored run remains **blocked by #124**. Do not invent browser results.
+W3 WebGPU scored runs use the manual procedure below. Do not invent browser results or manual `/16` scores.
 
 ---
 
@@ -55,7 +55,7 @@ Case: `construction-strategy` (built-in construction workforce planning / Strate
 | O1 | Ollama | `qwen3:4b` | `default` | Yes | Yes | Pass | Yes | ~14 s | Local CLI harness; baseline quality path |
 | W1 | WebGPU | `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` | `default` | No (smoke) | No (after retry) | Not reached | No | ~60 s | 2026-07-07 smoke; missing `stated_decision` |
 | W2 | WebGPU | same 1.5B | `schema_skeleton` | Yes (after retry) | Yes | Fail | No | ~40–60 s CL; ~20 s brief | Manual 2026-07-08; 64 GB / i9 / RTX 3080 Ti; invalid JSON first attempt; retry succeeded; hollow implied decision / assumptions / risks / missing context; open questions present; stated decision + recommendation present; two-click model-ready UX friction ([#78](https://github.com/this-side-down/decision-brief-engine/issues/78)); layout/wrapping issues ([#79](https://github.com/this-side-down/decision-brief-engine/issues/79)) |
-| W3 | WebGPU | same 1.5B | `default` + schema-constrained output ([#116](https://github.com/this-side-down/decision-brief-engine/issues/116)) | **Pending** | **Pending** | **Pending** | **Pending** | **Pending** | Model load not reached: Hugging Face Xet shard delivery returns 403 after redirect; not a schema-constrained generation failure ([#124](https://github.com/this-side-down/decision-brief-engine/issues/124)). Manual W3 remains pending until upstream shard delivery succeeds. |
+| W3 | WebGPU | same 1.5B | `default` + schema-constrained output ([#116](https://github.com/this-side-down/decision-brief-engine/issues/116)) | Yes (2026-07-13) | Yes (first attempt) | Fail (semantic) | Yes (not quality) | ~22s CL; ~23s brief | Model load succeeded after #124 delivery recovered on Windows ([#132](https://github.com/this-side-down/decision-brief-engine/issues/132)); schema pass but placeholder-leaked semantic fail. Subsequent #141 structured and markdown_only runs recorded below. |
 
 ### What was completed in #73
 
@@ -130,7 +130,7 @@ Public posture unchanged: **Mock demo** default; WebGPU hidden unless `VITE_ENAB
 - **Model/runtime:** WebLLM (`@mlc-ai/web-llm@0.2.84`) + `Qwen2.5-1.5B-Instruct-q4f16_1-MLC`
 - **Device/browser:** Windows 10 (10.0.26100), 64 GB RAM; Cursor embedded Chromium (Chrome/144.0.7559.236, Electron/40.10.3), WebGPU available
 - **Model size/download notes:** ~1.0 to 1.2 GB first load; post-merge smoke on `main` @ `add8fa5` (PR #67 / #60)
-- **Recommendation:** Remain gated — continue experimenting on structural field extraction (#73 W2); do not ungate on current evidence
+- **Recommendation:** Remain gated — continue experimenting; do not ungate on current evidence ([#141](https://github.com/this-side-down/decision-brief-engine/issues/141) markdown_only experiment failed on all three gallery examples; structured_response truncates on Household Move Planning)
 
 ### Post-merge WebGPU smoke test (2026-07-07) — config W1 (default prompt)
 
@@ -152,7 +152,9 @@ Manual validation on production build (`VITE_GENERATION_MODE=mock`, preview `:41
 | Copy / Download Markdown | Copy failed in embedded browser (`Unable to copy Markdown to clipboard`); Download not exercised in smoke |
 | Hosted inference API for generation | Not observed for inference; only local WebGPU + model-weight CDN fetches (no Ollama / app backend generation calls in browser mode) |
 
-### #124 delivery investigation (2026-07-13)
+### #124 delivery investigation (2026-07-13) — historical
+
+**Status:** Delivery later recovered on the benchmark Windows machine; generation was tested successfully on 2026-07-13 ([#132](https://github.com/this-side-down/decision-brief-engine/issues/132) W3 smoke) and in subsequent #141 experiments (2026-07-14). Preserve this record as isolation evidence; do not treat #124 as the current blocker for browser generation runs.
 
 | Check | Result |
 | --- | --- |
@@ -166,9 +168,9 @@ Manual validation on production build (`VITE_GENERATION_MODE=mock`, preview `:41
 | Cache backend | Default `cache`; not changed — direct fetch fails before Cache API storage |
 | Root cause category | Environment-wide upstream Hugging Face Xet delivery failure |
 | Production change | None — documented blocker; no model swap, cache-backend change, or WebLLM upgrade |
-| W3 generation result | **Not reached** — blocked before `model_ready` |
+| W3 generation result (2026-07-13) | **Not reached on that day** — blocked before `model_ready` |
 
-Isolation rerun on the benchmark machine (DevTools cache toggle off, site data cleared, time synced, VPN off) reproduced the same Xet 403 chain. W2 succeeded on 2026-07-08 with the same model ID; W3 failed on 2026-07-13, consistent with upstream delivery regression rather than an outdated app model record.
+Isolation rerun on the benchmark machine (DevTools cache toggle off, site data cleared, time synced, VPN off) reproduced the same Xet 403 chain. W2 succeeded on 2026-07-08 with the same model ID; W3 failed on 2026-07-13, consistent with upstream delivery regression rather than an outdated app model record. **Later the same model ID loaded successfully** and browser generation proceeded ([#132](https://github.com/this-side-down/decision-brief-engine/issues/132)).
 
 See [WebGPU model delivery diagnostic](../../docs/ai/webgpu-model-delivery-diagnostic.md).
 
@@ -187,9 +189,9 @@ Separate from the Windows/Xet 403 blocker ([#124](https://github.com/this-side-d
 | Terminal UI (before fix) | Incorrectly showed `Model download cancelled` |
 | Root cause | Timeout cleanup incremented load generation before `ModelLoadTimeoutError` was classified ([#129](https://github.com/this-side-down/decision-brief-engine/issues/129)) |
 | After fix ([#128](https://github.com/this-side-down/decision-brief-engine/issues/128), [#129](https://github.com/this-side-down/decision-brief-engine/issues/129)) | Timeout and cancellation are distinct; indeterminate/slow/stalled download states surface during active loads |
-| W3 generation result | **Not reached** — model did not reach `model_ready` before timeout; generation still pending |
+| W3 generation result | **Not reached** — model did not reach `model_ready` before timeout; generation still pending on that macOS attempt |
 
-Do not claim model delivery is fixed on macOS or Windows.
+Do not claim model delivery is fixed on all platforms; Windows benchmark machine subsequently loaded the model successfully ([#132](https://github.com/this-side-down/decision-brief-engine/issues/132)).
 
 ### #132 W3 Windows smoke (2026-07-13)
 
@@ -213,7 +215,9 @@ Do not claim model delivery is fixed on macOS or Windows.
 
 Do not treat schema validity alone as structural or product-quality success.
 
-### #116 prompt variant W3 (schema-constrained default prompt) — manual run pending
+### #116 prompt variant W3 (schema-constrained default prompt) — superseded by #132 / #141 runs
+
+The checklist below remains the manual W3 procedure. The 2026-07-13 shard-delivery failure row is historical ([#124](#124-delivery-investigation-2026-07-13--historical)); Windows W3 generation succeeded later the same week ([#132](#132-w3-windows-smoke-2026-07-13)).
 
 | Check | Result |
 | --- | --- |
@@ -221,18 +225,12 @@ Do not treat schema validity alone as structural or product-quality success.
 | Env | `VITE_ENABLE_WEBGPU_INFERENCE=true`; omit `VITE_CAPTURE_PROMPT_VARIANT` |
 | Model | `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` |
 | WebLLM structured output | Capture Layer schema `capture-layer-v1`; Decision Brief envelope schema `decision-brief-result-v1` |
-| Model load | **Failed** — shard requests redirect to `cas-bridge.xethub.hf.co` and return HTTP 403 before WebLLM can cache weights; generation never started ([#124](https://github.com/this-side-down/decision-brief-engine/issues/124)) |
-| Capture Layer attempt 1 schema | **Not reached** |
-| Built-in one-retry path | **Not reached** |
-| Capture Layer total latency | **Not reached** |
-| Structural readiness | **Not reached** |
-| Proceed to brief (harness gate) | **Not reached** |
-| Decision Brief generation | **Not reached** |
-| Decision Trace readiness | **Not reached** |
-| Decision Brief writing checks | **Not reached** |
-| Mock fallback after browser mode | **Pending** |
-
-This attempt is **not** a Capture Layer schema or quality failure — schema-constrained generation never started because upstream Hugging Face Xet shard delivery returned HTTP 403. Repeat W3 after shard delivery succeeds ([#124](https://github.com/this-side-down/decision-brief-engine/issues/124)).
+| Model load (2026-07-13, #124 day) | **Failed** — shard requests redirected to Xet and returned HTTP 403; generation never started |
+| Model load (2026-07-13, #132) | **Succeeded** — see [#132 W3 Windows smoke](#132-w3-windows-smoke-2026-07-13) |
+| Capture Layer attempt 1 schema | **Pass** (#132) |
+| Decision Brief generation | **Reached** (#132, #141) |
+| Decision Trace readiness | Evaluated in `structured_response` mode (#141) |
+| Mock fallback after browser mode | **Pass** (spot-checked) |
 
 Manual validation checklist for W3:
 
@@ -249,6 +247,35 @@ Manual validation checklist for W3:
 11. Confirm browser inference remains hidden in the normal public build.
 
 Do not treat schema validity alone as structural or product-quality success.
+
+### #141 structured_response Household Move Planning (2026-07-14)
+
+Production WebGPU path (`structured_response`): combined `{ markdown, decisionTrace }` envelope. Diagnostics enabled ([#142](https://github.com/this-side-down/decision-brief-engine/pull/142)).
+
+| Check | Result |
+| --- | --- |
+| Example | Household Move Planning (gallery) |
+| Brief attempt 1 tokens | prompt 1,469; completion 2,627; total 4,096 |
+| Brief attempt 1 finish reason | **`length`** (truncated mid-JSON) |
+| Brief retry | Schema-valid partial output; semantic quality fail (wrong recommendation, trace/next-step misalignment) |
+| Root finding | Output-budget exhaustion on first attempt when Decision Trace is co-generated |
+| Experiment implication | Motivated `markdown_only` controlled experiment (PR [#143](https://github.com/this-side-down/decision-brief-engine/pull/143)) |
+
+### #141 markdown_only gallery experiment (2026-07-14, PR #143)
+
+Gated evaluation mode: `VITE_WEBGPU_DECISION_BRIEF_PROMPT_MODE=markdown_only`. WebLLM `@mlc-ai/web-llm@0.2.84`; model `Qwen2.5-1.5B-Instruct-q4f16_1-MLC`. Diagnostics enabled. See [browser-markdown-only-experiment.md](../../docs/ai/browser-markdown-only-experiment.md).
+
+| Example | Brief attempt 1 (prompt / completion / total) | Finish reason | Retry | Final result | Final failure categories |
+| --- | --- | --- | --- | --- | --- |
+| Household Move Planning | 1,197 / 242 / 1,439 | `stop` | Yes — 1,260 / 408 / 1,668 | **FAIL** | `required_sections`, `recommendation_alignment`, `next_step_alignment`, `writing_hard_failure` |
+| Q4 Workforce Allocation | 1,130 / 487 / 1,617 | `stop` | No | **FAIL** | `required_sections`, `recommendation_alignment`, `next_step_alignment`, `writing_hard_failure` |
+| Local Inference Setup Flow | 1,143 / 294 / 1,437 | `stop` | No | **FAIL** | `recommendation_alignment`, `next_step_alignment`, `writing_hard_failure` |
+
+**Conclusion:** Removing Decision Trace eliminated context-window truncation but did not produce acceptable Markdown on any gallery example. All failures occurred with `finish_reason=stop` and substantial headroom. Manual `/16` scores not recorded.
+
+**Next experiment:** Validator-aligned `markdown_only` prompt (not production split-stage implementation).
+
+**PR #143 posture:** Useful as gated evaluation infrastructure; does **not** approve production split-stage architecture.
 
 ### #73 prompt variant W2 (schema_skeleton) — manual run (2026-07-08)
 
@@ -281,8 +308,8 @@ Do not treat schema validity alone as structural or product-quality success.
 
 - **First load:** ~30 s to model-ready after cancelled-then-retried download (not a clean cold start; partial cache from cancelled run) — W1 smoke
 - **Engine reload after refresh:** ~4 s from browser cache (no full re-download observed) — W1 smoke
-- **Capture Layer generation:** ~60 s before failure on construction example (includes one invalid-JSON retry) — W1; ~40–60 s with retry success — W2
-- **Decision Brief generation:** Not observed in browser mode — W1; ~20 s after W2 schema-valid Capture Layer — W2
+- **Capture Layer generation:** ~60 s before failure on construction example (includes one invalid-JSON retry) — W1; ~40–60 s with retry success — W2; ~22 s first-attempt schema pass — W3 (#132)
+- **Decision Brief generation:** Not observed in browser mode — W1; ~20 s after W2 schema-valid Capture Layer — W2; ~23 s first-attempt schema pass — W3 (#132); #141 structured and markdown_only runs recorded above
 
 ### Failure modes
 
@@ -298,9 +325,23 @@ Do not treat schema validity alone as structural or product-quality success.
 - **Score gates:** Not evaluated (manual /16 not run — structural gate failed).
 - **UX gates:** Progress, cancel-download, cancel-generation, cache reuse, and mock fallback behave as designed; model-ready two-click friction and left-panel layout issues tracked in #78 / #79.
 
-### Current decision (2026-07-08)
+### Current decision (2026-07-14)
 
-Browser WebGPU inference remains gated behind `VITE_ENABLE_WEBGPU_INFERENCE=true` for experimental/local validation. Public builds stay on **Mock demo**. See **#73 recommendation** above.
+Browser WebGPU inference remains gated behind `VITE_ENABLE_WEBGPU_INFERENCE=true` for experimental/local validation. Public builds stay on **Mock demo**.
+
+Rationale update:
+
+- Ollama `qwen3:4b` remains the higher-quality local/dev baseline.
+- Browser 1.5B reaches generation after model load ([#132](https://github.com/this-side-down/decision-brief-engine/issues/132)); schema-constrained output works on first attempt for Capture Layer and Decision Brief JSON envelopes.
+- Semantic quality gates ([#132](https://github.com/this-side-down/decision-brief-engine/issues/132)) and #141 diagnostics show schema pass ≠ artifact quality pass.
+- `structured_response` Household Move Planning truncates at 4,096 tokens (`finish_reason=length`) when Decision Trace is co-generated.
+- `markdown_only` experiment (PR [#143](https://github.com/this-side-down/decision-brief-engine/pull/143)) eliminated truncation but **failed all three gallery examples** with `finish_reason=stop` — completeness, grounding, and structure remain the bottleneck.
+- **Keep WebGPU gated.** Next controlled experiment: validator-aligned `markdown_only` prompt. Do not approve production split-stage architecture until a markdown-only stage passes the documented decision rule.
+- Full public ungating still requires [#117](https://github.com/this-side-down/decision-brief-engine/issues/117) Phase 2 (eight cases, two device profiles) plus hard/score/UX thresholds in the quality-gate doc.
+
+### Prior decision note (2026-07-08)
+
+See **#73 recommendation** above for W1/W2 construction Strategy history.
 
 ---
 
@@ -376,7 +417,7 @@ Browser WebGPU inference remains gated behind `VITE_ENABLE_WEBGPU_INFERENCE=true
 
 ## Overall gate decision
 
-- **Primary candidate recommendation:** Keep gated; continue experimenting on **structural field extraction** (risks, assumptions, missing context, implied decision) before another model ID or ungating discussion
-- **Fallback candidate recommendation:** Defer 0.5B / SmolLM2 until structural extraction improves on 1.5B + schema_skeleton
+- **Primary candidate recommendation:** Keep gated; next experiment is validator-aligned `markdown_only` prompt — not production split-stage implementation
+- **Fallback candidate recommendation:** Defer 0.5B / SmolLM2 until markdown-only stage passes gallery examples on 1.5B
 - **Overall browser inference decision:** **defer** public ungating — `keep gated` / continue experimenting
-- **Notes:** Ollama baseline passes construction Capture Layer gates; W1 schema fail; W2 schema pass after retry but structural fail. Decision Brief generated in W2 proves pipeline continuity only. Public Mock default unchanged. Follow-up: [#78](https://github.com/this-side-down/decision-brief-engine/issues/78) (eval telemetry / model-ready flow), [#79](https://github.com/this-side-down/decision-brief-engine/issues/79) (layout / wrapping). Issue #73 does not ungate WebGPU.
+- **Notes:** Ollama baseline passes harness gates on gallery examples; browser W3 reaches generation and passes JSON schemas but fails semantic/markdown quality gates ([#132](https://github.com/this-side-down/decision-brief-engine/issues/132), [#141](https://github.com/this-side-down/decision-brief-engine/issues/141)). Manual `/16` scores remain null. Public Mock default unchanged. Follow-up: [#78](https://github.com/this-side-down/decision-brief-engine/issues/78) (eval telemetry / model-ready flow), [#79](https://github.com/this-side-down/decision-brief-engine/issues/79) (layout / wrapping), [#141](https://github.com/this-side-down/decision-brief-engine/issues/141) (browser brief quality).

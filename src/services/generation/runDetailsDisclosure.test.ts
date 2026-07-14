@@ -261,6 +261,7 @@ describe("run details telemetry transitions", () => {
           webLlmVersion: "0.2.84",
           captureSchemaVersion: "capture-layer-v1",
           briefSchemaVersion: "decision-brief-result-v1",
+          briefPromptMode: "structured_response",
           captureFirstAttemptSchemaPass: true,
           briefFirstAttemptSchemaPass: true,
           briefFirstAttemptSemanticPass: false,

@@ -8,14 +8,15 @@ This document defines the gate to run, not a completed evaluation. Record result
 
 For a repeatable Capture Layer-first entry point (mock + Ollama CLI, WebGPU manual procedure, schema-before-score), use [`capture-layer-eval-harness.md`](capture-layer-eval-harness.md). The first harness case is the construction Strategy example; the five-fixture ungating thresholds in this document still apply before public WebGPU decisions.
 
-For **current-contract full-pipeline evaluation** (Capture Layer, Decision Trace, alignment, Decision Brief writing across all eight cases), use [`pipeline-eval-harness.md`](pipeline-eval-harness.md) and `npm run eval:pipeline` (#126). That harness establishes Mock/Ollama baselines while #124 blocks the scored W3 browser run. It does not replace the hard/score/UX thresholds below.
+For **current-contract full-pipeline evaluation** (Capture Layer, Decision Brief Markdown, Decision Trace, alignment, and Decision Brief writing across all eight cases), use [`pipeline-eval-harness.md`](pipeline-eval-harness.md) and `npm run eval:pipeline` (#126 / [#117](https://github.com/this-side-down/decision-brief-engine/issues/117) Phase 1). Record WebGPU results manually in the same format. It does not replace the hard/score/UX thresholds below or the [#117](https://github.com/this-side-down/decision-brief-engine/issues/117) Phase 2 release gate (eight cases, two device profiles).
 
-The gate exists because the product promise depends on preserving facts, inference, ambiguity, risks, assumptions, missing context, and open questions through a two-step pipeline:
+The gate exists because the product promise depends on preserving facts, inference, ambiguity, risks, assumptions, missing context, and open questions through the full pipeline:
 
 1. Generate valid typed Capture Layer JSON.
-2. Generate Markdown Decision Brief from that Capture Layer.
+2. Generate Decision Brief Markdown from that Capture Layer.
+3. Generate Decision Trace grounded in the Capture Layer and brief.
 
-JSON reliability is the load-bearing risk. Markdown generation is lower risk.
+JSON reliability and Markdown semantic quality are both load-bearing risks. Decision Trace readiness and alignment are evaluated in production `structured_response` mode; see [#141](https://github.com/this-side-down/decision-brief-engine/issues/141) for browser brief quality investigation and the failed `markdown_only` experiment (PR [#143](https://github.com/this-side-down/decision-brief-engine/pull/143)).
 
 This document satisfies the planning scope for [#57](https://github.com/this-side-down/decision-brief-engine/issues/57). It does not implement browser inference, add runtime dependencies, call hosted model APIs, or change app behavior.
 
@@ -28,9 +29,20 @@ The first successful Windows W3 run passed both Capture Layer and Decision Brief
 - One bounded retry regenerates grounded content when schema-valid output fails semantic quality.
 - Run details distinguish schema pass from semantic quality pass.
 
-This gate is necessary but not sufficient for public ungating. W3 quality evaluation remains incomplete; browser inference stays gated and Mock remains default.
+This gate is necessary but not sufficient for public ungating. W3 quality evaluation shows schema pass does not imply artifact quality pass; browser inference stays gated and Mock remains default.
 
-See [`fixtures/evaluation/browser-model-results.md`](../../fixtures/evaluation/browser-model-results.md) for the W3 Windows smoke record.
+### #141 browser generation diagnostics and markdown_only experiment (2026-07-14)
+
+[#142](https://github.com/this-side-down/decision-brief-engine/pull/142) added local-only completion diagnostics (tokens, finish reason, semantic findings). PR [#143](https://github.com/this-side-down/decision-brief-engine/pull/143) added gated `markdown_only` evaluation mode to test whether removing Decision Trace output burden improves Decision Brief Markdown quality.
+
+Recorded results (all three gallery examples, manual runs):
+
+- **`structured_response` Household Move Planning:** first brief attempt truncated at 4,096 tokens (`finish_reason=length`) when Decision Trace was co-generated.
+- **`markdown_only` (PR #143):** truncation eliminated (`finish_reason=stop` on all attempts) but **all three gallery examples failed** the documented decision rule — missing sections, recommendation misalignment, next-step structure failures, and writing hard failures.
+
+Conclusion: Markdown quality is not inherently lower risk than JSON/schema reliability. A production split-stage pipeline is not yet justified because the proposed first Markdown stage itself fails. Next controlled experiment: validator-aligned `markdown_only` prompt. PR #143 ships evaluation infrastructure only; it does not approve production split-stage architecture.
+
+See [`browser-markdown-only-experiment.md`](browser-markdown-only-experiment.md) and [`fixtures/evaluation/browser-model-results.md`](../../fixtures/evaluation/browser-model-results.md).
 
 ## Candidate model/runtime combinations to evaluate
 
@@ -75,7 +87,7 @@ Use all five evaluation fixtures in `fixtures/evaluation/`:
 
 Each evaluation pass should run the full pipeline:
 
-raw notes → Capture Layer JSON → Decision Brief Markdown
+raw notes → Capture Layer JSON → Decision Brief Markdown → Decision Trace
 
 Use the same prompt contracts documented in `docs/ai/prompt-contracts.md` and the Capture Layer contract in `docs/product/capture-layer.md`.
 
@@ -152,7 +164,7 @@ If JSON/schema reliability fails or download/device friction is unacceptable, de
 
 ## Decision rule
 
-Apply exactly one outcome only after manual runs are recorded in `fixtures/evaluation/browser-model-results.md`:
+Apply exactly one outcome only after manual runs are recorded in `fixtures/evaluation/browser-model-results.md`. [#117](https://github.com/this-side-down/decision-brief-engine/issues/117) Phase 2 requires the full eight-case, two-device browser evaluation before any public ungating decision.
 
 | Outcome | When to choose it |
 | --- | --- |
@@ -216,4 +228,6 @@ Required placeholder rows to maintain until evaluation is complete:
 - [WebGPU adapter feasibility](webgpu-adapter-feasibility.md)
 - [Evaluation plan](evaluation-plan.md)
 - [Manual scorecard](../../fixtures/evaluation/manual-scorecard.md)
+- [Browser markdown-only experiment (#141)](browser-markdown-only-experiment.md)
+- [Browser generation diagnostics (#141)](browser-generation-diagnostics.md)
 - [ADR 0004: inference path decision brief](../decisions/0004-inference-path-decision-brief.md)

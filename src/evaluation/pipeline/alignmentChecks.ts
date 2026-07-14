@@ -145,3 +145,82 @@ export function evaluateArtifactAlignment(options: {
         },
   };
 }
+
+/**
+ * Markdown-only alignment: Capture Layer recommendation and next steps vs Decision Brief.
+ * Decision Trace is not applicable in this experiment.
+ */
+export function evaluateBriefMarkdownAlignment(options: {
+  captureLayer: CaptureLayer;
+  briefMarkdown: string;
+}): {
+  recommendationAlignmentPass: boolean;
+  nextStepAlignmentPass: boolean;
+  findings: StructuralCheck[];
+  uncoveredNextStepStatements: string[];
+  recommendationMismatchSources: {
+    capture: string;
+    brief: string;
+  } | null;
+} {
+  const { captureLayer, briefMarkdown } = options;
+  const findings: StructuralCheck[] = [];
+
+  const briefRecommendation = extractRecommendationSection(briefMarkdown);
+  const captureRecommendation = normalizeRecommendationText(
+    captureLayer.recommendation_candidate,
+  );
+
+  const briefMatchesCapture =
+    !captureRecommendation ||
+    correspondsToText(briefRecommendation, captureRecommendation);
+
+  findings.push(
+    check(
+      "recommendation_alignment",
+      briefMatchesCapture,
+      briefMatchesCapture
+        ? "Recommendation in Decision Brief corresponds to Capture Layer recommendation_candidate"
+        : `Recommendation mismatch — capture="${captureRecommendation}" brief="${briefRecommendation}"`,
+    ),
+  );
+
+  const briefNextSteps = extractNextStepLines(briefMarkdown);
+  const captureNextSteps = captureLayer.suggested_next_steps.map((step) =>
+    normalizeRecommendationText(step),
+  );
+
+  const uncoveredCaptureSteps = captureNextSteps.filter(
+    (step) => !briefNextSteps.some((briefStep) => correspondsToText(briefStep, step)),
+  );
+
+  const nextStepCountAligned =
+    captureNextSteps.length === 0 ||
+    briefNextSteps.length === captureNextSteps.length;
+
+  const nextStepAlignmentPass =
+    uncoveredCaptureSteps.length === 0 && nextStepCountAligned;
+
+  findings.push(
+    check(
+      "next_step_alignment",
+      nextStepAlignmentPass,
+      nextStepAlignmentPass
+        ? "All Capture Layer suggested_next_steps are represented in Decision Brief Suggested Next Steps"
+        : `${uncoveredCaptureSteps.length} next-step mismatch(es); counts capture=${captureNextSteps.length} brief=${briefNextSteps.length}`,
+    ),
+  );
+
+  return {
+    recommendationAlignmentPass: briefMatchesCapture,
+    nextStepAlignmentPass,
+    findings,
+    uncoveredNextStepStatements: uncoveredCaptureSteps,
+    recommendationMismatchSources: briefMatchesCapture
+      ? null
+      : {
+          capture: captureRecommendation,
+          brief: briefRecommendation,
+        },
+  };
+}

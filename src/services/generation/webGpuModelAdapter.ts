@@ -6,6 +6,7 @@ import type {
   ModelAdapter,
 } from "./types";
 import { parseCaptureLayerJson } from "./parseCaptureLayer";
+import { parseDecisionBriefMarkdownOnlyJson } from "./parseDecisionBriefMarkdownOnly";
 import { parseDecisionBriefResultJson } from "./parseDecisionBriefResult";
 import { buildCaptureLayerPrompt, buildDecisionBriefPrompt } from "./prompts";
 import {
@@ -26,17 +27,27 @@ import {
 } from "./webGpuInputBudget";
 import {
   CAPTURE_LAYER_RESPONSE_FORMAT,
+  DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_FORMAT,
   DECISION_BRIEF_RESULT_RESPONSE_FORMAT,
   WEBGPU_CAPTURE_LAYER_SCHEMA_VERSION,
+  WEBGPU_DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_VERSION,
   WEBGPU_DECISION_BRIEF_RESULT_SCHEMA_VERSION,
   WEB_LLM_PACKAGE_VERSION,
 } from "./webGpuGenerationSchemas";
+import {
+  resolveWebGpuDecisionBriefPromptMode,
+  type WebGpuDecisionBriefPromptMode,
+} from "./webGpuDecisionBriefExperiment";
 import {
   buildDecisionBriefQualityRetrySuffix,
   evaluateDecisionBriefSemanticAcceptance,
   formatSemanticAcceptanceFindingLines,
   type SemanticAcceptanceDetailedFindings,
 } from "./decisionBriefSemanticAcceptance";
+import {
+  evaluateDecisionBriefMarkdownOnlyAcceptance,
+  formatMarkdownOnlyAcceptanceFindingLines,
+} from "./decisionBriefMarkdownOnlyAcceptance";
 import {
   type BrowserGenerationRawCaptureArtifact,
   type BrowserGenerationStage,
@@ -58,6 +69,7 @@ export type WebGpuFirstAttemptResult = {
   retryReasonCategories?: string[];
   completionDiagnostics?: StructuredCompletionDiagnostics | null;
   semanticFindings?: SemanticAcceptanceDetailedFindings | null;
+  briefPromptMode?: WebGpuDecisionBriefPromptMode;
 };
 
 export type WebGpuEvalContext = {
@@ -65,6 +77,7 @@ export type WebGpuEvalContext = {
   webLlmVersion: string;
   captureSchemaVersion: string;
   briefSchemaVersion: string;
+  briefPromptMode: WebGpuDecisionBriefPromptMode;
 };
 
 export type WebGpuGenerationCaptureContext = {
@@ -75,12 +88,17 @@ export type WebGpuGenerationCaptureContext = {
 
 export function getWebGpuEvalContext(): WebGpuEvalContext {
   const { modelId } = getWebGpuConfig();
+  const briefPromptMode = resolveWebGpuDecisionBriefPromptMode();
 
   return {
     modelId,
     webLlmVersion: WEB_LLM_PACKAGE_VERSION,
     captureSchemaVersion: WEBGPU_CAPTURE_LAYER_SCHEMA_VERSION,
-    briefSchemaVersion: WEBGPU_DECISION_BRIEF_RESULT_SCHEMA_VERSION,
+    briefSchemaVersion:
+      briefPromptMode === "markdown_only"
+        ? WEBGPU_DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_VERSION
+        : WEBGPU_DECISION_BRIEF_RESULT_SCHEMA_VERSION,
+    briefPromptMode,
   };
 }
 
@@ -110,8 +128,85 @@ type StructuredCompletionResult = {
   diagnostics: StructuredCompletionDiagnostics;
 };
 
+type BriefGenerationProfile = {
+  briefPromptMode: WebGpuDecisionBriefPromptMode;
+  briefSchemaVersion: string;
+  responseFormat: ResponseFormat;
+  buildPrompt: (input: GenerateDecisionBriefInput) => string;
+  parseResult: (rawText: string) => DecisionBriefResult;
+  evaluateAcceptance: (
+    result: DecisionBriefResult,
+    captureLayer: GenerateDecisionBriefInput["captureLayer"],
+  ) => {
+    accepted: boolean;
+    failureCategories: readonly string[];
+    detailedFindings: SemanticAcceptanceDetailedFindings;
+  };
+};
+
+function resolveBriefGenerationProfile(): BriefGenerationProfile {
+  const briefPromptMode = resolveWebGpuDecisionBriefPromptMode();
+
+  if (briefPromptMode === "markdown_only") {
+    return {
+      briefPromptMode,
+      briefSchemaVersion: WEBGPU_DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_VERSION,
+      responseFormat: DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_FORMAT,
+      buildPrompt: (input) =>
+        buildDecisionBriefPrompt(input, { mode: "markdown_only" }),
+      parseResult: parseDecisionBriefMarkdownOnlyJson,
+      evaluateAcceptance: (result, captureLayer) => {
+        const semantic = evaluateDecisionBriefMarkdownOnlyAcceptance({
+          result,
+          captureLayer,
+        });
+        return {
+          accepted: semantic.accepted,
+          failureCategories: semantic.failureCategories,
+          detailedFindings: semantic.detailedFindings,
+        };
+      },
+    };
+  }
+
+  return {
+    briefPromptMode: "structured_response",
+    briefSchemaVersion: WEBGPU_DECISION_BRIEF_RESULT_SCHEMA_VERSION,
+    responseFormat: DECISION_BRIEF_RESULT_RESPONSE_FORMAT,
+    buildPrompt: (input) =>
+      buildDecisionBriefPrompt(input, { mode: "structured_response" }),
+    parseResult: parseDecisionBriefResultJson,
+    evaluateAcceptance: (result, captureLayer) => {
+      const semantic = evaluateDecisionBriefSemanticAcceptance({
+        result,
+        captureLayer,
+      });
+      return {
+        accepted: semantic.accepted,
+        failureCategories: semantic.failureCategories,
+        detailedFindings: semantic.detailedFindings,
+      };
+    },
+  };
+}
+
 function createRunTimestamp(context?: WebGpuGenerationCaptureContext): string {
   return context?.runTimestamp ?? new Date().toISOString();
+}
+
+function resolveWebGpuDiagnosticArtifactConfiguration(): {
+  briefPromptMode: WebGpuDecisionBriefPromptMode;
+  briefSchemaVersion: string;
+} {
+  const briefPromptMode = resolveWebGpuDecisionBriefPromptMode();
+
+  return {
+    briefPromptMode,
+    briefSchemaVersion:
+      briefPromptMode === "markdown_only"
+        ? WEBGPU_DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_VERSION
+        : WEBGPU_DECISION_BRIEF_RESULT_SCHEMA_VERSION,
+  };
 }
 
 async function maybePersistRawOutput(options: {
@@ -120,7 +215,13 @@ async function maybePersistRawOutput(options: {
   attemptNumber: number;
   diagnostics: StructuredCompletionDiagnostics;
   rawOutput: string;
+  artifactConfiguration?: {
+    briefPromptMode: WebGpuDecisionBriefPromptMode;
+    briefSchemaVersion: string;
+  };
 }): Promise<void> {
+  const artifactConfiguration =
+    options.artifactConfiguration ?? resolveWebGpuDiagnosticArtifactConfiguration();
   const runTimestamp = createRunTimestamp(options.captureContext);
   const filename = buildBrowserGenerationDiagnosticFilename({
     runTimestamp,
@@ -137,7 +238,8 @@ async function maybePersistRawOutput(options: {
       modelId: options.diagnostics.modelId,
       webLlmVersion: options.diagnostics.webLlmVersion,
       captureSchemaVersion: WEBGPU_CAPTURE_LAYER_SCHEMA_VERSION,
-      briefSchemaVersion: WEBGPU_DECISION_BRIEF_RESULT_SCHEMA_VERSION,
+      briefSchemaVersion: artifactConfiguration.briefSchemaVersion,
+      briefPromptMode: artifactConfiguration.briefPromptMode,
       configuredMaxTokens: options.diagnostics.configuredMaxTokens,
     },
     attempt: {
@@ -263,17 +365,20 @@ async function generateDecisionBriefWithQualityGate(
     ) => void;
   },
 ): Promise<DecisionBriefResult> {
-  const prompt = buildDecisionBriefPrompt(input, { mode: "structured_response" });
+  const profile = resolveBriefGenerationProfile();
+  const prompt = profile.buildPrompt(input);
+  const completionCallbacks = { ...options };
+
   const firstCompletion = await completeStructuredPrompt(
     engine,
     {
       prompt,
-      responseFormat: DECISION_BRIEF_RESULT_RESPONSE_FORMAT,
+      responseFormat: profile.responseFormat,
       signal: options.signal,
       generationStage: "brief",
       attemptNumber: 1,
     },
-    options,
+    completionCallbacks,
   );
   const rawText = firstCompletion.content;
 
@@ -282,12 +387,9 @@ async function generateDecisionBriefWithQualityGate(
   let firstSemanticFindings: SemanticAcceptanceDetailedFindings | null = null;
 
   try {
-    firstResult = parseDecisionBriefResultJson(rawText);
-    const semantic = evaluateDecisionBriefSemanticAcceptance({
-      result: firstResult,
-      captureLayer: input.captureLayer,
-    });
-    firstSemanticFailureCategories = semantic.failureCategories;
+    firstResult = profile.parseResult(rawText);
+    const semantic = profile.evaluateAcceptance(firstResult, input.captureLayer);
+    firstSemanticFailureCategories = [...semantic.failureCategories];
     firstSemanticFindings = semantic.detailedFindings;
 
     recordBriefFirstAttemptOutcome(options.onBriefFirstAttempt, {
@@ -296,9 +398,10 @@ async function generateDecisionBriefWithQualityGate(
       placeholderLeakageDetected: semantic.failureCategories.includes(
         "placeholder_leakage",
       ),
-      retryReasonCategories: semantic.accepted ? [] : semantic.failureCategories,
+      retryReasonCategories: semantic.accepted ? [] : [...semantic.failureCategories],
       completionDiagnostics: firstCompletion.diagnostics,
       semanticFindings: semantic.detailedFindings,
+      briefPromptMode: profile.briefPromptMode,
     });
 
     if (semantic.accepted) {
@@ -316,6 +419,7 @@ async function generateDecisionBriefWithQualityGate(
       retryReasonCategories: ["parse_schema"],
       completionDiagnostics: firstCompletion.diagnostics,
       semanticFindings: null,
+      briefPromptMode: profile.briefPromptMode,
     });
   }
 
@@ -330,19 +434,16 @@ async function generateDecisionBriefWithQualityGate(
       engine,
       {
         prompt: `${prompt}${retrySuffix}`,
-        responseFormat: DECISION_BRIEF_RESULT_RESPONSE_FORMAT,
+        responseFormat: profile.responseFormat,
         signal: options.signal,
         generationStage: "brief_retry",
         attemptNumber: 2,
       },
-      options,
+      completionCallbacks,
     );
     const retryText = retryCompletion.content;
-    const retryResult = parseDecisionBriefResultJson(retryText);
-    const retrySemantic = evaluateDecisionBriefSemanticAcceptance({
-      result: retryResult,
-      captureLayer: input.captureLayer,
-    });
+    const retryResult = profile.parseResult(retryText);
+    const retrySemantic = profile.evaluateAcceptance(retryResult, input.captureLayer);
 
     if (retrySemantic.accepted) {
       return retryResult;
@@ -369,12 +470,15 @@ async function generateDecisionBriefWithQualityGate(
 
 export function getWebGpuSemanticFindingSummaryLines(
   findings: SemanticAcceptanceDetailedFindings | null | undefined,
+  briefPromptMode: WebGpuDecisionBriefPromptMode = resolveWebGpuDecisionBriefPromptMode(),
 ): string[] {
   if (!findings) {
     return [];
   }
 
-  return formatSemanticAcceptanceFindingLines(findings);
+  return briefPromptMode === "markdown_only"
+    ? formatMarkdownOnlyAcceptanceFindingLines(findings)
+    : formatSemanticAcceptanceFindingLines(findings);
 }
 
 export function createWebGpuModelAdapter({

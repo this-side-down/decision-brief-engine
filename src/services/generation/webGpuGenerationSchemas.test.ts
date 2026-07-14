@@ -4,10 +4,14 @@ import {
   CAPTURE_LAYER_JSON_SCHEMA,
   CAPTURE_LAYER_RESPONSE_FORMAT,
   CAPTURE_LAYER_RESPONSE_SCHEMA_JSON,
+  DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA,
+  DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_FORMAT,
+  DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_SCHEMA_JSON,
   DECISION_BRIEF_RESULT_JSON_SCHEMA,
   DECISION_BRIEF_RESULT_RESPONSE_FORMAT,
   DECISION_BRIEF_RESULT_RESPONSE_SCHEMA_JSON,
   WEBGPU_CAPTURE_LAYER_SCHEMA_VERSION,
+  WEBGPU_DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_VERSION,
   WEBGPU_DECISION_BRIEF_RESULT_SCHEMA_VERSION,
   buildWebGpuJsonResponseFormat,
 } from "./webGpuGenerationSchemas";
@@ -100,6 +104,25 @@ describe("webGpuGenerationSchemas", () => {
     );
     expect(JSON.parse(DECISION_BRIEF_RESULT_RESPONSE_SCHEMA_JSON)).toEqual(
       DECISION_BRIEF_RESULT_JSON_SCHEMA,
+    );
+    expect(JSON.parse(DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_SCHEMA_JSON)).toEqual(
+      DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA,
+    );
+  });
+
+  it("defines markdown-only schema without Decision Trace", () => {
+    const parsed = JSON.parse(DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_SCHEMA_JSON) as {
+      required: string[];
+      properties: Record<string, unknown>;
+    };
+
+    expect(WEBGPU_DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_VERSION).toBe(
+      "decision-brief-markdown-only-v1",
+    );
+    expect(parsed.required).toEqual(["markdown"]);
+    expect(parsed.properties).toEqual({ markdown: { type: "string" } });
+    expect(DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_FORMAT.schema).toBe(
+      DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_SCHEMA_JSON,
     );
   });
 });

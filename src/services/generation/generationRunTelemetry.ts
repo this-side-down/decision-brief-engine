@@ -19,6 +19,7 @@ export type WebGpuGenerationEval = {
   webLlmVersion: string;
   captureSchemaVersion: string;
   briefSchemaVersion: string;
+  briefPromptMode: "structured_response" | "markdown_only";
   captureFirstAttemptSchemaPass: boolean | null;
   briefFirstAttemptSchemaPass: boolean | null;
   briefFirstAttemptSemanticPass: boolean | null;
@@ -201,6 +202,11 @@ export function formatRunDetailsLines(record: GenerationRunRecord): string[] {
     lines.push(
       `Structured output schemas: ${evalRecord.captureSchemaVersion} / ${evalRecord.briefSchemaVersion}`,
     );
+    if (evalRecord.briefPromptMode === "markdown_only") {
+      lines.push(
+        "Decision Brief experiment mode: markdown_only (Decision Trace checks not applicable)",
+      );
+    }
     lines.push(
       `Capture first attempt schema: ${formatFirstAttemptSummary(evalRecord.captureFirstAttemptSchemaPass)}`,
     );

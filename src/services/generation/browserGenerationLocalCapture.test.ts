@@ -53,6 +53,7 @@ describe("browserGenerationLocalCapture", () => {
           webLlmVersion: "0.2.84",
           captureSchemaVersion: "capture-layer-v1",
           briefSchemaVersion: "decision-brief-result-v1",
+          briefPromptMode: "structured_response",
           configuredMaxTokens: null,
         },
         attempt: {
@@ -105,6 +106,7 @@ describe("browserGenerationLocalCapture", () => {
         webLlmVersion: "0.2.84",
         captureSchemaVersion: "capture-layer-v1",
         briefSchemaVersion: "decision-brief-result-v1",
+        briefPromptMode: "structured_response",
         configuredMaxTokens: null,
       },
       attempt: {
