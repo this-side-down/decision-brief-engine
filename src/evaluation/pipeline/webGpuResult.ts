@@ -130,5 +130,6 @@ export function buildWebGpuPipelineResult(input: {
     failureKind: deterministicUsableBrief ? "none" : "product_quality",
     artifactPaths: null,
     webGpu,
+    longInputDiagnostics: null,
   });
 }

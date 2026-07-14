@@ -1,8 +1,8 @@
 {
   "resultFormatVersion": 1,
-  "runId": "pipeline-2026-07-14T18-06-21-209Z",
-  "timestamp": "2026-07-14T18:06:21.262Z",
-  "buildCommit": "59b03934f617681e0c2f08344d791ff87eb0b34e",
+  "runId": "pipeline-2026-07-14T18-49-12-138Z",
+  "timestamp": "2026-07-14T18:49:12.188Z",
+  "buildCommit": "c4aef624b178159292efca1d2c9422506569b858",
   "generationMode": "mock",
   "modelId": "mockModelAdapter",
   "caseIds": [
@@ -11,6 +11,7 @@
     "execution-planning",
     "customer-interview-synthesis",
     "ambiguous-stakeholder-conversation",
+    "regional-launch-readiness-review",
     "q4-workforce-allocation",
     "local-inference-setup-flow",
     "household-move-planning",
@@ -18,9 +19,9 @@
   ],
   "results": [
     {
-      "runId": "pipeline-2026-07-14T18-06-21-209Z",
-      "timestamp": "2026-07-14T18:06:21.267Z",
-      "buildCommit": "59b03934f617681e0c2f08344d791ff87eb0b34e",
+      "runId": "pipeline-2026-07-14T18-49-12-138Z",
+      "timestamp": "2026-07-14T18:49:12.192Z",
+      "buildCommit": "c4aef624b178159292efca1d2c9422506569b858",
       "fixtureId": "product-prioritization",
       "fixtureName": "Product prioritization meeting",
       "fixtureCategory": "evaluation-fixture",
@@ -81,7 +82,7 @@
       ],
       "inventedStatedDecisionFinding": null,
       "captureLayerRetryCount": 0,
-      "captureLayerLatencyMs": 0,
+      "captureLayerLatencyMs": 1,
       "decisionBriefAttempted": true,
       "decisionBriefGenerationSuccess": true,
       "decisionBriefLatencyMs": 0,
@@ -175,6 +176,19 @@
       "failureKind": "product_quality",
       "artifactPaths": null,
       "webGpu": null,
+      "longInputDiagnostics": {
+        "strategy": "single_pass",
+        "chunkCount": null,
+        "sourceCoverageComplete": null,
+        "totalSourceLength": null,
+        "coveredSourceLength": null,
+        "chunkRetryCounts": null,
+        "totalChunkRetries": null,
+        "planningLatencyMs": null,
+        "chunkExtractionLatencyMs": null,
+        "mergeLatencyMs": null,
+        "validationLatencyMs": null
+      },
       "resultFormatVersion": 1,
       "captureLayerSchemaVersion": "1",
       "decisionTraceSchemaVersion": "0.2",
@@ -189,9 +203,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-14T18-06-21-209Z",
-      "timestamp": "2026-07-14T18:06:21.270Z",
-      "buildCommit": "59b03934f617681e0c2f08344d791ff87eb0b34e",
+      "runId": "pipeline-2026-07-14T18-49-12-138Z",
+      "timestamp": "2026-07-14T18:49:12.196Z",
+      "buildCommit": "c4aef624b178159292efca1d2c9422506569b858",
       "fixtureId": "strategy-tradeoff",
       "fixtureName": "Strategy tradeoff discussion",
       "fixtureCategory": "evaluation-fixture",
@@ -335,7 +349,9 @@
         "missing-source-proper-noun: Capture Layer proper noun not found in brief: Explicit.",
         "missing-source-proper-noun: Capture Layer proper noun not found in brief: Confirmed.",
         "missing-source-proper-noun: Capture Layer proper noun not found in brief: Evidence.",
-        "high-capture-reuse: Brief shares 87% token overlap with Capture Layer text."
+        "missing-source-quantity: Capture Layer quantity not found in brief: 6.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 12.",
+        "high-capture-reuse: Brief shares 86% token overlap with Capture Layer text."
       ],
       "deterministicUsableBrief": false,
       "evaluatorNotes": [],
@@ -348,6 +364,24 @@
       "failureKind": "product_quality",
       "artifactPaths": null,
       "webGpu": null,
+      "longInputDiagnostics": {
+        "strategy": "hierarchical",
+        "chunkCount": 4,
+        "sourceCoverageComplete": true,
+        "totalSourceLength": 6358,
+        "coveredSourceLength": 6358,
+        "chunkRetryCounts": {
+          "chunk-001": 0,
+          "chunk-002": 0,
+          "chunk-003": 0,
+          "chunk-004": 0
+        },
+        "totalChunkRetries": 0,
+        "planningLatencyMs": 1,
+        "chunkExtractionLatencyMs": 0,
+        "mergeLatencyMs": 1,
+        "validationLatencyMs": 0
+      },
       "resultFormatVersion": 1,
       "captureLayerSchemaVersion": "1",
       "decisionTraceSchemaVersion": "0.2",
@@ -362,9 +396,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-14T18-06-21-209Z",
-      "timestamp": "2026-07-14T18:06:21.271Z",
-      "buildCommit": "59b03934f617681e0c2f08344d791ff87eb0b34e",
+      "runId": "pipeline-2026-07-14T18-49-12-138Z",
+      "timestamp": "2026-07-14T18:49:12.196Z",
+      "buildCommit": "c4aef624b178159292efca1d2c9422506569b858",
       "fixtureId": "execution-planning",
       "fixtureName": "Execution planning disagreement",
       "fixtureCategory": "evaluation-fixture",
@@ -519,6 +553,19 @@
       "failureKind": "product_quality",
       "artifactPaths": null,
       "webGpu": null,
+      "longInputDiagnostics": {
+        "strategy": "single_pass",
+        "chunkCount": null,
+        "sourceCoverageComplete": null,
+        "totalSourceLength": null,
+        "coveredSourceLength": null,
+        "chunkRetryCounts": null,
+        "totalChunkRetries": null,
+        "planningLatencyMs": null,
+        "chunkExtractionLatencyMs": null,
+        "mergeLatencyMs": null,
+        "validationLatencyMs": null
+      },
       "resultFormatVersion": 1,
       "captureLayerSchemaVersion": "1",
       "decisionTraceSchemaVersion": "0.2",
@@ -533,9 +580,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-14T18-06-21-209Z",
-      "timestamp": "2026-07-14T18:06:21.272Z",
-      "buildCommit": "59b03934f617681e0c2f08344d791ff87eb0b34e",
+      "runId": "pipeline-2026-07-14T18-49-12-138Z",
+      "timestamp": "2026-07-14T18:49:12.197Z",
+      "buildCommit": "c4aef624b178159292efca1d2c9422506569b858",
       "fixtureId": "customer-interview-synthesis",
       "fixtureName": "Customer interview synthesis",
       "fixtureCategory": "evaluation-fixture",
@@ -690,6 +737,19 @@
       "failureKind": "product_quality",
       "artifactPaths": null,
       "webGpu": null,
+      "longInputDiagnostics": {
+        "strategy": "single_pass",
+        "chunkCount": null,
+        "sourceCoverageComplete": null,
+        "totalSourceLength": null,
+        "coveredSourceLength": null,
+        "chunkRetryCounts": null,
+        "totalChunkRetries": null,
+        "planningLatencyMs": null,
+        "chunkExtractionLatencyMs": null,
+        "mergeLatencyMs": null,
+        "validationLatencyMs": null
+      },
       "resultFormatVersion": 1,
       "captureLayerSchemaVersion": "1",
       "decisionTraceSchemaVersion": "0.2",
@@ -704,9 +764,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-14T18-06-21-209Z",
-      "timestamp": "2026-07-14T18:06:21.273Z",
-      "buildCommit": "59b03934f617681e0c2f08344d791ff87eb0b34e",
+      "runId": "pipeline-2026-07-14T18-49-12-138Z",
+      "timestamp": "2026-07-14T18:49:12.198Z",
+      "buildCommit": "c4aef624b178159292efca1d2c9422506569b858",
       "fixtureId": "ambiguous-stakeholder-conversation",
       "fixtureName": "Ambiguous stakeholder conversation",
       "fixtureCategory": "evaluation-fixture",
@@ -863,6 +923,19 @@
       "failureKind": "product_quality",
       "artifactPaths": null,
       "webGpu": null,
+      "longInputDiagnostics": {
+        "strategy": "single_pass",
+        "chunkCount": null,
+        "sourceCoverageComplete": null,
+        "totalSourceLength": null,
+        "coveredSourceLength": null,
+        "chunkRetryCounts": null,
+        "totalChunkRetries": null,
+        "planningLatencyMs": null,
+        "chunkExtractionLatencyMs": null,
+        "mergeLatencyMs": null,
+        "validationLatencyMs": null
+      },
       "resultFormatVersion": 1,
       "captureLayerSchemaVersion": "1",
       "decisionTraceSchemaVersion": "0.2",
@@ -877,9 +950,234 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-14T18-06-21-209Z",
-      "timestamp": "2026-07-14T18:06:21.274Z",
-      "buildCommit": "59b03934f617681e0c2f08344d791ff87eb0b34e",
+      "runId": "pipeline-2026-07-14T18-49-12-138Z",
+      "timestamp": "2026-07-14T18:49:12.201Z",
+      "buildCommit": "c4aef624b178159292efca1d2c9422506569b858",
+      "fixtureId": "regional-launch-readiness-review",
+      "fixtureName": "Regional launch readiness review",
+      "fixtureCategory": "evaluation-fixture",
+      "generationMode": "mock",
+      "modelId": "mockModelAdapter",
+      "runtimeLibraryVersion": null,
+      "promptVariant": null,
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": false,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": false,
+          "detail": "2 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": false,
+          "detail": "3 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": false,
+          "detail": "2 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "2 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": false,
+          "detail": "2 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "3 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": false,
+          "detail": "recommendation_candidate is empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=Medium"
+        }
+      ],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 2,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": true,
+      "decisionBriefLatencyMs": 0,
+      "decisionTraceSchemaPass": true,
+      "decisionTraceStructuralReadinessPass": true,
+      "decisionTraceFindings": [
+        {
+          "id": "recommendation_coverage",
+          "pass": true,
+          "detail": "recommendation_candidate is empty; recommendation coverage not required"
+        },
+        {
+          "id": "next_step_count",
+          "pass": true,
+          "detail": "2 next_step entries for 2 suggested_next_steps"
+        },
+        {
+          "id": "next_step_statement_coverage",
+          "pass": true,
+          "detail": "every suggested_next_steps item has a corresponding next_step entry statement"
+        },
+        {
+          "id": "entries_have_intent",
+          "pass": true,
+          "detail": "every entry has a non-empty basis.intent"
+        },
+        {
+          "id": "entries_have_confidence",
+          "pass": true,
+          "detail": "every entry has a valid per-item confidence"
+        },
+        {
+          "id": "entries_have_non_empty_basis",
+          "pass": true,
+          "detail": "every entry has at least one non-empty basis array field"
+        },
+        {
+          "id": "would_change_if_specific",
+          "pass": true,
+          "detail": "every entry has at least one specific, non-generic would_change_if condition"
+        },
+        {
+          "id": "intent_grounded_in_goals",
+          "pass": true,
+          "detail": "every non-empty basis.intent is grounded in captureLayer.goals"
+        },
+        {
+          "id": "basis_grounded_in_capture_layer",
+          "pass": true,
+          "detail": "every basis array item is grounded in the corresponding Capture Layer field"
+        },
+        {
+          "id": "recommendation_alignment",
+          "pass": true,
+          "detail": "Recommendation statement aligns across Capture Layer, Decision Trace, and Decision Brief"
+        },
+        {
+          "id": "next_step_alignment",
+          "pass": true,
+          "detail": "Next-step statements align across Capture Layer, Decision Trace, and Decision Brief"
+        }
+      ],
+      "recommendationAlignmentPass": true,
+      "nextStepAlignmentPass": true,
+      "requiredDecisionBriefSectionsPass": true,
+      "writingHardFailures": [
+        "em-dash: Decision Brief contains an em dash (U+2014).",
+        "bare-confidence: Confidence section states a label without an explanation."
+      ],
+      "writingWarnings": [
+        "sentence-length-warning: Sentence is 27 words (warning range 25-35).",
+        "section-restates-heading: Section begins by restating its heading: Confidence."
+      ],
+      "writingReportOnlyFindings": [
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Clarify.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Affected.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Reviewer Option.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Legal.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Compliance.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Kyle.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Product Launch.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Opening.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: If.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Current.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Singapore.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Australia.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Broad.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Missing.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Malaysia.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: April.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Geography.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Sydney.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Noise.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Philippines.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Require.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Northstar.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: May.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Pilot.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Monitoring.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Confirmed.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Repeated.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Speed.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Explicit.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: Evidence.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: PM.",
+        "missing-source-proper-noun: Capture Layer proper noun not found in brief: SLA.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 2.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 14.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 14..",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 20.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 18.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 12.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 28.",
+        "missing-source-quantity: Capture Layer quantity not found in brief: 95%.",
+        "high-capture-reuse: Brief shares 89% token overlap with Capture Layer text."
+      ],
+      "deterministicUsableBrief": false,
+      "evaluatorNotes": [],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment.",
+        "Mock adapter returns synthetic Capture Layers for non-gallery eval fixtures; gallery cases use authored demo fixtures via demo: sourceLabel."
+      ],
+      "rawErrorCategory": "none",
+      "failureKind": "product_quality",
+      "artifactPaths": null,
+      "webGpu": null,
+      "longInputDiagnostics": {
+        "strategy": "hierarchical",
+        "chunkCount": 6,
+        "sourceCoverageComplete": true,
+        "totalSourceLength": 9872,
+        "coveredSourceLength": 9872,
+        "chunkRetryCounts": {
+          "chunk-001": 0,
+          "chunk-002": 0,
+          "chunk-003": 0,
+          "chunk-004": 0,
+          "chunk-005": 0,
+          "chunk-006": 0
+        },
+        "totalChunkRetries": 0,
+        "planningLatencyMs": 0,
+        "chunkExtractionLatencyMs": 1,
+        "mergeLatencyMs": 1,
+        "validationLatencyMs": 0
+      },
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    },
+    {
+      "runId": "pipeline-2026-07-14T18-49-12-138Z",
+      "timestamp": "2026-07-14T18:49:12.203Z",
+      "buildCommit": "c4aef624b178159292efca1d2c9422506569b858",
       "fixtureId": "q4-workforce-allocation",
       "fixtureName": "Q4 Workforce Allocation",
       "fixtureCategory": "gallery-example",
@@ -1046,6 +1344,19 @@
       "failureKind": "none",
       "artifactPaths": null,
       "webGpu": null,
+      "longInputDiagnostics": {
+        "strategy": "single_pass",
+        "chunkCount": null,
+        "sourceCoverageComplete": null,
+        "totalSourceLength": null,
+        "coveredSourceLength": null,
+        "chunkRetryCounts": null,
+        "totalChunkRetries": null,
+        "planningLatencyMs": null,
+        "chunkExtractionLatencyMs": null,
+        "mergeLatencyMs": null,
+        "validationLatencyMs": null
+      },
       "resultFormatVersion": 1,
       "captureLayerSchemaVersion": "1",
       "decisionTraceSchemaVersion": "0.2",
@@ -1060,9 +1371,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-14T18-06-21-209Z",
-      "timestamp": "2026-07-14T18:06:21.275Z",
-      "buildCommit": "59b03934f617681e0c2f08344d791ff87eb0b34e",
+      "runId": "pipeline-2026-07-14T18-49-12-138Z",
+      "timestamp": "2026-07-14T18:49:12.204Z",
+      "buildCommit": "c4aef624b178159292efca1d2c9422506569b858",
       "fixtureId": "local-inference-setup-flow",
       "fixtureName": "Local Inference Setup Flow",
       "fixtureCategory": "gallery-example",
@@ -1221,6 +1532,19 @@
       "failureKind": "none",
       "artifactPaths": null,
       "webGpu": null,
+      "longInputDiagnostics": {
+        "strategy": "single_pass",
+        "chunkCount": null,
+        "sourceCoverageComplete": null,
+        "totalSourceLength": null,
+        "coveredSourceLength": null,
+        "chunkRetryCounts": null,
+        "totalChunkRetries": null,
+        "planningLatencyMs": null,
+        "chunkExtractionLatencyMs": null,
+        "mergeLatencyMs": null,
+        "validationLatencyMs": null
+      },
       "resultFormatVersion": 1,
       "captureLayerSchemaVersion": "1",
       "decisionTraceSchemaVersion": "0.2",
@@ -1235,9 +1559,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-14T18-06-21-209Z",
-      "timestamp": "2026-07-14T18:06:21.277Z",
-      "buildCommit": "59b03934f617681e0c2f08344d791ff87eb0b34e",
+      "runId": "pipeline-2026-07-14T18-49-12-138Z",
+      "timestamp": "2026-07-14T18:49:12.205Z",
+      "buildCommit": "c4aef624b178159292efca1d2c9422506569b858",
       "fixtureId": "household-move-planning",
       "fixtureName": "Household Move Planning",
       "fixtureCategory": "gallery-example",
@@ -1399,6 +1723,19 @@
       "failureKind": "none",
       "artifactPaths": null,
       "webGpu": null,
+      "longInputDiagnostics": {
+        "strategy": "single_pass",
+        "chunkCount": null,
+        "sourceCoverageComplete": null,
+        "totalSourceLength": null,
+        "coveredSourceLength": null,
+        "chunkRetryCounts": null,
+        "totalChunkRetries": null,
+        "planningLatencyMs": null,
+        "chunkExtractionLatencyMs": null,
+        "mergeLatencyMs": null,
+        "validationLatencyMs": null
+      },
       "resultFormatVersion": 1,
       "captureLayerSchemaVersion": "1",
       "decisionTraceSchemaVersion": "0.2",
@@ -1413,9 +1750,9 @@
       }
     },
     {
-      "runId": "pipeline-2026-07-14T18-06-21-209Z",
-      "timestamp": "2026-07-14T18:06:21.279Z",
-      "buildCommit": "59b03934f617681e0c2f08344d791ff87eb0b34e",
+      "runId": "pipeline-2026-07-14T18-49-12-138Z",
+      "timestamp": "2026-07-14T18:49:12.207Z",
+      "buildCommit": "c4aef624b178159292efca1d2c9422506569b858",
       "fixtureId": "platform-rearchitecture-review",
       "fixtureName": "Platform Re-Architecture Review",
       "fixtureCategory": "gallery-example",
@@ -1476,7 +1813,7 @@
       ],
       "inventedStatedDecisionFinding": null,
       "captureLayerRetryCount": 0,
-      "captureLayerLatencyMs": 1,
+      "captureLayerLatencyMs": 0,
       "decisionBriefAttempted": true,
       "decisionBriefGenerationSuccess": true,
       "decisionBriefLatencyMs": 0,
@@ -1595,6 +1932,25 @@
       "failureKind": "none",
       "artifactPaths": null,
       "webGpu": null,
+      "longInputDiagnostics": {
+        "strategy": "hierarchical",
+        "chunkCount": 5,
+        "sourceCoverageComplete": true,
+        "totalSourceLength": 7558,
+        "coveredSourceLength": 7558,
+        "chunkRetryCounts": {
+          "chunk-001": 0,
+          "chunk-002": 0,
+          "chunk-003": 0,
+          "chunk-004": 0,
+          "chunk-005": 0
+        },
+        "totalChunkRetries": 0,
+        "planningLatencyMs": 0,
+        "chunkExtractionLatencyMs": 0,
+        "mergeLatencyMs": 0,
+        "validationLatencyMs": 0
+      },
       "resultFormatVersion": 1,
       "captureLayerSchemaVersion": "1",
       "decisionTraceSchemaVersion": "0.2",

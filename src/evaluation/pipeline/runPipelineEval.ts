@@ -43,12 +43,17 @@ import { loadPipelineCaseInput } from "./loadCaseInput";
 import {
   createBasePipelineResult,
   createEmptyManualScores,
+  createSinglePassLongInputDiagnostics,
 } from "./resultSchema";
+import type {
+  LongInputCaptureDiagnostics as SessionLongInputDiagnostics,
+} from "../../services/generation/longInput/types";
 import type {
   PipelineEvalResult,
   PipelineFailureKind,
   PipelineGenerationMode,
   PipelineRunSummary,
+  LongInputCaptureDiagnostics,
 } from "./resultTypes";
 
 function resolveBriefType(
@@ -107,6 +112,21 @@ function classifyFailureKind(result: {
   }
 
   return "product_quality";
+}
+
+function toPipelineLongInputDiagnostics(
+  diagnostics: SessionLongInputDiagnostics | null,
+  captureSucceeded: boolean,
+): LongInputCaptureDiagnostics | null {
+  if (diagnostics) {
+    return diagnostics;
+  }
+
+  if (captureSucceeded) {
+    return createSinglePassLongInputDiagnostics();
+  }
+
+  return null;
 }
 
 async function resolveAdapter(options: {
@@ -238,6 +258,7 @@ export async function runSinglePipelineEval(options: {
       failureKind: "infrastructure",
       artifactPaths: null,
       webGpu: null,
+      longInputDiagnostics: null,
     });
   }
 
@@ -253,6 +274,9 @@ export async function runSinglePipelineEval(options: {
   let rawErrorCategory: PipelineEvalResult["rawErrorCategory"] = "none";
 
   const captureStarted = Date.now();
+  const longInputDiagnosticsHolder: {
+    value: SessionLongInputDiagnostics | null;
+  } = { value: null };
   try {
     captureLayer = await generateCaptureLayerForSession({
       rawInputText: loaded.rawInputText,
@@ -260,6 +284,7 @@ export async function runSinglePipelineEval(options: {
       sourceLabel: loaded.sourceLabel,
       adapter,
       mode: options.mode,
+      longInputDiagnostics: longInputDiagnosticsHolder,
     });
     captureLatencyMs = Date.now() - captureStarted;
   } catch (error) {
@@ -449,7 +474,8 @@ export async function runSinglePipelineEval(options: {
     captureLayerStructuralReadinessPass: structural.pass,
     captureLayerReadinessFindings: structural.checks,
     inventedStatedDecisionFinding: invented.finding,
-    captureLayerRetryCount: 0,
+    captureLayerRetryCount:
+      longInputDiagnosticsHolder.value?.totalChunkRetries ?? 0,
     captureLayerLatencyMs: captureLatencyMs,
     decisionBriefAttempted,
     decisionBriefGenerationSuccess: briefGenerationSuccess,
@@ -474,6 +500,10 @@ export async function runSinglePipelineEval(options: {
     }),
     artifactPaths,
     webGpu: null,
+    longInputDiagnostics: toPipelineLongInputDiagnostics(
+      longInputDiagnosticsHolder.value,
+      validatedCapture !== null,
+    ),
   });
 
   return result;

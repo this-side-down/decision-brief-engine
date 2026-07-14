@@ -1,0 +1,259 @@
+{
+  "resultFormatVersion": 1,
+  "runId": "pipeline-2026-07-14T18-49-24-046Z",
+  "timestamp": "2026-07-14T18:49:24.100Z",
+  "buildCommit": "c4aef624b178159292efca1d2c9422506569b858",
+  "generationMode": "ollama",
+  "modelId": "ollama:qwen3:4b",
+  "caseIds": [
+    "platform-rearchitecture-review",
+    "regional-launch-readiness-review"
+  ],
+  "results": [
+    {
+      "runId": "pipeline-2026-07-14T18-49-24-046Z",
+      "timestamp": "2026-07-14T18:50:00.257Z",
+      "buildCommit": "c4aef624b178159292efca1d2c9422506569b858",
+      "fixtureId": "platform-rearchitecture-review",
+      "fixtureName": "Platform Re-Architecture Review",
+      "fixtureCategory": "gallery-example",
+      "generationMode": "ollama",
+      "modelId": "ollama:qwen3:4b",
+      "runtimeLibraryVersion": null,
+      "promptVariant": "default",
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": true,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": true,
+          "detail": "12 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": true,
+          "detail": "20 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": true,
+          "detail": "15 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "11 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": true,
+          "detail": "13 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "19 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": true,
+          "detail": "recommendation_candidate is non-empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=Medium"
+        }
+      ],
+      "inventedStatedDecisionFinding": "Invented stated_decision treated as fact: \"No final architecture decision made Pursue Helix modular-monolith with staged invoice remediation track and tracing/SLO gates, with microservices extraction as later phase if module boundaries fail No stated final decision today\"",
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 24381,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": false,
+      "decisionBriefLatencyMs": 11774,
+      "decisionTraceSchemaPass": null,
+      "decisionTraceStructuralReadinessPass": null,
+      "decisionTraceFindings": [],
+      "recommendationAlignmentPass": null,
+      "nextStepAlignmentPass": null,
+      "requiredDecisionBriefSectionsPass": null,
+      "writingHardFailures": [],
+      "writingWarnings": [],
+      "writingReportOnlyFindings": [],
+      "deterministicUsableBrief": false,
+      "evaluatorNotes": [
+        "Decision Brief generation failed: Decision Brief result is missing a non-empty \"markdown\" field."
+      ],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment."
+      ],
+      "rawErrorCategory": "brief_generation",
+      "failureKind": "product_quality",
+      "artifactPaths": null,
+      "webGpu": null,
+      "longInputDiagnostics": {
+        "strategy": "hierarchical",
+        "chunkCount": 5,
+        "sourceCoverageComplete": true,
+        "totalSourceLength": 7558,
+        "coveredSourceLength": 7558,
+        "chunkRetryCounts": {
+          "chunk-001": 0,
+          "chunk-002": 0,
+          "chunk-003": 0,
+          "chunk-004": 0,
+          "chunk-005": 0
+        },
+        "totalChunkRetries": 0,
+        "planningLatencyMs": 1,
+        "chunkExtractionLatencyMs": 24378,
+        "mergeLatencyMs": 2,
+        "validationLatencyMs": 0
+      },
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    },
+    {
+      "runId": "pipeline-2026-07-14T18-49-24-046Z",
+      "timestamp": "2026-07-14T18:50:57.027Z",
+      "buildCommit": "c4aef624b178159292efca1d2c9422506569b858",
+      "fixtureId": "regional-launch-readiness-review",
+      "fixtureName": "Regional launch readiness review",
+      "fixtureCategory": "evaluation-fixture",
+      "generationMode": "ollama",
+      "modelId": "ollama:qwen3:4b",
+      "runtimeLibraryVersion": null,
+      "promptVariant": "default",
+      "captureLayerFirstAttemptParsePass": true,
+      "captureLayerFinalParsePass": true,
+      "captureLayerSchemaPass": true,
+      "captureLayerStructuralReadinessPass": true,
+      "captureLayerReadinessFindings": [
+        {
+          "id": "decision_present",
+          "pass": true,
+          "detail": "stated_decision or implied_decision is non-empty"
+        },
+        {
+          "id": "options_count",
+          "pass": true,
+          "detail": "21 options (min 3)"
+        },
+        {
+          "id": "stakeholders_count",
+          "pass": true,
+          "detail": "14 stakeholders (min 4)"
+        },
+        {
+          "id": "risks_count",
+          "pass": true,
+          "detail": "23 risks (min 3)"
+        },
+        {
+          "id": "assumptions_count",
+          "pass": true,
+          "detail": "20 assumptions (min 2)"
+        },
+        {
+          "id": "open_questions_count",
+          "pass": true,
+          "detail": "21 open questions (min 3)"
+        },
+        {
+          "id": "missing_context_count",
+          "pass": true,
+          "detail": "32 missing-context items (min 2)"
+        },
+        {
+          "id": "recommendation_present",
+          "pass": true,
+          "detail": "recommendation_candidate is non-empty"
+        },
+        {
+          "id": "confidence_present",
+          "pass": true,
+          "detail": "confidence=Medium"
+        }
+      ],
+      "inventedStatedDecisionFinding": null,
+      "captureLayerRetryCount": 0,
+      "captureLayerLatencyMs": 43880,
+      "decisionBriefAttempted": true,
+      "decisionBriefGenerationSuccess": false,
+      "decisionBriefLatencyMs": 12889,
+      "decisionTraceSchemaPass": null,
+      "decisionTraceStructuralReadinessPass": null,
+      "decisionTraceFindings": [],
+      "recommendationAlignmentPass": null,
+      "nextStepAlignmentPass": null,
+      "requiredDecisionBriefSectionsPass": null,
+      "writingHardFailures": [],
+      "writingWarnings": [],
+      "writingReportOnlyFindings": [],
+      "deterministicUsableBrief": false,
+      "evaluatorNotes": [
+        "Decision Brief generation failed: Decision Brief result is missing a non-empty \"markdown\" field."
+      ],
+      "supportLimitations": [
+        "Manual score fields stay null until a human reviewer records them.",
+        "Deterministic usable-brief is separate from human usable-brief judgment."
+      ],
+      "rawErrorCategory": "brief_generation",
+      "failureKind": "product_quality",
+      "artifactPaths": null,
+      "webGpu": null,
+      "longInputDiagnostics": {
+        "strategy": "hierarchical",
+        "chunkCount": 6,
+        "sourceCoverageComplete": true,
+        "totalSourceLength": 9872,
+        "coveredSourceLength": 9872,
+        "chunkRetryCounts": {
+          "chunk-001": 0,
+          "chunk-002": 0,
+          "chunk-003": 0,
+          "chunk-004": 0,
+          "chunk-005": 0,
+          "chunk-006": 0
+        },
+        "totalChunkRetries": 0,
+        "planningLatencyMs": 0,
+        "chunkExtractionLatencyMs": 43879,
+        "mergeLatencyMs": 1,
+        "validationLatencyMs": 0
+      },
+      "resultFormatVersion": 1,
+      "captureLayerSchemaVersion": "1",
+      "decisionTraceSchemaVersion": "0.2",
+      "manualScores": {
+        "decisionUsefulness": null,
+        "groundingAndTraceability": null,
+        "clarity": null,
+        "actionability": null,
+        "totalScore": null,
+        "reviewerNotes": null,
+        "humanUsableBrief": null
+      }
+    }
+  ],
+  "infrastructureFailure": false,
+  "harnessExecutionError": null
+}

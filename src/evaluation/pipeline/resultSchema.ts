@@ -1,4 +1,8 @@
-import type { ManualScoreFields, PipelineEvalResult } from "./resultTypes";
+import type {
+  LongInputCaptureDiagnostics,
+  ManualScoreFields,
+  PipelineEvalResult,
+} from "./resultTypes";
 import {
   CAPTURE_LAYER_SCHEMA_VERSION,
   DECISION_TRACE_SCHEMA_VERSION,
@@ -14,6 +18,22 @@ export function createEmptyManualScores(): ManualScoreFields {
     totalScore: null,
     reviewerNotes: null,
     humanUsableBrief: null,
+  };
+}
+
+export function createSinglePassLongInputDiagnostics(): LongInputCaptureDiagnostics {
+  return {
+    strategy: "single_pass",
+    chunkCount: null,
+    sourceCoverageComplete: null,
+    totalSourceLength: null,
+    coveredSourceLength: null,
+    chunkRetryCounts: null,
+    totalChunkRetries: null,
+    planningLatencyMs: null,
+    chunkExtractionLatencyMs: null,
+    mergeLatencyMs: null,
+    validationLatencyMs: null,
   };
 }
 

@@ -16,7 +16,7 @@ The older Capture Layer-only CLI (`npm run eval:capture`) remains available for 
 ## Commands
 
 ```sh
-# Mock (CI-friendly baseline; all nine cases by default)
+# Mock (CI-friendly baseline; all ten cases by default)
 npm run eval:pipeline -- --mode=mock
 npm run eval:pipeline -- --mode=mock --json
 npm run eval:pipeline -- --mode=mock --output=fixtures/evaluation/baselines/mock-pipeline-baseline.json
@@ -43,7 +43,7 @@ Optional flags: `--all`, `--fixture=<id>` (repeatable), `--output=<path>`, `--js
 | `1` | CLI usage / argument error (`failureKind: "harness_execution"`). |
 | `2` | Infrastructure or execution failure (for example Ollama unreachable, WebGPU mode requested, case load failure). Distinct from product-quality failures. |
 
-## Cases (nine; never silently skipped)
+## Cases (ten; never silently skipped)
 
 ### Evaluation fixtures
 
@@ -54,6 +54,7 @@ Optional flags: `--all`, `--fixture=<id>` (repeatable), `--output=<path>`, `--js
 | `execution-planning` | `fixtures/evaluation/execution-planning.md` |
 | `customer-interview-synthesis` | `fixtures/evaluation/customer-interview-synthesis.md` |
 | `ambiguous-stakeholder-conversation` | `fixtures/evaluation/ambiguous-stakeholder-conversation.md` |
+| `regional-launch-readiness-review` | `fixtures/evaluation/regional-launch-readiness-review.md` (execution-oriented long-form; hierarchical Ollama/Mock path) |
 
 ### Public gallery examples
 

@@ -66,24 +66,25 @@ const usableOptions = {
 };
 
 describe("pipeline case registry", () => {
-  it("includes all nine expected case IDs", () => {
+  it("includes all ten expected case IDs", () => {
     expect(PIPELINE_EVAL_CASE_IDS).toEqual([
       "product-prioritization",
       "strategy-tradeoff",
       "execution-planning",
       "customer-interview-synthesis",
       "ambiguous-stakeholder-conversation",
+      "regional-launch-readiness-review",
       "q4-workforce-allocation",
       "local-inference-setup-flow",
       "household-move-planning",
       "platform-rearchitecture-review",
     ]);
-    expect(PIPELINE_EVAL_CASES).toHaveLength(9);
+    expect(PIPELINE_EVAL_CASES).toHaveLength(10);
   });
 });
 
 describe("parsePipelineCliArgs", () => {
-  it("defaults to mock + all nine cases", () => {
+  it("defaults to mock + all ten cases", () => {
     const options = parsePipelineCliArgs([]);
     expect(options.mode).toBe("mock");
     expect(resolveCaseIds(options)).toEqual(PIPELINE_EVAL_CASE_IDS);
@@ -310,6 +311,35 @@ describe("evaluation fixture loader", () => {
 });
 
 describe("mock full-pipeline execution", () => {
+  it("records hierarchical diagnostics for long-form gallery cases", async () => {
+    const result = await runSinglePipelineEval({
+      mode: "mock",
+      caseId: "platform-rearchitecture-review",
+      repoRoot,
+      runId: "test-mock-long-diagnostics",
+      buildCommit: "test",
+    });
+
+    expect(result.longInputDiagnostics).not.toBeNull();
+    expect(result.longInputDiagnostics?.strategy).toBe("hierarchical");
+    expect(result.longInputDiagnostics?.chunkCount).toBeGreaterThan(1);
+    expect(result.longInputDiagnostics?.sourceCoverageComplete).toBe(true);
+    expect(result.longInputDiagnostics?.totalChunkRetries).toBe(0);
+  });
+
+  it("records single-pass diagnostics for ordinary gallery cases", async () => {
+    const result = await runSinglePipelineEval({
+      mode: "mock",
+      caseId: "q4-workforce-allocation",
+      repoRoot,
+      runId: "test-mock-single-pass-diagnostics",
+      buildCommit: "test",
+    });
+
+    expect(result.longInputDiagnostics?.strategy).toBe("single_pass");
+    expect(result.longInputDiagnostics?.chunkCount).toBeNull();
+  });
+
   it("runs a gallery case through Capture Layer, brief, and trace gates", async () => {
     const result = await runSinglePipelineEval({
       mode: "mock",

@@ -112,6 +112,56 @@ export function buildCaptureLayerPrompt(
   ].join("\n");
 }
 
+import type { ChunkExtractionInput } from "./longInput/types";
+import { CHUNK_EXTRACTION_JSON_SCHEMA } from "./longInput/chunkExtractionSchema";
+
+export function buildChunkExtractionPrompt(input: ChunkExtractionInput): string {
+  const sourceLabelLine = input.sourceLabel
+    ? `Source label: ${input.sourceLabel}\n`
+    : "";
+
+  return [
+    "You are a decision capture analyst extracting chunk-local decision signals from a long source document.",
+    "Your job is to convert only the current chunk into structured partial signals. Do not write a Decision Brief.",
+    "Separate stated facts from inference. Preserve ambiguity, conflicts, and unresolved terminology.",
+    "Do not invent a stated_decision unless the chunk contains an explicit final decision statement.",
+    "Do not infer stated_decision from recommendations, preferences, or tentative alignment.",
+    "",
+    `Brief type: ${input.briefType.id}`,
+    "Brief type guidance:",
+    formatGuidance(input.briefType.guidance),
+    "",
+    `Chunk position: ${input.chunk.index + 1} of ${input.chunkCount}`,
+    sourceLabelLine,
+    "Return a single JSON object with these fields only:",
+    JSON.stringify(CHUNK_EXTRACTION_JSON_SCHEMA.properties, null, 2),
+    "Use string values for scalar fields and arrays of strings for list fields.",
+    "evidence must be an array of short source-grounded quote strings from this chunk only.",
+    "conflicts must capture direct disagreements present in this chunk.",
+    "unresolved_references must capture decision-critical terms that remain undefined in this chunk.",
+    'confidence must be "High", "Medium", or "Low".',
+    "Do not include chunk identifiers, source offsets, or metadata fields.",
+    NO_REASONING_INSTRUCTION,
+    "",
+    "Current chunk text:",
+    input.chunk.text,
+  ].join("\n");
+}
+
+export function buildChunkExtractionRetryPrompt(
+  input: ChunkExtractionInput,
+  failureMessage: string,
+): string {
+  return [
+    buildChunkExtractionPrompt(input),
+    "",
+    "The previous response failed the structured-output contract.",
+    `Failure: ${failureMessage}`,
+    "Return corrected JSON only. Include every required field with valid types.",
+    NO_REASONING_INSTRUCTION,
+  ].join("\n");
+}
+
 export type DecisionBriefPromptMode = "legacy" | "structured_response" | "markdown_only";
 
 const DECISION_BRIEF_RESULT_SCHEMA = JSON.stringify(

@@ -10,6 +10,7 @@ import { getLongInputCaptureCapability } from "./longInput/longInputCapability";
 import { resolveCapturePath } from "./longInput/inputBudgetPolicy";
 import {
   formatLongInputProgressMessage,
+  type LongInputCaptureDiagnostics,
   type LongInputProgressState,
 } from "./longInput/types";
 import { runLongInputCapture } from "./longInput/runLongInputCapture";
@@ -26,6 +27,7 @@ type GenerateCaptureLayerForSessionInput = {
   activeRunId?: number;
   onProgress?: (progress: LongInputProgressState) => void;
   interChunkDelayMs?: number;
+  longInputDiagnostics?: { value: LongInputCaptureDiagnostics | null };
 };
 
 export async function generateCaptureLayerForSession({
@@ -39,6 +41,7 @@ export async function generateCaptureLayerForSession({
   activeRunId,
   onProgress,
   interChunkDelayMs,
+  longInputDiagnostics,
 }: GenerateCaptureLayerForSessionInput): Promise<CaptureLayer> {
   const captureInput = {
     rawInputText,
@@ -51,7 +54,7 @@ export async function generateCaptureLayerForSession({
   if (resolveCapturePath(rawInputText) === "hierarchical") {
     const capability = getLongInputCaptureCapability(mode);
     if (capability) {
-      return runLongInputCapture({
+      const result = await runLongInputCapture({
         input: captureInput,
         capability,
         signal,
@@ -60,7 +63,17 @@ export async function generateCaptureLayerForSession({
         onProgress,
         interChunkDelayMs,
       });
+
+      if (longInputDiagnostics) {
+        longInputDiagnostics.value = result.diagnostics;
+      }
+
+      return result.captureLayer;
     }
+  }
+
+  if (longInputDiagnostics) {
+    longInputDiagnostics.value = null;
   }
 
   return adapter.generateCaptureLayer(captureInput);
