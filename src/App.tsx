@@ -21,9 +21,16 @@ import { useGenerationMode } from "./hooks/useGenerationMode";
 import { resolveBrowserInferenceStatusMessage } from "./hooks/modelLoadAttempt";
 import { useGenerationRunTelemetry } from "./hooks/useGenerationRunTelemetry";
 import { useTimedStatusMessage } from "./hooks/useTimedStatusMessage";
-import { generateCaptureLayerForSession } from "./services/generation/generateCaptureLayer";
+import { generateCaptureLayerForSession, formatLongInputProgressMessage } from "./services/generation/generateCaptureLayer";
 import { generateDecisionBriefForSession } from "./services/generation/generateDecisionBrief";
 import { getOllamaConfig } from "./services/generation/ollamaConfig";
+import { resolveCapturePath } from "./services/generation/longInput/inputBudgetPolicy";
+import { getLongInputCaptureCapability } from "./services/generation/longInput/longInputCapability";
+import {
+  LongInputChunkFailureError,
+  LongInputMergeFailureError,
+  LongInputSupersededError,
+} from "./services/generation/longInput/longInputErrors";
 import { GenerationCancelledError, GenerationQualityError, InputTooLargeError } from "./services/generation/webGpuErrors";
 import { getWebGpuEvalContext } from "./services/generation/webGpuModelAdapter";
 import { CAPTURE_LAYER_FIELDS } from "./services/generation/types";
@@ -234,6 +241,8 @@ export function App() {
     useState<DecisionBriefViewMode>("preview");
   const pendingGenerateRef = useRef<PendingGenerate | null>(null);
   const lastModelLoadDurationRef = useRef<number | null>(null);
+  const captureRunIdRef = useRef(0);
+  const [longInputProgressMessage, setLongInputProgressMessage] = useState("");
 
   const selectedBriefTypeId = useMemo(
     () => briefSession.briefType?.id ?? "",
@@ -324,6 +333,7 @@ export function App() {
     briefSession.errorStep === "brief" ? briefSession.errors[0] : null;
   const generationStatusMessage =
     telemetry.liveStatusMessage ||
+    longInputProgressMessage ||
     (isWebGpuMode ? statusMessage : "");
   const showRunDetails =
     telemetry.enabled &&
@@ -433,6 +443,25 @@ export function App() {
       };
     }
 
+    if (error instanceof LongInputChunkFailureError) {
+      return {
+        sessionMessage:
+          "Capture Layer generation stopped because one section failed. No partial Capture Layer was saved.",
+        telemetryMessage: error.message,
+        notifyMessage:
+          "Long-input Capture Layer generation failed before merge completed.",
+      };
+    }
+
+    if (error instanceof LongInputMergeFailureError) {
+      return {
+        sessionMessage:
+          "Capture Layer merge or validation failed. No partial Capture Layer was saved.",
+        telemetryMessage: error.message,
+        notifyMessage: "Long-input Capture Layer merge failed.",
+      };
+    }
+
     const message =
       error instanceof Error
         ? error.message
@@ -485,11 +514,24 @@ export function App() {
   }
 
   async function runCaptureGeneration(snapshot: PendingCaptureGenerate) {
-    const abortController = isWebGpuMode ? beginGenerationAbort() : null;
+    const usesLongInputPath =
+      resolveCapturePath(snapshot.rawInputText) === "hierarchical" &&
+      getLongInputCaptureCapability(effectiveMode) !== null;
+    const abortController =
+      isWebGpuMode || usesLongInputPath ? beginGenerationAbort() : null;
+    const runId = captureRunIdRef.current + 1;
+    captureRunIdRef.current = runId;
+
+    setLongInputProgressMessage(
+      usesLongInputPath ? formatLongInputProgressMessage({ phase: "preparing" }) : "",
+    );
 
     setBriefSession((currentSession) => ({
       ...currentSession,
       status: "generating_capture",
+      captureLayer: null,
+      decisionTrace: null,
+      decisionBrief: null,
       errors: [],
       errorStep: null,
       updatedAt: new Date().toISOString(),
@@ -505,6 +547,18 @@ export function App() {
         rawInputText: snapshot.rawInputText,
         briefType: snapshot.briefType,
         sourceLabel: snapshot.sourceLabel,
+        mode: effectiveMode,
+        signal: abortController?.signal,
+        runId,
+        activeRunId: captureRunIdRef.current,
+        interChunkDelayMs: usesLongInputPath ? 250 : undefined,
+        onProgress: usesLongInputPath
+          ? (progress) => {
+              setLongInputProgressMessage(
+                formatLongInputProgressMessage(progress),
+              );
+            }
+          : undefined,
         adapter: getAdapterForGeneration(abortController?.signal, {
           captureContext: {
             sourceLabel: snapshot.sourceLabel ?? null,
@@ -537,17 +591,25 @@ export function App() {
         updatedAt: new Date().toISOString(),
       }));
       notifyCaptureReady();
+      setLongInputProgressMessage("");
     } catch (error) {
-      if (error instanceof GenerationCancelledError) {
+      if (
+        error instanceof GenerationCancelledError ||
+        error instanceof LongInputSupersededError
+      ) {
         telemetry.completeCapture(error);
         setBriefSession((currentSession) => ({
           ...currentSession,
           status: "draft",
+          captureLayer: null,
+          decisionTrace: null,
+          decisionBrief: null,
           errors: [],
           errorStep: null,
           updatedAt: new Date().toISOString(),
         }));
         cancelActiveGeneration();
+        setLongInputProgressMessage("");
         return;
       }
 
@@ -563,6 +625,7 @@ export function App() {
         updatedAt: new Date().toISOString(),
       }));
       notifyCaptureFailed(failure.notifyMessage);
+      setLongInputProgressMessage("");
     } finally {
       if (abortController) {
         endGenerationAbort();
@@ -674,6 +737,12 @@ export function App() {
         endGenerationAbort();
       }
     }
+  }
+
+  function handleCancelLongInputCapture() {
+    captureRunIdRef.current += 1;
+    cancelActiveGeneration();
+    setLongInputProgressMessage("");
   }
 
   async function handleGenerateCaptureLayer() {
@@ -1133,9 +1202,18 @@ export function App() {
               type="button"
             >
               {isGeneratingCaptureLayer
-                ? "Generating..."
+                ? longInputProgressMessage || "Generating..."
                 : "Generate Capture Layer"}
             </button>
+            {isGeneratingCaptureLayer && longInputProgressMessage ? (
+              <button
+                className="rounded border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
+                onClick={handleCancelLongInputCapture}
+                type="button"
+              >
+                Cancel
+              </button>
+            ) : null}
             <button
               className={`rounded border px-4 py-2 text-sm font-semibold ${
                 canGenerateDecisionBrief
@@ -1196,7 +1274,9 @@ export function App() {
         <GenerationRunStatus
           failureMessage={showRunDetails ? telemetry.failureMessage : ""}
           liveStatusMessage={
-            isOllamaMode ? telemetry.liveStatusMessage : ""
+            isOllamaMode
+              ? telemetry.liveStatusMessage
+              : longInputProgressMessage
           }
           runDetails={showRunDetails ? telemetry.runDetails : null}
           runGenerationId={telemetry.runGenerationId}

@@ -41,6 +41,7 @@ Use the following milestone map unless a later ADR or issue explicitly changes i
 | --- | --- |
 | `v0.1.0` | Public demo milestone: mock default, example gallery, export polish, Local Ollama dev tools, gated WebGPU, generation telemetry |
 | `v0.2.0` | Decision Trace milestone: structured recommendation rationale, trace fixtures/eval gates, in-app traceable basis UI, trace-aware Markdown export, and IA polish for understanding/judgment/output hierarchy |
+| `v0.3.0` | Long-Form Decision Capture: hierarchical processing of realistic long decision material, complete source coverage, auditable merge behavior, Mock demonstration, and Local Ollama validation |
 
 Intermediate `0.x.y` releases should note whether they change product behavior or docs only.
 

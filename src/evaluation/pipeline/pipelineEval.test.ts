@@ -66,7 +66,7 @@ const usableOptions = {
 };
 
 describe("pipeline case registry", () => {
-  it("includes all eight expected case IDs", () => {
+  it("includes all nine expected case IDs", () => {
     expect(PIPELINE_EVAL_CASE_IDS).toEqual([
       "product-prioritization",
       "strategy-tradeoff",
@@ -76,13 +76,14 @@ describe("pipeline case registry", () => {
       "q4-workforce-allocation",
       "local-inference-setup-flow",
       "household-move-planning",
+      "platform-rearchitecture-review",
     ]);
-    expect(PIPELINE_EVAL_CASES).toHaveLength(8);
+    expect(PIPELINE_EVAL_CASES).toHaveLength(9);
   });
 });
 
 describe("parsePipelineCliArgs", () => {
-  it("defaults to mock + all eight cases", () => {
+  it("defaults to mock + all nine cases", () => {
     const options = parsePipelineCliArgs([]);
     expect(options.mode).toBe("mock");
     expect(resolveCaseIds(options)).toEqual(PIPELINE_EVAL_CASE_IDS);

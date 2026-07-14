@@ -30,6 +30,7 @@ const BRIEF_TYPE_BY_EXAMPLE_ID = {
   "q4-workforce-allocation": STRATEGY_DECISION_BRIEF,
   "local-inference-setup-flow": PRODUCT_DECISION_BRIEF,
   "household-move-planning": EXECUTION_DECISION_BRIEF,
+  "platform-rearchitecture-review": PRODUCT_DECISION_BRIEF,
 } satisfies Record<string, BriefType>;
 
 describe("mockModelAdapter demo gallery mock flow", () => {
