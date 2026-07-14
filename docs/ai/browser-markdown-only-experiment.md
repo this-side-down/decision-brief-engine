@@ -207,17 +207,76 @@ Warnings and report-only writing findings do **not** independently fail the expe
 | Writing hard failures | Rule IDs and excerpts |
 | Alignment details | Recommendation / next-step mismatch sources |
 
-### Results (pending)
+### Results (2026-07-14)
 
-Manual E2b gallery runs are **pending**. Do not pre-fill outcomes in the implementation PR.
+Manual E2b gallery runs completed after PR #146 merged the validator-aligned `markdown_only` prompt. Diagnostics enabled; raw artifacts stored locally only (not committed).
 
-| Example | Attempt 1 (prompt / completion / total) | Finish reason | Retry | Final result | Failure categories (final) |
-| --- | --- | --- | --- | --- | --- |
-| Household Move Planning | — | — | — | **PENDING** | — |
-| Q4 Workforce Allocation | — | — | — | **PENDING** | — |
-| Local Inference Setup Flow | — | — | — | **PENDING** | — |
+| Example | Attempt 1 (prompt / completion / total) | Finish reason | Retry (prompt / completion / total) | Retry finish | Final result | Failure categories (final) |
+| --- | --- | --- | --- | --- | --- | --- |
+| Q4 Workforce Allocation | 1,499 / 368 / 1,867 | `stop` | 1,560 / 366 / 1,926 | `stop` | **FAIL** | `recommendation_alignment`, `next_step_alignment`, `writing_hard_failure` |
+| Local Inference Setup Flow | 1,459 / 364 / 1,823 | `stop` | 1,516 / 274 / 1,790 | `stop` | **FAIL** | `next_step_alignment`, `writing_hard_failure` |
+| Household Move Planning | 1,677 / 376 / 2,053 | `stop` | 1,734 / 435 / 2,169 | `stop` | **FAIL** | `required_sections`, `writing_hard_failure` |
 
-### Decision rule
+All three examples **FAIL** the E2b pass rule. No example reached an accepted attempt that passed all pass criteria.
+
+#### Q4 Workforce Allocation
+
+- **First attempt:** 1,499 prompt / 368 completion / 1,867 total, `finish_reason=stop`
+- **Retry:** yes — 1,560 prompt / 366 completion / 1,926 total, `finish_reason=stop`
+- **Final result:** FAIL
+- **Final categories:** `recommendation_alignment`, `next_step_alignment`, `writing_hard_failure`
+- **Capture next steps:** 5
+- **Brief next steps:** 1 (collapsed into prose instead of discrete list items)
+- **Sentence-length hard failure:** 37 words
+- **Capture recommendation candidate was hollow:** `1. Option #1`
+
+#### Local Inference Setup Flow
+
+- **First attempt:** 1,459 prompt / 364 completion / 1,823 total, `finish_reason=stop`
+- **Retry:** yes — 1,516 prompt / 274 completion / 1,790 total, `finish_reason=stop`
+- **Final result:** FAIL
+- **Final categories:** `next_step_alignment`, `writing_hard_failure`
+- **Capture next steps:** 5
+- **Brief next steps:** 1 (collapsed into prose)
+- **Em-dash hard failure**
+- **First attempt recommendation mismatch:**
+  - capture: `1) status strip only`
+  - brief expanded to a different recommendation
+- **Retry corrected recommendation alignment** but did not correct next-step representation or writing quality
+
+#### Household Move Planning
+
+- **First attempt:** 1,677 prompt / 376 completion / 2,053 total, `finish_reason=stop`
+- **Retry:** yes — 1,734 prompt / 435 completion / 2,169 total, `finish_reason=stop`
+- **Final result:** FAIL
+- **Final categories:** `required_sections`, `writing_hard_failure`
+- **First attempt:**
+  - Capture next steps: 8
+  - Brief next steps: 1 (collapsed into semicolon-separated prose)
+  - Sentence-length failures: 44, 41, 38, and 65 words
+- **Retry omitted the required Confidence section**
+
+### Final conclusion
+
+E2b failed **0/3**. All first attempts ended with `finish_reason=stop` and substantial context headroom (totals 1,823–2,053 vs the 4,096-token ceiling observed in E2 truncation).
+
+Prompt-validator alignment did **not** produce an acceptable Markdown stage. The leading explanation is a **capability ceiling** for `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` under the current browser configuration and decision-grade artifact contract. Some failures were compounded by hollow upstream Capture Layer content (e.g. Q4 recommendation candidate `1. Option #1`). Household Move Planning demonstrates an independent Markdown prompt-following failure even without final recommendation misalignment (retry dropped the required Confidence section).
+
+This is a bounded conclusion about the current model, configuration, and product contract — not all browser models or all browser inference.
+
+**Posture after E2b:**
+
+- Do **not** run a trace-only experiment.
+- Do **not** implement production split-stage generation.
+- Do **not** start **#117**.
+- Keep WebGPU gated.
+- Keep Mock as public default.
+- Keep Local Ollama as the real-generation quality baseline.
+- **#141** should hand the formal rollout posture to **#75** after this evidence is merged.
+
+### Decision rule (applied)
 
 - **3/3 pass:** Keep **#141** open. Recommend the next controlled Decision Trace isolation experiment. Do **not** implement a production split pipeline.
 - **Any failure:** Do **not** start **#117** or implement split-stage production. Record exact tokens, finish reason, attempts, deterministic failure categories, and whether the 1.5B model capability ceiling is the leading explanation.
+
+**E2b outcome:** 0/3 pass. The trace-only isolation experiment is **not recommended**. Split-stage production and **#117** remain blocked.
