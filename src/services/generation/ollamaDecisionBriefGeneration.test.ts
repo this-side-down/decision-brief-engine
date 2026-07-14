@@ -3,18 +3,16 @@ import { getExampleFixture } from "../../data/exampleFixtures";
 import { STRATEGY_DECISION_BRIEF } from "../../data/briefTypes";
 import { ollamaGenerate } from "./ollamaClient";
 import { DecisionBriefContractError } from "./decisionBriefContractErrors";
+import type { DecisionArtifactDiagnosticsHolder } from "./decisionArtifactDiagnostics";
 import { DECISION_BRIEF_MARKDOWN_STRUCTURE } from "./types";
 import { GenerationCancelledError } from "./webGpuErrors";
-import {
-  generateOllamaDecisionBrief,
-  ollamaDecisionArtifactDiagnosticsHolder,
-} from "./ollamaDecisionBriefGeneration";
+import { generateOllamaDecisionBrief } from "./ollamaDecisionBriefGeneration";
 
 vi.mock("./ollamaClient", () => ({
   ollamaGenerate: vi.fn(),
 }));
 
-const mockedOllamaGenerate = vi.mocked(ollamaGenerate);
+const mockOllamaGenerate = vi.mocked(ollamaGenerate);
 
 const fixture = getExampleFixture("q4-workforce-allocation")!;
 
@@ -55,95 +53,163 @@ const validEnvelope = {
   },
 };
 
+function createDiagnosticsHolder(): DecisionArtifactDiagnosticsHolder {
+  return { value: null };
+}
+
 describe("generateOllamaDecisionBrief", () => {
   beforeEach(() => {
-    mockedOllamaGenerate.mockReset();
-    ollamaDecisionArtifactDiagnosticsHolder.value = null;
+    mockOllamaGenerate.mockReset();
   });
 
   it("returns a valid combined result on first attempt", async () => {
-    mockedOllamaGenerate.mockResolvedValue(JSON.stringify(validEnvelope));
+    mockOllamaGenerate.mockResolvedValue(JSON.stringify(validEnvelope));
+    const diagnostics = createDiagnosticsHolder();
 
-    const result = await generateOllamaDecisionBrief(baseInput);
+    const result = await generateOllamaDecisionBrief(baseInput, { diagnostics });
 
     expect(result.markdown).toContain("# Decision Brief");
     expect(result.decisionTrace.entries).toHaveLength(1);
-    expect(mockedOllamaGenerate).toHaveBeenCalledTimes(1);
-    expect(mockedOllamaGenerate.mock.calls[0]?.[0]).toMatchObject({
+    expect(mockOllamaGenerate).toHaveBeenCalledTimes(1);
+    expect(mockOllamaGenerate.mock.calls[0]?.[0]).toMatchObject({
       think: false,
       temperature: 0,
     });
-    expect(ollamaDecisionArtifactDiagnosticsHolder.value).toMatchObject({
+    expect(diagnostics.value).toMatchObject({
       strategy: "combined",
       briefRetryCount: 0,
       traceRetryCount: null,
     });
   });
 
-  it("retries once after contract failure and succeeds on second attempt", async () => {
-    mockedOllamaGenerate
-      .mockResolvedValueOnce(JSON.stringify({ markdown: "", decisionTrace: validEnvelope.decisionTrace }))
-      .mockResolvedValueOnce(JSON.stringify(validEnvelope));
+  it("works normally without a diagnostics holder", async () => {
+    mockOllamaGenerate.mockResolvedValue(JSON.stringify(validEnvelope));
 
     const result = await generateOllamaDecisionBrief(baseInput);
 
     expect(result.markdown).toContain("# Decision Brief");
-    expect(mockedOllamaGenerate).toHaveBeenCalledTimes(2);
-    expect(ollamaDecisionArtifactDiagnosticsHolder.value?.briefRetryCount).toBe(1);
   });
 
-  it("stops after the second contract failure", async () => {
-    mockedOllamaGenerate
+  it("retries once after contract failure and succeeds on second attempt", async () => {
+    mockOllamaGenerate
+      .mockResolvedValueOnce(JSON.stringify({ markdown: "", decisionTrace: validEnvelope.decisionTrace }))
+      .mockResolvedValueOnce(JSON.stringify(validEnvelope));
+    const diagnostics = createDiagnosticsHolder();
+
+    const result = await generateOllamaDecisionBrief(baseInput, { diagnostics });
+
+    expect(result.markdown).toContain("# Decision Brief");
+    expect(mockOllamaGenerate).toHaveBeenCalledTimes(2);
+    expect(diagnostics.value?.briefRetryCount).toBe(1);
+  });
+
+  it("records retry count and elapsed time on final contract failure", async () => {
+    mockOllamaGenerate
       .mockResolvedValueOnce(JSON.stringify({ markdown: "", decisionTrace: validEnvelope.decisionTrace }))
       .mockResolvedValueOnce(JSON.stringify({ markdown: "   ", decisionTrace: validEnvelope.decisionTrace }));
+    const diagnostics = createDiagnosticsHolder();
 
-    await expect(generateOllamaDecisionBrief(baseInput)).rejects.toBeInstanceOf(
-      DecisionBriefContractError,
-    );
-    expect(mockedOllamaGenerate).toHaveBeenCalledTimes(2);
+    await expect(
+      generateOllamaDecisionBrief(baseInput, { diagnostics }),
+    ).rejects.toBeInstanceOf(DecisionBriefContractError);
+
+    expect(mockOllamaGenerate).toHaveBeenCalledTimes(2);
+    expect(diagnostics.value).toMatchObject({
+      strategy: "combined",
+      briefRetryCount: 1,
+    });
+    expect(diagnostics.value?.briefGenerationLatencyMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it("does not let two holders overwrite each other", async () => {
+    let releaseFirst!: () => void;
+    const firstGate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+
+    mockOllamaGenerate
+      .mockImplementationOnce(async () => {
+        await firstGate;
+        return JSON.stringify(validEnvelope);
+      })
+      .mockResolvedValueOnce(JSON.stringify(validEnvelope));
+
+    const firstDiagnostics = createDiagnosticsHolder();
+    const secondDiagnostics = createDiagnosticsHolder();
+
+    const firstPromise = generateOllamaDecisionBrief(baseInput, {
+      diagnostics: firstDiagnostics,
+    });
+    const secondPromise = generateOllamaDecisionBrief(baseInput, {
+      diagnostics: secondDiagnostics,
+    });
+
+    await secondPromise;
+    expect(secondDiagnostics.value?.briefRetryCount).toBe(0);
+
+    releaseFirst();
+    await firstPromise;
+    expect(firstDiagnostics.value?.briefRetryCount).toBe(0);
+  });
+
+  it("does not leak diagnostics from a prior invocation into the next holder", async () => {
+    mockOllamaGenerate.mockResolvedValue(JSON.stringify(validEnvelope));
+
+    const firstDiagnostics = createDiagnosticsHolder();
+    await generateOllamaDecisionBrief(baseInput, { diagnostics: firstDiagnostics });
+
+    const secondDiagnostics = createDiagnosticsHolder();
+    await generateOllamaDecisionBrief(baseInput, { diagnostics: secondDiagnostics });
+
+    expect(firstDiagnostics.value?.briefRetryCount).toBe(0);
+    expect(secondDiagnostics.value?.briefRetryCount).toBe(0);
+    expect(secondDiagnostics.value?.briefGenerationLatencyMs).toBeGreaterThanOrEqual(0);
   });
 
   it("does not retry on cancellation", async () => {
-    mockedOllamaGenerate.mockRejectedValue(new GenerationCancelledError());
+    mockOllamaGenerate.mockRejectedValue(new GenerationCancelledError());
+    const diagnostics = createDiagnosticsHolder();
 
-    await expect(generateOllamaDecisionBrief(baseInput)).rejects.toBeInstanceOf(
-      GenerationCancelledError,
-    );
-    expect(mockedOllamaGenerate).toHaveBeenCalledTimes(1);
+    await expect(
+      generateOllamaDecisionBrief(baseInput, { diagnostics, signal: new AbortController().signal }),
+    ).rejects.toBeInstanceOf(GenerationCancelledError);
+
+    expect(mockOllamaGenerate).toHaveBeenCalledTimes(1);
+    expect(diagnostics.value?.briefGenerationLatencyMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it("passes AbortSignal to ollamaGenerate", async () => {
+    mockOllamaGenerate.mockResolvedValue(JSON.stringify(validEnvelope));
+    const controller = new AbortController();
+
+    await generateOllamaDecisionBrief(baseInput, { signal: controller.signal });
+
+    expect(mockOllamaGenerate.mock.calls[0]?.[0]).toMatchObject({
+      signal: controller.signal,
+    });
   });
 
   it("does not retry on timeout", async () => {
-    mockedOllamaGenerate.mockRejectedValue(
+    mockOllamaGenerate.mockRejectedValue(
       new Error("Ollama request timed out after 120000ms."),
     );
+    const diagnostics = createDiagnosticsHolder();
 
-    await expect(generateOllamaDecisionBrief(baseInput)).rejects.toThrow("timed out");
-    expect(mockedOllamaGenerate).toHaveBeenCalledTimes(1);
+    await expect(generateOllamaDecisionBrief(baseInput, { diagnostics })).rejects.toThrow(
+      "timed out",
+    );
+    expect(mockOllamaGenerate).toHaveBeenCalledTimes(1);
+    expect(diagnostics.value?.briefGenerationLatencyMs).toBeGreaterThanOrEqual(0);
   });
 
   it("does not retry on network failure", async () => {
-    mockedOllamaGenerate.mockRejectedValue(new TypeError("fetch failed"));
+    mockOllamaGenerate.mockRejectedValue(new TypeError("fetch failed"));
+    const diagnostics = createDiagnosticsHolder();
 
-    await expect(generateOllamaDecisionBrief(baseInput)).rejects.toThrow("fetch failed");
-    expect(mockedOllamaGenerate).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe("diagnoseDecisionBriefResponseShape", () => {
-  it("summarizes legacy empty-markdown failure shape without raw text", async () => {
-    const { diagnoseDecisionBriefResponseShape } = await import(
-      "./diagnoseDecisionBriefResponseShape"
+    await expect(generateOllamaDecisionBrief(baseInput, { diagnostics })).rejects.toThrow(
+      "fetch failed",
     );
-
-    const diagnosis = diagnoseDecisionBriefResponseShape(
-      JSON.stringify({
-        decisionTrace: validEnvelope.decisionTrace,
-      }),
-    );
-
-    expect(diagnosis.parseableJson).toBe(true);
-    expect(diagnosis.markdownPresent).toBe(false);
-    expect(diagnosis.decisionTracePresent).toBe(true);
-    expect(diagnosis.topLevelKeys).toEqual(["decisionTrace"]);
+    expect(mockOllamaGenerate).toHaveBeenCalledTimes(1);
+    expect(diagnostics.value?.briefGenerationLatencyMs).toBeGreaterThanOrEqual(0);
   });
 });

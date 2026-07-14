@@ -2,6 +2,7 @@ import type {
   DecisionBriefResult,
   GenerateCaptureLayerInput,
   GenerateDecisionBriefInput,
+  GenerateDecisionBriefOptions,
   ModelAdapter,
 } from "./types";
 import { ollamaGenerate } from "./ollamaClient";
@@ -21,7 +22,10 @@ export const ollamaModelAdapter: ModelAdapter = {
     return parseCaptureLayerJson(modelText);
   },
 
-  async generateDecisionBrief(input: GenerateDecisionBriefInput): Promise<DecisionBriefResult> {
-    return generateOllamaDecisionBrief(input);
+  async generateDecisionBrief(
+    input: GenerateDecisionBriefInput,
+    options?: GenerateDecisionBriefOptions,
+  ): Promise<DecisionBriefResult> {
+    return generateOllamaDecisionBrief(input, options);
   },
 };

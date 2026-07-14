@@ -3,6 +3,7 @@ import type {
   DecisionBriefResult,
   GenerateCaptureLayerInput,
   GenerateDecisionBriefInput,
+  GenerateDecisionBriefOptions,
   ModelAdapter,
 } from "./types";
 import { parseCaptureLayerJson } from "./parseCaptureLayer";
@@ -552,7 +553,10 @@ export function createWebGpuModelAdapter({
       }
     },
 
-    async generateDecisionBrief(input: GenerateDecisionBriefInput): Promise<DecisionBriefResult> {
+    async generateDecisionBrief(
+      input: GenerateDecisionBriefInput,
+      _options?: GenerateDecisionBriefOptions,
+    ): Promise<DecisionBriefResult> {
       return generateDecisionBriefWithQualityGate(engine, input, {
         signal,
         captureContext,

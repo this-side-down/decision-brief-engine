@@ -24,6 +24,11 @@ import { useTimedStatusMessage } from "./hooks/useTimedStatusMessage";
 import { generateCaptureLayerForSession, formatLongInputProgressMessage } from "./services/generation/generateCaptureLayer";
 import { generateDecisionBriefForSession } from "./services/generation/generateDecisionBrief";
 import { getOllamaConfig } from "./services/generation/ollamaConfig";
+import {
+  beginBriefGenerationRun,
+  isBriefGenerationRunCurrent,
+  supersedeBriefGenerationRun,
+} from "./utils/briefGenerationRunGuard";
 import { resolveCapturePath } from "./services/generation/longInput/inputBudgetPolicy";
 import { getLongInputCaptureCapability } from "./services/generation/longInput/longInputCapability";
 import {
@@ -242,6 +247,7 @@ export function App() {
   const pendingGenerateRef = useRef<PendingGenerate | null>(null);
   const lastModelLoadDurationRef = useRef<number | null>(null);
   const captureRunIdRef = useRef(0);
+  const briefRunIdRef = useRef(0);
   const [longInputProgressMessage, setLongInputProgressMessage] = useState("");
 
   const selectedBriefTypeId = useMemo(
@@ -634,11 +640,16 @@ export function App() {
   }
 
   async function runBriefGeneration(snapshot: PendingBriefGenerate) {
-    const abortController = isWebGpuMode ? beginGenerationAbort() : null;
+    const abortController =
+      isWebGpuMode || isOllamaMode ? beginGenerationAbort() : null;
+    const { runId, nextActiveRunId } = beginBriefGenerationRun(briefRunIdRef.current);
+    briefRunIdRef.current = nextActiveRunId;
 
     setBriefSession((currentSession) => ({
       ...currentSession,
       status: "generating_brief",
+      decisionTrace: null,
+      decisionBrief: null,
       errors: [],
       errorStep: null,
       updatedAt: new Date().toISOString(),
@@ -651,6 +662,7 @@ export function App() {
         captureLayer: snapshot.captureLayer,
         briefType: snapshot.briefType,
         sourceLabel: snapshot.sourceLabel,
+        signal: abortController?.signal,
         adapter: getAdapterForGeneration(abortController?.signal, {
           captureContext: {
             sourceLabel: snapshot.sourceLabel ?? null,
@@ -668,6 +680,10 @@ export function App() {
           },
         }),
       });
+
+      if (!isBriefGenerationRunCurrent(briefRunIdRef.current, runId)) {
+        return;
+      }
 
       if (!markdown.trim()) {
         throw new Error("Decision Brief generation returned empty Markdown.");
@@ -696,11 +712,17 @@ export function App() {
       setDecisionBriefViewMode("preview");
       notifyGenerationComplete();
     } catch (error) {
+      if (!isBriefGenerationRunCurrent(briefRunIdRef.current, runId)) {
+        return;
+      }
+
       if (error instanceof GenerationCancelledError) {
         telemetry.completeBrief(error);
         setBriefSession((currentSession) => ({
           ...currentSession,
           status: "capture_ready",
+          decisionTrace: null,
+          decisionBrief: null,
           errors: [],
           errorStep: null,
           updatedAt: new Date().toISOString(),
@@ -737,6 +759,11 @@ export function App() {
         endGenerationAbort();
       }
     }
+  }
+
+  function handleCancelBriefGeneration() {
+    briefRunIdRef.current = supersedeBriefGenerationRun(briefRunIdRef.current);
+    cancelActiveGeneration();
   }
 
   function handleCancelLongInputCapture() {
@@ -1209,6 +1236,15 @@ export function App() {
               <button
                 className="rounded border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
                 onClick={handleCancelLongInputCapture}
+                type="button"
+              >
+                Cancel
+              </button>
+            ) : null}
+            {isGeneratingDecisionBrief && isOllamaMode ? (
+              <button
+                className="rounded border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
+                onClick={handleCancelBriefGeneration}
                 type="button"
               >
                 Cancel

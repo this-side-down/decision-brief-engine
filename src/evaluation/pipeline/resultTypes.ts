@@ -5,6 +5,7 @@ import type {
   PIPELINE_RESULT_FORMAT_VERSION,
 } from "./constants";
 import type { StructuredCompletionDiagnostics } from "../../services/generation/browserGenerationDiagnostics";
+import type { DecisionArtifactDiagnostics } from "../../services/generation/decisionArtifactDiagnostics";
 import type { SemanticAcceptanceDetailedFindings } from "../../services/generation/decisionBriefSemanticAcceptance";
 
 export type PipelineGenerationMode = "mock" | "ollama" | "webgpu";
@@ -71,13 +72,7 @@ export type LongInputCaptureDiagnostics = {
   validationLatencyMs: number | null;
 };
 
-export type DecisionArtifactDiagnostics = {
-  strategy: "combined" | "split_stage";
-  briefRetryCount: number;
-  traceRetryCount: number | null;
-  briefGenerationLatencyMs: number | null;
-  traceGenerationLatencyMs: number | null;
-};
+export type { DecisionArtifactDiagnostics } from "../../services/generation/decisionArtifactDiagnostics";
 
 export type PipelineEvalResult = {
   resultFormatVersion: typeof PIPELINE_RESULT_FORMAT_VERSION;

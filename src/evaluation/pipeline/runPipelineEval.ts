@@ -9,7 +9,7 @@ import {
 import { generateCaptureLayerForSession } from "../../services/generation/generateCaptureLayer";
 import { mockModelAdapter } from "../../services/generation/mockModelAdapter";
 import { ollamaModelAdapter } from "../../services/generation/ollamaModelAdapter";
-import { ollamaDecisionArtifactDiagnosticsHolder } from "../../services/generation/ollamaDecisionBriefGeneration";
+import type { DecisionArtifactDiagnosticsHolder } from "../../services/generation/decisionArtifactDiagnostics";
 import { getOllamaConfig } from "../../services/generation/ollamaConfig";
 import { validateDecisionTraceObject } from "../../services/generation/parseDecisionTrace";
 import {
@@ -345,23 +345,30 @@ export async function runSinglePipelineEval(options: {
   let writingHardFailures: string[] = [];
   let writingWarnings: string[] = [];
   let writingReports: string[] = [];
+  const decisionArtifactDiagnosticsHolder: DecisionArtifactDiagnosticsHolder = {
+    value: null,
+  };
 
   if (!decisionBriefAttempted) {
     notes.push(
       "Decision Brief skipped because Capture Layer schema/parse gate did not pass.",
     );
   } else if (validatedCapture) {
-    ollamaDecisionArtifactDiagnosticsHolder.value = null;
     const briefStarted = Date.now();
     try {
-      const briefResult = await adapter.generateDecisionBrief({
-        captureLayer: validatedCapture,
-        briefType,
-        briefTypeGuidance: briefType.guidance,
-        markdownStructure: [...DECISION_BRIEF_MARKDOWN_STRUCTURE],
-        toneGuidance: "Concise, executive-ready, direct, and decision-oriented.",
-        sourceLabel: loaded.sourceLabel,
-      });
+      const briefResult = await adapter.generateDecisionBrief(
+        {
+          captureLayer: validatedCapture,
+          briefType,
+          briefTypeGuidance: briefType.guidance,
+          markdownStructure: [...DECISION_BRIEF_MARKDOWN_STRUCTURE],
+          toneGuidance: "Concise, executive-ready, direct, and decision-oriented.",
+          sourceLabel: loaded.sourceLabel,
+        },
+        options.mode === "ollama"
+          ? { diagnostics: decisionArtifactDiagnosticsHolder }
+          : undefined,
+      );
       briefLatencyMs = Date.now() - briefStarted;
       briefMarkdown = briefResult.markdown;
       briefGenerationSuccess = Boolean(briefMarkdown?.trim());
@@ -509,7 +516,7 @@ export async function runSinglePipelineEval(options: {
     ),
     decisionArtifactDiagnostics:
       options.mode === "ollama"
-        ? ollamaDecisionArtifactDiagnosticsHolder.value
+        ? decisionArtifactDiagnosticsHolder.value
         : null,
   });
 

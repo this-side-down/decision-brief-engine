@@ -1,5 +1,29 @@
 # Local Ollama Decision Brief and Trace generation (#154)
 
+#154 restores the combined Decision Brief + Decision Trace envelope for Local Ollama, but **#154 remains open** until trace readiness, required sections, alignment, writing quality, and deterministic usability pass on the measured fixtures.
+
+## Scope of PR #156
+
+This PR is the **first implementation slice** under #154. It resolves the empty-Markdown / wrong-envelope defect. It does **not** close #154.
+
+Remaining work under open #154:
+
+- Decision Trace structural readiness
+- required Decision Brief sections
+- recommendation and next-step alignment
+- writing hard failures
+- deterministic usability
+
+**#155** remains the independent hierarchical `stated_decision` blocker on the platform fixture.
+
+## Request-scoped diagnostics
+
+Production generation records `DecisionArtifactDiagnostics` through a per-invocation holder passed in `GenerateDecisionBriefOptions`. No module-global diagnostics state is used. The evaluation harness supplies its own holder per pipeline case.
+
+## Production cancellation
+
+Local Ollama Decision Brief generation uses the same abort-controller path as WebGPU brief generation. Cancellation aborts the in-flight Ollama fetch, preserves the accepted Capture Layer, clears partial brief/trace artifacts, returns the session to `capture_ready`, and uses a run-id guard so late responses cannot publish stale results.
+
 ## Diagnosed root cause
 
 Before #154, Local Ollama Decision Brief generation used the **legacy** prompt with `format: "json"` and no JSON Schema constraint. Measured on `qwen3:4b` with the Q4 gallery Capture Layer:
