@@ -196,6 +196,9 @@ export function App() {
     notifyBriefFailed,
     notifyGenerationComplete,
     lastModelLoadDurationMs,
+    modelLoadAttemptStartedAt,
+    modelLoadLastCallbackAt,
+    modelLoadLastMeaningfulProgressAt,
   } = generation;
   const isOllamaMode = effectiveMode === "ollama";
   const isWebGpuMode = effectiveMode === "webgpu";
@@ -1050,6 +1053,10 @@ export function App() {
         <BrowserInferenceStatus
           downloadProgress={downloadProgress}
           inferenceUiState={inferenceUiState}
+          liveModelLoadMessage={telemetry.liveStatusMessage}
+          modelLoadAttemptStartedAt={modelLoadAttemptStartedAt}
+          modelLoadLastCallbackAt={modelLoadLastCallbackAt}
+          modelLoadLastMeaningfulProgressAt={modelLoadLastMeaningfulProgressAt}
           onCancelDownload={cancelModelDownload}
           onCancelGeneration={cancelActiveGeneration}
           onRetryDownload={retryModelDownload}

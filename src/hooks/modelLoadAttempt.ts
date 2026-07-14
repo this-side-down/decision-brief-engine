@@ -9,6 +9,51 @@ export type DownloadProgressUpdate = {
   text: string;
 };
 
+export type ModelDownloadActivitySnapshot = {
+  attemptStartedAt: number;
+  lastCallbackAt: number;
+  lastMeaningfulProgressAt: number;
+  lastProgressValue: number | null;
+  lastPhaseText: string;
+};
+
+export function createModelDownloadActivitySnapshot(
+  now: number,
+): ModelDownloadActivitySnapshot {
+  return {
+    attemptStartedAt: now,
+    lastCallbackAt: now,
+    lastMeaningfulProgressAt: now,
+    lastProgressValue: null,
+    lastPhaseText: "",
+  };
+}
+
+export function updateModelDownloadActivitySnapshot(
+  snapshot: ModelDownloadActivitySnapshot,
+  progress: DownloadProgressUpdate,
+  now: number,
+): ModelDownloadActivitySnapshot {
+  const progressValue =
+    typeof progress.progress === "number" && Number.isFinite(progress.progress)
+      ? progress.progress
+      : null;
+  const progressAdvanced =
+    progressValue !== null && progressValue !== snapshot.lastProgressValue;
+  const phaseChanged = progress.text !== snapshot.lastPhaseText;
+  const meaningfulProgressChanged = progressAdvanced || phaseChanged;
+
+  return {
+    ...snapshot,
+    lastCallbackAt: now,
+    lastMeaningfulProgressAt: meaningfulProgressChanged
+      ? now
+      : snapshot.lastMeaningfulProgressAt,
+    lastProgressValue: progressAdvanced ? progressValue : snapshot.lastProgressValue,
+    lastPhaseText: progress.text,
+  };
+}
+
 export type ModelLoadAttemptState = {
   beginAttempt(): number;
   invalidateCurrentAttempt(): void;
@@ -71,12 +116,17 @@ export function sanitizeModelDownloadErrorDetail(message: string): string {
   return withoutUrls;
 }
 
+export function formatModelLoadTimeoutMessage(): string {
+  return MODEL_LOAD_TIMEOUT_STATUS;
+}
+
+export function isModelLoadTimeout(error: unknown): boolean {
+  return error instanceof ModelLoadTimeoutError;
+}
+
 export function formatModelDownloadFailureMessage(error: unknown): string {
   if (error instanceof ModelLoadTimeoutError) {
-    const detail = sanitizeModelDownloadErrorDetail(error.message);
-    return detail.startsWith("Model download failed")
-      ? detail
-      : `Model download failed. ${detail}`;
+    return formatModelLoadTimeoutMessage();
   }
 
   if (error instanceof ModelDownloadFailedError) {
@@ -144,7 +194,11 @@ export function applyModelLoadProgressUpdate(options: {
   attemptId: number;
   aborted: boolean;
   progress: DownloadProgressUpdate;
-  applyUpdate: (progress: DownloadProgressUpdate, statusMessage: string) => void;
+  activitySnapshot: ModelDownloadActivitySnapshot | null;
+  applyUpdate: (
+    progress: DownloadProgressUpdate,
+    activitySnapshot: ModelDownloadActivitySnapshot,
+  ) => void;
 }): boolean {
   if (
     !options.attemptState.canAcceptProgress(options.attemptId, options.aborted)
@@ -152,9 +206,17 @@ export function applyModelLoadProgressUpdate(options: {
     return false;
   }
 
+  if (!options.activitySnapshot) {
+    return false;
+  }
+
   options.applyUpdate(
     options.progress,
-    formatDownloadingStatusMessage(options.progress.progress),
+    updateModelDownloadActivitySnapshot(
+      options.activitySnapshot,
+      options.progress,
+      Date.now(),
+    ),
   );
   return true;
 }
@@ -171,6 +233,8 @@ const MODEL_READY_STATUS =
   "Live in browser is ready. Generation runs locally on your device.";
 const DOWNLOAD_CANCELLED_STATUS =
   "Model download cancelled. Live in browser is not ready.";
+export const MODEL_LOAD_TIMEOUT_STATUS =
+  "Model download timed out before the browser model was ready.";
 
 export function applyModelLoadSuccessTransition(options: {
   attemptState: ModelLoadAttemptState;
@@ -204,6 +268,12 @@ export function applyModelLoadFailureTransition(options: {
 
   options.onTerminal?.();
   options.ui.downloadProgress = null;
+
+  if (isModelLoadTimeout(options.error)) {
+    options.ui.inferenceUiState = "download_failed";
+    options.ui.statusMessage = formatModelLoadTimeoutMessage();
+    return true;
+  }
 
   if (isModelLoadCancellation(options.error)) {
     options.ui.inferenceUiState = "download_cancelled";

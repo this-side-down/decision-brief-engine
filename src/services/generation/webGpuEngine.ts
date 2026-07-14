@@ -41,6 +41,12 @@ async function abortInFlightLoadEngine(
   await engine.unload().catch(() => undefined);
 }
 
+async function unloadActiveLoadEngineWithoutSuperseding(): Promise<void> {
+  const engine = activeLoadEngine;
+  activeLoadEngine = null;
+  await abortInFlightLoadEngine(engine);
+}
+
 export async function isWebGpuModelCached(modelId?: string): Promise<boolean> {
   const config = getWebGpuConfig();
   const targetModelId = modelId ?? config.modelId;
@@ -132,7 +138,7 @@ async function loadWebGpuEngineInternal(
   try {
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutId = window.setTimeout(() => {
-        void cancelWebGpuLoad();
+        void unloadActiveLoadEngineWithoutSuperseding();
         reject(new ModelLoadTimeoutError());
       }, timeoutMs);
     });
@@ -158,6 +164,10 @@ async function loadWebGpuEngineInternal(
     activeLoadEngine = null;
     return engine;
   } catch (error) {
+    if (error instanceof ModelLoadTimeoutError) {
+      throw error;
+    }
+
     if (
       isLoadStale(loadGeneration) ||
       options.signal?.aborted ||
@@ -165,10 +175,6 @@ async function loadWebGpuEngineInternal(
       (error instanceof DOMException && error.name === "AbortError")
     ) {
       throw new ModelLoadCancelledError();
-    }
-
-    if (error instanceof ModelLoadTimeoutError) {
-      throw error;
     }
 
     if (error instanceof Error && /memory|oom|device lost/i.test(error.message)) {
@@ -221,4 +227,12 @@ export function assertGenerationNotCancelled(signal?: AbortSignal): void {
   if (signal?.aborted) {
     throw new GenerationCancelledError();
   }
+}
+
+export function resetWebGpuEngineStateForTests(): void {
+  cachedEngine = null;
+  cachedModelId = null;
+  activeLoadPromise = null;
+  activeLoadEngine = null;
+  activeLoadGeneration = 0;
 }

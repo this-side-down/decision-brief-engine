@@ -29,9 +29,12 @@ import {
 } from "../services/generation/webGpuPreflight";
 import {
   applyModelLoadProgressUpdate,
+  createModelDownloadActivitySnapshot,
   createModelLoadAttemptState,
   formatModelDownloadFailureMessage,
+  formatModelLoadTimeoutMessage,
   isModelLoadCancellation,
+  isModelLoadTimeout,
 } from "./modelLoadAttempt";
 
 export type BrowserInferenceUiState =
@@ -77,9 +80,20 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
   const [lastModelLoadDurationMs, setLastModelLoadDurationMs] = useState<
     number | null
   >(null);
+  const [modelLoadAttemptStartedAt, setModelLoadAttemptStartedAt] = useState<
+    number | null
+  >(null);
+  const [modelLoadLastCallbackAt, setModelLoadLastCallbackAt] = useState<
+    number | null
+  >(null);
+  const [modelLoadLastMeaningfulProgressAt, setModelLoadLastMeaningfulProgressAt] =
+    useState<number | null>(null);
   const loadAbortRef = useRef<AbortController | null>(null);
   const generationAbortRef = useRef<AbortController | null>(null);
   const modelLoadAttemptStateRef = useRef(createModelLoadAttemptState());
+  const modelLoadActivityRef = useRef<ReturnType<
+    typeof createModelDownloadActivitySnapshot
+  > | null>(null);
   const onModelLoadTerminalRef = useRef(options.onModelLoadTerminal);
   onModelLoadTerminalRef.current = options.onModelLoadTerminal;
 
@@ -151,6 +165,13 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
     setModePreferenceState(preference);
   }, []);
 
+  const clearModelLoadActivity = useCallback(() => {
+    modelLoadActivityRef.current = null;
+    setModelLoadAttemptStartedAt(null);
+    setModelLoadLastCallbackAt(null);
+    setModelLoadLastMeaningfulProgressAt(null);
+  }, []);
+
   const selectMockDemo = useCallback(() => {
     loadAbortRef.current?.abort();
     generationAbortRef.current?.abort();
@@ -161,9 +182,10 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
     persistPreference("mock");
     setIsDisclosureOpen(false);
     setDownloadProgress(null);
+    clearModelLoadActivity();
     setInferenceUiState("fallback_to_mock");
     setStatusMessage("Switched to Mock demo.");
-  }, [engine, persistPreference]);
+  }, [clearModelLoadActivity, engine, persistPreference]);
 
   const cancelModelDownload = useCallback(() => {
     loadAbortRef.current?.abort();
@@ -172,10 +194,11 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
     onModelLoadTerminalRef.current?.();
     void cancelWebGpuLoad();
     setDownloadProgress(null);
+    clearModelLoadActivity();
     setIsDisclosureOpen(false);
     setInferenceUiState("download_cancelled");
     setStatusMessage("Model download cancelled. Live in browser is not ready.");
-  }, []);
+  }, [clearModelLoadActivity]);
 
   const confirmModelDownload = useCallback(async () => {
     const result = await refreshPreflight(true);
@@ -195,9 +218,14 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
     const controller = new AbortController();
     loadAbortRef.current = controller;
     const attemptId = modelLoadAttemptStateRef.current.beginAttempt();
+    const activitySnapshot = createModelDownloadActivitySnapshot(Date.now());
+    modelLoadActivityRef.current = activitySnapshot;
+    setModelLoadAttemptStartedAt(activitySnapshot.attemptStartedAt);
+    setModelLoadLastCallbackAt(activitySnapshot.lastCallbackAt);
+    setModelLoadLastMeaningfulProgressAt(activitySnapshot.lastMeaningfulProgressAt);
     setIsDisclosureOpen(false);
     setInferenceUiState("downloading_model");
-    setStatusMessage("Downloading model for live browser generation…");
+    setStatusMessage("Downloading browser model…");
     setDownloadProgress({ progress: 0, text: "Starting download…" });
     const loadStartedAt = Date.now();
 
@@ -210,9 +238,14 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
             attemptId,
             aborted: controller.signal.aborted,
             progress,
-            applyUpdate: (nextProgress, nextStatusMessage) => {
+            activitySnapshot: modelLoadActivityRef.current,
+            applyUpdate: (nextProgress, nextActivity) => {
+              modelLoadActivityRef.current = nextActivity;
               setDownloadProgress(nextProgress);
-              setStatusMessage(nextStatusMessage);
+              setModelLoadLastCallbackAt(nextActivity.lastCallbackAt);
+              setModelLoadLastMeaningfulProgressAt(
+                nextActivity.lastMeaningfulProgressAt,
+              );
             },
           });
         },
@@ -228,6 +261,7 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
 
       setEngine(loadedEngine);
       setDownloadProgress(null);
+      clearModelLoadActivity();
       setLastModelLoadDurationMs(Date.now() - loadStartedAt);
       setInferenceUiState("model_ready");
       setStatusMessage(
@@ -240,6 +274,13 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
 
       onModelLoadTerminalRef.current?.();
       setDownloadProgress(null);
+      clearModelLoadActivity();
+
+      if (isModelLoadTimeout(error)) {
+        setInferenceUiState("download_failed");
+        setStatusMessage(formatModelLoadTimeoutMessage());
+        return;
+      }
 
       if (isModelLoadCancellation(error)) {
         setInferenceUiState("download_cancelled");
@@ -254,7 +295,7 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
         loadAbortRef.current = null;
       }
     }
-  }, [refreshPreflight]);
+  }, [clearModelLoadActivity, refreshPreflight]);
 
   const selectLiveInBrowser = useCallback(async () => {
     if (!canSelectBrowserInference()) {
@@ -453,6 +494,9 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
     inferenceUiState,
     statusMessage,
     lastModelLoadDurationMs,
+    modelLoadAttemptStartedAt,
+    modelLoadLastCallbackAt,
+    modelLoadLastMeaningfulProgressAt,
     downloadProgress,
     isDisclosureOpen,
     isEngineReady,
