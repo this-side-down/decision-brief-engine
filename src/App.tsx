@@ -1183,6 +1183,8 @@ export function App() {
             isOllamaMode ? telemetry.liveStatusMessage : ""
           }
           runDetails={showRunDetails ? telemetry.runDetails : null}
+          runGenerationId={telemetry.runGenerationId}
+          runRecord={showRunDetails ? telemetry.runRecord : null}
         />
         <BrowserInferenceStatus
           downloadProgress={downloadProgress}
