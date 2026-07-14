@@ -72,6 +72,7 @@ describe("arbitrary pasted long Mock input integration", () => {
     const evidence = captureLayer.evidence.join(" ");
     expect(evidence).toContain("BEGIN-MARKER");
     expect(evidence).toContain("MID-MARKER");
+    expect(evidence).toContain("END-MARKER");
     expect(captureLayer.evidence.length).toBeGreaterThanOrEqual(3);
 
     const structural = evaluateStructuralReadiness(

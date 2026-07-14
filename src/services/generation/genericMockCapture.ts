@@ -71,6 +71,22 @@ function extractChunkSentences(text: string): string[] {
     .filter((sentence) => sentence.length > 0);
 }
 
+export function selectRepresentativeChunkSentences(sentences: string[]): string[] {
+  if (sentences.length <= 2) {
+    return [...sentences];
+  }
+
+  const indices = new Set<number>([
+    0,
+    Math.floor((sentences.length - 1) / 2),
+    sentences.length - 1,
+  ]);
+
+  return [...indices]
+    .sort((left, right) => left - right)
+    .map((index) => sentences[index]);
+}
+
 function detectExplicitStatedDecision(text: string): string {
   const match = text.match(
     /(?:^|\n)\s*(?:stated decision|final decision|we decided)\s*:\s*([^\n.!?]+)/i,
@@ -85,7 +101,7 @@ function buildChunkEvidence(
   sourceRange: PartialCaptureSignals["sourceRange"],
 ): EvidenceReference[] {
   const sentences = extractChunkSentences(chunkText);
-  const evidence = sentences.slice(0, 3).map((sentence) => ({
+  const evidence = selectRepresentativeChunkSentences(sentences).map((sentence) => ({
     text: sentence,
     sourceChunkId: chunkId,
     sourceRange,
