@@ -127,3 +127,97 @@ All three examples **FAIL** the documented decision rule. No example reached an 
 ### Next experiment
 
 **Validator-aligned `markdown_only` prompt** — revise the experiment prompt (not production `structured_response`) so section structure, recommendation correspondence, and discrete suggested-next-step representation are explicit requirements aligned with existing validators. Do not implement split-stage production until a markdown-only stage passes the documented decision rule on gallery examples.
+
+---
+
+## E2b — validator-aligned markdown_only prompt (#145)
+
+Follow-up controlled experiment after E2 (PR #143) failed all three gallery examples with `finish_reason=stop` but semantic acceptance failures. Parent investigation: **#141**. Implementation: **#145**.
+
+### Hypothesis
+
+The remaining bottleneck is **prompt-validator misalignment**. The E2 `markdown_only` prompt did not state several hard requirements already enforced by `evaluateDecisionBriefMarkdownOnlyAcceptance`, `evaluateBriefMarkdownAlignment`, and `evaluateDecisionBriefWriting`. Explicitly stating those requirements may allow Qwen2.5-1.5B to produce acceptable Markdown without changing model, schema, validators, or retry behavior.
+
+### Controlled variable
+
+Only the evaluation-only `markdown_only` Decision Brief prompt wording — aligned with existing deterministic validators (section headings as `##`, non-empty sections, recommendation preservation, discrete next-step list items with exact count, writing hard gates, explained Confidence, grounding rules).
+
+### Frozen variables
+
+Unchanged from E2 / #145:
+
+| Variable | Value |
+| --- | --- |
+| WebLLM | `@mlc-ai/web-llm@0.2.84` |
+| Model | `Qwen2.5-1.5B-Instruct-q4f16_1-MLC` |
+| Brief prompt mode | `markdown_only` |
+| Capture Layer | Unchanged production path |
+| Markdown-only JSON schema | `{ "markdown": "..." }` only |
+| Validators / thresholds | Unchanged |
+| `max_tokens` / context | Unchanged |
+| Retry count / retry suffix | Unchanged |
+| Production `structured_response` | Unchanged |
+| Decision Trace generation | Unchanged (not requested in markdown_only) |
+| Public gating / Mock default | Unchanged |
+
+### Gallery cases
+
+Same three built-in gallery examples as E2:
+
+1. **Household Move Planning**
+2. **Q4 Workforce Allocation**
+3. **Local Inference Setup Flow**
+
+### Pass rule (E2b)
+
+All three gallery examples must produce an **accepted** markdown-only result after at most **one bounded retry**, with:
+
+- Final accepted attempt `finish_reason=stop`
+- Valid markdown-only JSON response
+- All required sections present and non-empty
+- Recommendation corresponding to `capture_layer.recommendation_candidate`
+- Every Capture Layer suggested next step represented as a separate Markdown list item
+- Exact next-step count match — no additional or invented next steps
+- No writing hard failures
+- No placeholder leakage
+
+Warnings and report-only writing findings do **not** independently fail the experiment.
+
+### Reproduction procedure
+
+1. Configure `.env.local` (see [Enable markdown_only mode](#enable-markdown_only-mode) above).
+2. Build and preview: `npm run build && npm run preview`.
+3. Open the app in **Chrome** (Windows target).
+4. For each gallery example:
+   - Select the example from the built-in gallery.
+   - Run **Generate Capture Layer**, then **Generate Decision Brief**.
+   - Open **Run Details** and record diagnostics.
+5. If `VITE_BROWSER_GENERATION_DIAGNOSTICS=true`, inspect `.local/browser-generation-diagnostics/` for attempt artifacts.
+
+### Required evidence fields
+
+| Field | Notes |
+| --- | --- |
+| Example name | Gallery case |
+| Attempt count | 1 or 2 (bounded retry) |
+| `promptTokens` / `completionTokens` / `totalTokens` | Per attempt |
+| `finishReason` | Must be `stop` on accepted attempt |
+| Acceptance result | pass / fail |
+| Failure categories | If fail: `required_sections`, `recommendation_alignment`, `next_step_alignment`, `writing_hard_failure`, `placeholder_leakage` |
+| Writing hard failures | Rule IDs and excerpts |
+| Alignment details | Recommendation / next-step mismatch sources |
+
+### Results (pending)
+
+Manual E2b gallery runs are **pending**. Do not pre-fill outcomes in the implementation PR.
+
+| Example | Attempt 1 (prompt / completion / total) | Finish reason | Retry | Final result | Failure categories (final) |
+| --- | --- | --- | --- | --- | --- |
+| Household Move Planning | — | — | — | **PENDING** | — |
+| Q4 Workforce Allocation | — | — | — | **PENDING** | — |
+| Local Inference Setup Flow | — | — | — | **PENDING** | — |
+
+### Decision rule
+
+- **3/3 pass:** Keep **#141** open. Recommend the next controlled Decision Trace isolation experiment. Do **not** implement a production split pipeline.
+- **Any failure:** Do **not** start **#117** or implement split-stage production. Record exact tokens, finish reason, attempts, deterministic failure categories, and whether the 1.5B model capability ceiling is the leading explanation.
