@@ -9,7 +9,10 @@ import {
 import { generateCaptureLayerForSession } from "../../services/generation/generateCaptureLayer";
 import { mockModelAdapter } from "../../services/generation/mockModelAdapter";
 import { ollamaModelAdapter } from "../../services/generation/ollamaModelAdapter";
-import type { DecisionArtifactDiagnosticsHolder } from "../../services/generation/decisionArtifactDiagnostics";
+import type {
+  DecisionArtifactDiagnostics,
+  DecisionArtifactDiagnosticsHolder,
+} from "../../services/generation/decisionArtifactDiagnostics";
 import { getOllamaConfig } from "../../services/generation/ollamaConfig";
 import { validateDecisionTraceObject } from "../../services/generation/parseDecisionTrace";
 import {
@@ -56,6 +59,36 @@ import type {
   PipelineRunSummary,
   LongInputCaptureDiagnostics,
 } from "./resultTypes";
+
+/**
+ * Derives the recorded prompt/strategy label from request-scoped Ollama
+ * diagnostics instead of hardcoding a single architecture assumption for
+ * every Ollama run. "structured_response_combined" only applies to the
+ * historical combined strategy; PR #157's split-stage Ollama generation
+ * (Markdown-only Stage A plus deterministic Stage B) is labeled
+ * "markdown_only_split_stage". Returns null when the mode is not "ollama",
+ * or when Ollama diagnostics were never recorded (for example, Decision
+ * Brief generation was never attempted because Capture Layer generation
+ * itself failed).
+ */
+export function resolvePromptVariant(
+  mode: PipelineGenerationMode,
+  diagnostics: DecisionArtifactDiagnostics | null,
+): string | null {
+  if (mode !== "ollama") {
+    return null;
+  }
+
+  if (diagnostics?.strategy === "split_stage") {
+    return "markdown_only_split_stage";
+  }
+
+  if (diagnostics?.strategy === "combined") {
+    return "structured_response_combined";
+  }
+
+  return null;
+}
 
 function resolveBriefType(
   briefTypeId: PipelineEvalCase["briefTypeId"],
@@ -477,7 +510,7 @@ export async function runSinglePipelineEval(options: {
     generationMode: options.mode,
     modelId,
     runtimeLibraryVersion,
-    promptVariant: options.mode === "ollama" ? "structured_response_combined" : null,
+    promptVariant: resolvePromptVariant(options.mode, decisionArtifactDiagnosticsHolder.value),
     captureLayerFirstAttemptParsePass: schema.validJson,
     captureLayerFinalParsePass: schema.validJson,
     captureLayerSchemaPass: schema.schemaPass,

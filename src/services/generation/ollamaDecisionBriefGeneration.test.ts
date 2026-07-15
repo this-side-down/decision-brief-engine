@@ -3,7 +3,10 @@ import { STRATEGY_DECISION_BRIEF } from "../../data/briefTypes";
 import type { CaptureLayer } from "../../types/captureLayer";
 import { ollamaGenerate } from "./ollamaClient";
 import { DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA } from "./decisionBriefResultSchema";
-import { DecisionBriefContractError } from "./decisionBriefContractErrors";
+import {
+  DecisionBriefContractError,
+  StageAMarkdownGenerationError,
+} from "./decisionBriefContractErrors";
 import type { DecisionArtifactDiagnosticsHolder } from "./decisionArtifactDiagnostics";
 import { DECISION_BRIEF_MARKDOWN_STRUCTURE } from "./types";
 import { GenerationCancelledError } from "./webGpuErrors";
@@ -150,6 +153,7 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
     expect(mockOllamaGenerate).toHaveBeenCalledTimes(1);
     expect(diagnostics.value).toMatchObject({
       strategy: "split_stage",
+      briefRetryCount: 0,
       markdownAttemptCount: 1,
       markdownRetryReasonCategory: "none",
       traceConstructionStrategy: "source_bound_projection",
@@ -157,7 +161,7 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
     });
   });
 
-  it("retries once when a required section is missing, then succeeds", async () => {
+  it("retries once when a required section is missing, then succeeds: records attempt count 2 and the retry reason", async () => {
     mockOllamaGenerate
       .mockResolvedValueOnce(markdownOnlyEnvelope(buildValidMarkdown({ omitRisksSection: true })))
       .mockResolvedValueOnce(markdownOnlyEnvelope(buildValidMarkdown()));
@@ -168,6 +172,8 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
     expect(result.markdown).toContain("# Decision Brief");
     expect(mockOllamaGenerate).toHaveBeenCalledTimes(2);
     expect(diagnostics.value?.markdownAttemptCount).toBe(2);
+    expect(diagnostics.value?.briefRetryCount).toBe(1);
+    expect(diagnostics.value?.totalModelCallCount).toBe(2);
     expect(diagnostics.value?.markdownRetryReasonCategory).toBe("required_sections");
   });
 
@@ -233,41 +239,143 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
     expect(retryPrompt).not.toContain(firstMarkdown);
   });
 
-  it("stops after one failed semantic retry and throws a typed contract error", async () => {
+  it("terminal semantic failure after two attempts records attempt count 2 and retry count 1 (not 0)", async () => {
     mockOllamaGenerate.mockResolvedValue(
       markdownOnlyEnvelope(buildValidMarkdown({ omitRisksSection: true })),
     );
     const diagnostics = createDiagnosticsHolder();
 
     await expect(generateOllamaDecisionBrief(baseInput, { diagnostics })).rejects.toBeInstanceOf(
-      DecisionBriefContractError,
+      StageAMarkdownGenerationError,
+    );
+    await expect(
+      generateOllamaDecisionBrief(baseInput, { diagnostics: createDiagnosticsHolder() }),
+    ).rejects.toBeInstanceOf(DecisionBriefContractError);
+
+    expect(mockOllamaGenerate).toHaveBeenCalledTimes(4);
+    expect(diagnostics.value).toMatchObject({
+      strategy: "split_stage",
+      markdownAttemptCount: 2,
+      briefRetryCount: 1,
+      totalModelCallCount: 2,
+      markdownRetryReasonCategory: "required_sections",
+      traceConstructionStrategy: null,
+      traceConstructionLatencyMs: null,
+    });
+    expect(diagnostics.value?.briefGenerationLatencyMs).toBeGreaterThanOrEqual(0);
+    expect(diagnostics.value?.markdownGenerationLatencyMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it("terminal parse/schema failure after two attempts records attempt count 2", async () => {
+    mockOllamaGenerate.mockResolvedValue("not valid json at all");
+    const diagnostics = createDiagnosticsHolder();
+
+    await expect(generateOllamaDecisionBrief(baseInput, { diagnostics })).rejects.toBeInstanceOf(
+      StageAMarkdownGenerationError,
     );
 
     expect(mockOllamaGenerate).toHaveBeenCalledTimes(2);
+    expect(diagnostics.value).toMatchObject({
+      strategy: "split_stage",
+      markdownAttemptCount: 2,
+      briefRetryCount: 1,
+      totalModelCallCount: 2,
+      markdownRetryReasonCategory: "parse_or_schema",
+    });
   });
 
-  it("does not retry cancellation", async () => {
+  it("does not retry cancellation, and records exactly one attempted model call", async () => {
     mockOllamaGenerate.mockRejectedValue(new GenerationCancelledError());
+    const diagnostics = createDiagnosticsHolder();
 
     await expect(
-      generateOllamaDecisionBrief(baseInput, { signal: new AbortController().signal }),
+      generateOllamaDecisionBrief(baseInput, {
+        diagnostics,
+        signal: new AbortController().signal,
+      }),
     ).rejects.toBeInstanceOf(GenerationCancelledError);
 
     expect(mockOllamaGenerate).toHaveBeenCalledTimes(1);
+    expect(diagnostics.value).toMatchObject({
+      strategy: "split_stage",
+      markdownAttemptCount: 1,
+      briefRetryCount: 0,
+      totalModelCallCount: 1,
+      markdownRetryReasonCategory: null,
+    });
   });
 
-  it("does not retry on timeout", async () => {
+  it("does not retry on timeout, and records exactly one attempted model call", async () => {
     mockOllamaGenerate.mockRejectedValue(new Error("Ollama request timed out after 120000ms."));
+    const diagnostics = createDiagnosticsHolder();
 
-    await expect(generateOllamaDecisionBrief(baseInput)).rejects.toThrow("timed out");
+    await expect(generateOllamaDecisionBrief(baseInput, { diagnostics })).rejects.toThrow("timed out");
+
     expect(mockOllamaGenerate).toHaveBeenCalledTimes(1);
+    expect(diagnostics.value).toMatchObject({
+      markdownAttemptCount: 1,
+      briefRetryCount: 0,
+      totalModelCallCount: 1,
+    });
   });
 
-  it("does not retry on network failure", async () => {
+  it("does not retry on network failure, and records exactly one attempted model call", async () => {
     mockOllamaGenerate.mockRejectedValue(new TypeError("fetch failed"));
+    const diagnostics = createDiagnosticsHolder();
 
-    await expect(generateOllamaDecisionBrief(baseInput)).rejects.toThrow("fetch failed");
+    await expect(generateOllamaDecisionBrief(baseInput, { diagnostics })).rejects.toThrow("fetch failed");
+
     expect(mockOllamaGenerate).toHaveBeenCalledTimes(1);
+    expect(diagnostics.value).toMatchObject({
+      markdownAttemptCount: 1,
+      briefRetryCount: 0,
+      totalModelCallCount: 1,
+    });
+  });
+
+  it("keeps diagnostics request-scoped across concurrent and sequential invocations", async () => {
+    // Call order is deterministic: both invocations start synchronously, so
+    // the first invocation's first attempt is Ollama call 1 and the second
+    // invocation's only attempt is Ollama call 2. Only call 1 is gated, so
+    // the second invocation can resolve fully while the first is still
+    // in flight -- this is what actually exercises "request-scoped" (a
+    // holder must not see a value written by a different in-flight call).
+    let releaseFirst!: () => void;
+    const firstGate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+
+    mockOllamaGenerate
+      .mockImplementationOnce(async () => {
+        // First invocation, attempt 1: gated, then fails the required-
+        // sections gate so the first invocation must retry.
+        await firstGate;
+        return markdownOnlyEnvelope(buildValidMarkdown({ omitRisksSection: true }));
+      })
+      .mockResolvedValueOnce(markdownOnlyEnvelope(buildValidMarkdown()))
+      .mockResolvedValueOnce(markdownOnlyEnvelope(buildValidMarkdown()));
+
+    const firstDiagnostics = createDiagnosticsHolder();
+    const secondDiagnostics = createDiagnosticsHolder();
+
+    const firstPromise = generateOllamaDecisionBrief(baseInput, { diagnostics: firstDiagnostics });
+    const secondPromise = generateOllamaDecisionBrief(baseInput, { diagnostics: secondDiagnostics });
+
+    // Second invocation's single call (Ollama call 2) is not gated, so it
+    // resolves fully while the first invocation is still stuck on firstGate.
+    await secondPromise;
+    expect(secondDiagnostics.value?.markdownAttemptCount).toBe(1);
+    expect(secondDiagnostics.value?.briefRetryCount).toBe(0);
+
+    releaseFirst();
+    await firstPromise;
+    expect(firstDiagnostics.value?.markdownAttemptCount).toBe(2);
+    expect(firstDiagnostics.value?.briefRetryCount).toBe(1);
+    expect(firstDiagnostics.value?.markdownRetryReasonCategory).toBe("required_sections");
+
+    // Neither holder was overwritten by the other invocation's diagnostics.
+    expect(secondDiagnostics.value?.markdownAttemptCount).toBe(1);
+    expect(secondDiagnostics.value?.briefRetryCount).toBe(0);
   });
 
   it("builds a valid Decision Trace deterministically alongside the accepted Markdown", async () => {
