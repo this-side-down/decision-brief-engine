@@ -6,6 +6,10 @@ import type {
   DecisionTraceEntryKind,
 } from "../../types/decisionTrace";
 import { DECISION_TRACE_BASIS_ARRAY_FIELDS } from "./parseDecisionTrace";
+import {
+  findConstructableNextStepBasis,
+  type NextStepBasisCaptureField,
+} from "./nextStepBasisConstructability";
 
 /**
  * Thrown when a structurally-ready Capture Layer still cannot produce a valid
@@ -44,6 +48,19 @@ const BASIS_FIELD_TO_CAPTURE_LAYER_FIELD: Partial<
   tradeoffs: "tensions",
   alternatives_considered: "options_considered",
   missing_context_caveats: "missing_context",
+};
+
+const CAPTURE_LAYER_FIELD_TO_BASIS_FIELD: Record<
+  NextStepBasisCaptureField,
+  Exclude<BasisArrayField, "risks_accepted">
+> = {
+  evidence: "supporting_evidence",
+  assumptions: "assumptions_relied_on",
+  risks: "risks_addressed",
+  constraints: "constraints_respected",
+  tensions: "tradeoffs",
+  options_considered: "alternatives_considered",
+  missing_context: "missing_context_caveats",
 };
 
 /** Fields consulted, in priority order, to construct would_change_if. */
@@ -146,7 +163,11 @@ function selectBasisItems(
   return scored.slice(0, cap).map((candidate) => candidate.item);
 }
 
-function buildBasis(statement: string, captureLayer: CaptureLayer): DecisionTraceBasis {
+function buildBasis(
+  statement: string,
+  captureLayer: CaptureLayer,
+  kind: DecisionTraceEntryKind,
+): DecisionTraceBasis {
   const intent = selectIntent(statement, captureLayer.goals);
 
   const basis: DecisionTraceBasis = {
@@ -161,7 +182,13 @@ function buildBasis(statement: string, captureLayer: CaptureLayer): DecisionTrac
     missing_context_caveats: [],
   };
 
-  for (const field of DECISION_TRACE_BASIS_ARRAY_FIELDS) {
+  if (kind === "next_step") {
+    const matches = findConstructableNextStepBasis(statement, captureLayer);
+    for (const match of matches) {
+      const field = CAPTURE_LAYER_FIELD_TO_BASIS_FIELD[match.field];
+      if (basis[field].length < 3) basis[field].push(match.item);
+    }
+  } else for (const field of DECISION_TRACE_BASIS_ARRAY_FIELDS) {
     const captureLayerField = BASIS_FIELD_TO_CAPTURE_LAYER_FIELD[field];
     if (!captureLayerField) {
       // risks_accepted: no dedicated source field, see module docs.
@@ -247,7 +274,7 @@ function buildEntry(
   return {
     statement,
     kind,
-    basis: buildBasis(statement, captureLayer),
+    basis: buildBasis(statement, captureLayer, kind),
     confidence: captureLayer.confidence,
     would_change_if: wouldChangeIf,
   };
