@@ -1,47 +1,50 @@
 {
-  "evidenceFormatVersion": 1,
+  "evidenceFormatVersion": 2,
   "issue": "154",
-  "implementationCommit": "ae1d9268c2eff50310096310d745b7d4cee1897e",
+  "implementationCommit": "3e8211567a0110c9c35b2c0067389583d045166b",
   "modelId": "ollama:qwen3:4b",
-  "recordedAt": "2026-07-15T15:06:27Z",
-  "strategy": "markdown_only_split_stage_section_scaffold",
+  "recordedAt": "2026-07-15T16:14:43Z",
+  "strategy": "markdown_only_split_stage_section_scaffold_with_bounded_section_retry",
   "validatorsChanged": false,
+  "recommendationAlignmentContract": "same lexical words in the same order; punctuation-only sentence splitting and required boundary capitalization permitted",
   "runs": [
     {
       "run": 1,
-      "runId": "pipeline-2026-07-15T15-03-12-964Z",
-      "totalDurationMs": 92900,
+      "runId": "pipeline-2026-07-15T16-11-21-814Z",
+      "totalDurationMs": 97700,
       "outcomes": [
-        { "fixtureId": "q4-workforce-allocation", "markdownAttempts": 1, "retryCategory": "none", "requiredSectionsPass": true, "recommendationAlignmentPass": true, "nextStepAlignmentPass": true, "writingHardFailures": [], "captureLayerSchemaPass": true, "captureLayerReadinessPass": true, "inventedStatedDecisionFinding": null, "decisionTraceSchemaPass": true, "decisionTraceReadinessPass": true, "artifactUsable": true, "markdownLatencyMs": 3544, "traceLatencyMs": 1, "timeout": false, "outputLength": 2800, "possibleTruncation": false },
-        { "fixtureId": "platform-rearchitecture-review", "markdownAttempts": 1, "retryCategory": "none", "requiredSectionsPass": true, "recommendationAlignmentPass": true, "nextStepAlignmentPass": true, "writingHardFailures": [], "captureLayerSchemaPass": true, "captureLayerReadinessPass": true, "inventedStatedDecisionFinding": null, "decisionTraceSchemaPass": true, "decisionTraceReadinessPass": true, "artifactUsable": true, "markdownLatencyMs": 5038, "traceLatencyMs": 5, "timeout": false, "outputLength": 3542, "possibleTruncation": false },
-        { "fixtureId": "regional-launch-readiness-review", "markdownAttempts": 1, "retryCategory": "none", "requiredSectionsPass": true, "recommendationAlignmentPass": true, "nextStepAlignmentPass": true, "writingHardFailures": [], "captureLayerSchemaPass": true, "captureLayerReadinessPass": true, "inventedStatedDecisionFinding": null, "decisionTraceSchemaPass": true, "decisionTraceReadinessPass": true, "artifactUsable": true, "markdownLatencyMs": 6196, "traceLatencyMs": 11, "timeout": false, "outputLength": 4040, "possibleTruncation": false }
+        { "fixtureId": "q4-workforce-allocation", "stageAAttempts": 1, "retryCategory": "none", "stageAAccepted": true, "requiredSectionsPass": true, "recommendationAlignmentPass": true, "nextStepAlignmentPass": true, "writingHardFailures": [], "captureLayerSchemaPass": true, "captureLayerReadinessPass": true, "inventedStatedDecisionFinding": null, "decisionTraceSchemaPass": null, "decisionTraceReadinessPass": null, "artifactUsable": false, "markdownLatencyMs": 3324, "traceLatencyMs": 1, "timeout": false, "outputLength": 2500, "possibleTruncation": false, "terminalFinding": "Deterministic Stage B found no grounded basis for Capture Layer next step: Revisit workforce allocation at next meeting with updated context" },
+        { "fixtureId": "platform-rearchitecture-review", "stageAAttempts": 2, "retryCategory": "writing_hard_failure", "stageAAccepted": true, "requiredSectionsPass": true, "recommendationAlignmentPass": true, "nextStepAlignmentPass": true, "writingHardFailures": [], "captureLayerSchemaPass": true, "captureLayerReadinessPass": true, "inventedStatedDecisionFinding": null, "decisionTraceSchemaPass": true, "decisionTraceReadinessPass": true, "artifactUsable": true, "markdownLatencyMs": 6551, "traceLatencyMs": 6, "timeout": false, "attemptOutputLengths": [2967, 2010], "possibleTruncation": false },
+        { "fixtureId": "regional-launch-readiness-review", "stageAAttempts": 2, "retryCategory": "writing_hard_failure", "stageAAccepted": true, "requiredSectionsPass": true, "recommendationAlignmentPass": true, "nextStepAlignmentPass": true, "writingHardFailures": [], "captureLayerSchemaPass": true, "captureLayerReadinessPass": true, "inventedStatedDecisionFinding": null, "decisionTraceSchemaPass": true, "decisionTraceReadinessPass": true, "artifactUsable": true, "markdownLatencyMs": 9280, "traceLatencyMs": 13, "timeout": false, "attemptOutputLengths": [3682, 3047], "possibleTruncation": false }
       ]
     },
     {
       "run": 2,
-      "runId": "pipeline-2026-07-15T15-04-49-479Z",
-      "totalDurationMs": 97700,
+      "runId": "pipeline-2026-07-15T16-13-04-457Z",
+      "totalDurationMs": 98200,
       "outcomes": [
-        { "fixtureId": "q4-workforce-allocation", "markdownAttempts": 1, "retryCategory": "none", "requiredSectionsPass": true, "recommendationAlignmentPass": true, "nextStepAlignmentPass": true, "writingHardFailures": [], "captureLayerSchemaPass": true, "captureLayerReadinessPass": true, "inventedStatedDecisionFinding": null, "decisionTraceSchemaPass": true, "decisionTraceReadinessPass": true, "artifactUsable": true, "markdownLatencyMs": 4087, "traceLatencyMs": 1, "timeout": false, "outputLength": 3130, "possibleTruncation": false },
-        { "fixtureId": "platform-rearchitecture-review", "markdownAttempts": 1, "retryCategory": "none", "requiredSectionsPass": true, "recommendationAlignmentPass": true, "nextStepAlignmentPass": true, "writingHardFailures": [], "captureLayerSchemaPass": true, "captureLayerReadinessPass": true, "inventedStatedDecisionFinding": null, "decisionTraceSchemaPass": true, "decisionTraceReadinessPass": true, "artifactUsable": true, "markdownLatencyMs": 4518, "traceLatencyMs": 5, "timeout": false, "outputLength": 3262, "possibleTruncation": false },
-        { "fixtureId": "regional-launch-readiness-review", "markdownAttempts": 1, "retryCategory": "none", "requiredSectionsPass": true, "recommendationAlignmentPass": true, "nextStepAlignmentPass": true, "writingHardFailures": [], "captureLayerSchemaPass": true, "captureLayerReadinessPass": true, "inventedStatedDecisionFinding": null, "decisionTraceSchemaPass": true, "decisionTraceReadinessPass": true, "artifactUsable": true, "markdownLatencyMs": 8976, "traceLatencyMs": 12, "timeout": false, "outputLength": 5828, "possibleTruncation": false }
+        { "fixtureId": "q4-workforce-allocation", "stageAAttempts": 1, "retryCategory": "none", "stageAAccepted": true, "requiredSectionsPass": true, "recommendationAlignmentPass": true, "nextStepAlignmentPass": true, "writingHardFailures": [], "captureLayerSchemaPass": true, "captureLayerReadinessPass": true, "inventedStatedDecisionFinding": null, "decisionTraceSchemaPass": true, "decisionTraceReadinessPass": true, "artifactUsable": true, "markdownLatencyMs": 3319, "traceLatencyMs": 1, "timeout": false, "outputLength": 2442, "possibleTruncation": false },
+        { "fixtureId": "platform-rearchitecture-review", "stageAAttempts": 2, "retryCategory": "writing_hard_failure", "stageAAccepted": true, "requiredSectionsPass": true, "recommendationAlignmentPass": true, "nextStepAlignmentPass": true, "writingHardFailures": [], "captureLayerSchemaPass": true, "captureLayerReadinessPass": true, "inventedStatedDecisionFinding": null, "decisionTraceSchemaPass": true, "decisionTraceReadinessPass": true, "artifactUsable": true, "markdownLatencyMs": 6542, "traceLatencyMs": 6, "timeout": false, "attemptOutputLengths": [2967, 2010], "possibleTruncation": false },
+        { "fixtureId": "regional-launch-readiness-review", "stageAAttempts": 2, "retryCategory": "writing_hard_failure", "stageAAccepted": true, "requiredSectionsPass": true, "recommendationAlignmentPass": true, "nextStepAlignmentPass": true, "writingHardFailures": [], "captureLayerSchemaPass": true, "captureLayerReadinessPass": true, "inventedStatedDecisionFinding": null, "decisionTraceSchemaPass": true, "decisionTraceReadinessPass": true, "artifactUsable": true, "markdownLatencyMs": 9249, "traceLatencyMs": 13, "timeout": false, "attemptOutputLengths": [3682, 3085], "possibleTruncation": false }
       ]
     }
   ],
   "acceptance": {
-    "q4DeterministicUsable": true,
+    "q4StageADeterministic": true,
+    "q4DeterministicFullArtifact": false,
     "platformDeterministicUsable": true,
     "regionalDeterministicUsable": true,
     "bothLongFormFixturesPassTwice": true,
-    "maxRetryCountObserved": 0,
+    "maxRetryCountObserved": 1,
     "manualRescueUsed": false,
-    "issue154ClosureCriteriaMet": true
+    "originalReviewFindingsResolved": true,
+    "issue154ClosureCriteriaMet": false,
+    "closureBlocker": "Q4 run 1 failed deterministic Stage B source-bound basis construction after accepted Stage A; Stage B was not changed in this review correction"
   },
   "validation": {
-    "test": "pass (56 files, 552 tests)",
+    "test": "pass (57 files, 564 tests)",
     "typecheck": "pass",
     "build": "pass (existing large-chunk warning)",
-    "mockPipeline": "pass (10 cases, no infrastructure failure)",
-    "ollamaHealth": "all checks PASS and Result READY; Windows Node process then exits 1 on libuv UV_HANDLE_CLOSING assertion"
+    "mockPipeline": "pass (10 cases, no infrastructure failure)"
   }
 }
