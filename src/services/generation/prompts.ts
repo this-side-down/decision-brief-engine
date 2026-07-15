@@ -176,6 +176,23 @@ export function buildDecisionBriefRetryPrompt(
   ].join("\n");
 }
 
+export function buildDecisionBriefMarkdownOnlyRetryPrompt(
+  input: GenerateDecisionBriefInput,
+  findingLines: string[],
+): string {
+  return [
+    buildDecisionBriefPrompt(input, { mode: "markdown_only" }),
+    "",
+    "The previous response failed quality validation. It is not shown again here;",
+    "fix every finding below using only content grounded in the Capture Layer.",
+    "Validation findings:",
+    ...findingLines.map((line) => `- ${line}`),
+    "",
+    "Return a single corrected JSON object with a non-empty markdown field that addresses every finding above.",
+    NO_REASONING_INSTRUCTION,
+  ].join("\n");
+}
+
 export type DecisionBriefPromptMode = "legacy" | "structured_response" | "markdown_only";
 
 const DECISION_BRIEF_RESULT_SCHEMA = JSON.stringify(
