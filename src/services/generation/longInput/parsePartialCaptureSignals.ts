@@ -7,6 +7,7 @@ import type {
   SignalConflict,
   UnresolvedReference,
 } from "./types";
+import { acceptChunkStatedDecision } from "./statedDecisionHygiene";
 
 const CONFIDENCE_VALUES = new Set<CaptureLayer["confidence"]>([
   "High",
@@ -260,7 +261,10 @@ export function parsePartialCaptureSignalsJson(
     sourceRange: input.chunk.sourceRange,
     source_summary: record.source_summary as string,
     decision_context: record.decision_context as string,
-    stated_decision: record.stated_decision as string,
+    stated_decision: acceptChunkStatedDecision(
+      record.stated_decision as string,
+      input.chunk.text,
+    ),
     implied_decision: record.implied_decision as string,
     goals: record.goals as string[],
     stakeholders: record.stakeholders as string[],

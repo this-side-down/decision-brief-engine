@@ -7,6 +7,11 @@ import type {
   SignalConflict,
   UnresolvedReference,
 } from "./types";
+import {
+  acceptChunkStatedDecision,
+  areCompatibleRepeatedDecisions,
+  areDirectlyConflictingDecisions,
+} from "./statedDecisionHygiene";
 
 function normalizeComparable(value: string): string {
   return value.trim().replace(/\s+/g, " ").toLowerCase();
@@ -198,11 +203,37 @@ export function mergePartialCaptureSignals(
     ...mergeConflicts(conflicts),
   ];
 
-  const statedDecisionValues = dedupeStrings(
-    partialResults
-      .map((partial) => partial.stated_decision ?? "")
-      .filter((value) => value.trim().length > 0),
+  const chunksById = new Map(input.plan.chunks.map((chunk) => [chunk.id, chunk]));
+  const acceptedStatedDecisions = partialResults.map((partial) => {
+      const chunk = chunksById.get(partial.chunkId);
+      return chunk
+        ? acceptChunkStatedDecision(partial.stated_decision ?? "", chunk.text)
+        : "";
+    }).filter(Boolean);
+  const statedDecisionValues = acceptedStatedDecisions.filter(
+    (decision, index, all) =>
+      all.findIndex((other) => areCompatibleRepeatedDecisions(decision, other)) ===
+      index,
   );
+  const conflictingDecisionPairs: Array<[string, string]> = [];
+  for (let left = 0; left < statedDecisionValues.length; left += 1) {
+    for (let right = left + 1; right < statedDecisionValues.length; right += 1) {
+      if (
+        areDirectlyConflictingDecisions(
+          statedDecisionValues[left],
+          statedDecisionValues[right],
+        )
+      ) {
+        conflictingDecisionPairs.push([
+          statedDecisionValues[left],
+          statedDecisionValues[right],
+        ]);
+      }
+    }
+  }
+  for (const [a, b] of conflictingDecisionPairs) {
+    tensions.push(`Conflicting explicit decisions: ${a} vs ${b}`);
+  }
 
   const missingContext = dedupeStrings([
     ...collectField(partialResults, "missing_context"),
@@ -212,7 +243,10 @@ export function mergePartialCaptureSignals(
   const captureLayer: CaptureLayer = {
     source_summary: summarizeSource(fullSourceText),
     decision_context: mergeScalarField(partialResults, "decision_context"),
-    stated_decision: statedDecisionValues.join(" "),
+    stated_decision:
+      conflictingDecisionPairs.length > 0
+        ? ""
+        : statedDecisionValues.join(" "),
     implied_decision: mergeScalarField(partialResults, "implied_decision"),
     goals: collectField(partialResults, "goals"),
     stakeholders: collectField(partialResults, "stakeholders"),

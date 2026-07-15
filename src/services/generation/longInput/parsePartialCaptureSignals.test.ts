@@ -65,6 +65,19 @@ describe("parsePartialCaptureSignalsJson", () => {
     });
   });
 
+  it("empties an ungrounded stated decision while preserving the envelope", () => {
+    const parsed = parsePartialCaptureSignalsJson(
+      JSON.stringify({
+        ...validEnvelope,
+        stated_decision: "Proceed with a broad regional launch.",
+      }),
+      baseInput,
+    );
+
+    expect(parsed.stated_decision).toBe("");
+    expect(parsed.implied_decision).toBe(validEnvelope.implied_decision);
+  });
+
   it("accepts legitimate technical content containing schema", () => {
     const parsed = parsePartialCaptureSignalsJson(
       JSON.stringify({

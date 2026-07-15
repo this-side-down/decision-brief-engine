@@ -89,7 +89,7 @@ export function selectRepresentativeChunkSentences(sentences: string[]): string[
 
 function detectExplicitStatedDecision(text: string): string {
   const match = text.match(
-    /(?:^|\n)\s*(?:stated decision|final decision|we decided)\s*:\s*([^\n.!?]+)/i,
+    /(?:^|\n)\s*(?:\*\*[^*]+:\*\*\s*)?(?:stated decision|final decision(?: for the record)?|decision captured|we decided)\s*:\s*([^\n.!?]+)/i,
   );
 
   return match?.[1]?.trim() ?? "";
