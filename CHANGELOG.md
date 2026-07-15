@@ -8,15 +8,50 @@ This project uses pre-1.0 versioning (`v0.x.y`) for capability milestones rather
 
 ### Planned
 
-- **v0.3.0 — Long-Form Decision Capture:** hierarchical processing of realistic long decision material with complete source coverage, auditable merge behavior, Mock demonstration, and Local Ollama validation (#136).
-- This release slice adds the deterministic Mock long-input Capture Layer path (#147), including planning, chunk contracts, merge orchestration, synthetic long-form demo material, and regression coverage.
-- Previously merged browser reliability, diagnostics, schema, and evaluation work remain gated internal infrastructure per the closed #75 decision.
+- Re-enter browser inference evaluation with stronger WebGPU model candidates under #149.
+- Improve bounded Capture quality retry effectiveness under #162.
 
-### Runtime posture (unchanged)
+## v0.3.0 — Long-Form Decision Capture
+
+**2026-07-15**
+
+Decision Brief Engine v0.3.0 adds reliable long-form decision capture for realistic meeting and interview material while preserving source coverage, grounded recommendations, and typed failure behavior.
+
+### Added
+
+- Hierarchical processing for long decision material with planning, chunk-level Capture, deterministic merge behavior, and source-coverage checks.
+- Two long-form evaluation fixtures covering platform rearchitecture and regional launch readiness.
+- Grounded Capture Layer next-step validation before Decision Brief generation.
+- Deterministic source-bound Decision Trace construction for recommendation and next-step rationale.
+- Exact Stage A section-body schema with application-owned canonical headings.
+- Targeted correction of only failing model-owned Decision Brief sections.
+- Capture and Stage A retry diagnostics with typed terminal failures.
+
+### Changed
+
+- Passing Decision Brief sections remain byte-for-byte unchanged during targeted correction.
+- Recommendation and Suggested Next Steps remain application-owned and source-bound.
+- Summary correction uses a 50-word operating target against the unchanged 60-word validator.
+- Sentence correction uses a 30-word operating target against the unchanged 35-word validator.
+- Local Ollama `qwen3:4b` is the supported real-generation baseline for ordinary and long-form inputs.
+
+### Quality evidence
+
+- Q4 workforce allocation, platform rearchitecture, and regional launch readiness each produced usable full artifacts.
+- Both required long-form fixtures cleared Capture Layer, Decision Brief, Decision Trace, alignment, writing, and groundedness gates.
+- Five of six final counted Local Ollama artifacts were usable.
+- One Platform run ended in a typed Capture quality failure after the model repeated an unsupported placeholder on its single bounded retry.
+- No validator was weakened, no content was silently truncated, and no trace basis was fabricated.
+
+### Known limitation
+
+Local generation can return a typed quality failure when its single bounded correction cannot recover a source-grounded Capture Layer next step. The application rejects that output before Decision Brief generation rather than silently accepting or fabricating an artifact. Follow-up work is tracked in #162.
+
+### Runtime posture
 
 - Mock demo remains the public default.
-- Local Ollama remains the real-generation quality baseline.
-- Browser WebGPU remains experimental and gated.
+- Local Ollama `qwen3:4b` remains the supported real-generation path.
+- Browser WebGPU remains experimental and gated for v0.3.0.
 - Hosted inference remains deferred.
 
 ## v0.2.1 — Decision Brief Workspace and Writing Quality Polish
