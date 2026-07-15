@@ -97,6 +97,40 @@ export const DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_JSON = JSON.stringify(
   DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA,
 );
 
+const REQUIRED_STAGE_A_SECTION_PROPERTIES = {
+  summary: { type: "string", description: "One concise paragraph of at most 60 words. Every sentence is at most 35 words." },
+  decisionContext: { type: "string", description: "Concise prose. Every sentence is at most 35 words." },
+  optionsConsidered: { type: "string", description: "Markdown list with one option per line. Every list item is at most 35 words." },
+  recommendation: { type: "string", description: "Recommendation prose. Every sentence is at most 35 words." },
+  risksAndConstraints: { type: "string", description: "Markdown list with one risk or constraint per line. Every list item is at most 35 words." },
+  openQuestions: { type: "string", description: "Markdown list with one question per line. Every list item is at most 35 words." },
+  suggestedNextSteps: { type: "string", description: "Markdown list with one next step per line. Every list item is at most 35 words." },
+  confidence: { type: "string", description: "Confidence label and concise explanation. Every sentence is at most 35 words." },
+} as const;
+
+/** Ollama-only deterministic Stage A section scaffold (#154). */
+export const OLLAMA_STAGE_A_SECTIONS_JSON_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: REQUIRED_STAGE_A_SECTION_PROPERTIES,
+  required: Object.keys(REQUIRED_STAGE_A_SECTION_PROPERTIES),
+} as const;
+
+export type OllamaStageASectionField = keyof typeof REQUIRED_STAGE_A_SECTION_PROPERTIES;
+
+export function buildOllamaStageACorrectionSchema(
+  fields: readonly OllamaStageASectionField[],
+): Record<string, unknown> {
+  return {
+    type: "object",
+    additionalProperties: false,
+    properties: Object.fromEntries(
+      fields.map((field) => [field, REQUIRED_STAGE_A_SECTION_PROPERTIES[field]]),
+    ),
+    required: [...fields],
+  };
+}
+
 /** Backward-compatible alias matching the prior WebGPU-module export name. */
 export const DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_SCHEMA_JSON =
   DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_JSON;

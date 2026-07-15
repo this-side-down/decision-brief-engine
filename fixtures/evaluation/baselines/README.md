@@ -6,6 +6,7 @@ Machine-readable full-pipeline evaluation records (`resultFormatVersion: 1`).
 | --- | --- | --- |
 | `mock-pipeline-baseline.json` | Mock | Committed reference for all eight cases |
 | `ollama-pipeline-baseline.json` | Ollama `qwen3:4b` | Local run; may include timeouts / brief-generation failures |
+| `ollama-stage-a-markdown-reliability-154.json` | Ollama `qwen3:4b` | Two-run #154 Stage A Markdown reliability evidence |
 
 Regenerate:
 

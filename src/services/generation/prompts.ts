@@ -220,6 +220,116 @@ export function buildDecisionBriefMarkdownOnlyRetryPrompt(
   ].join("\n");
 }
 
+const STAGE_A_SECTION_FIELDS = [
+  ["summary", "Summary", "one concise paragraph, at most 60 words"],
+  ["decisionContext", "Decision Context", "concise prose; every sentence at most 35 words"],
+  ["optionsConsidered", "Options Considered", "Markdown list, one option per line; each item at most 35 words"],
+  ["recommendation", "Recommendation", "concise prose; every sentence at most 35 words"],
+  ["risksAndConstraints", "Risks and Constraints", "Markdown list, one risk or constraint per line; each item at most 35 words"],
+  ["openQuestions", "Open Questions", "Markdown list, one question per line; each item at most 35 words"],
+  ["suggestedNextSteps", "Suggested Next Steps", "Markdown list, one step per line; each item at most 35 words"],
+  ["confidence", "Confidence", "label plus concise explanation; every sentence at most 35 words"],
+] as const;
+
+/** Ollama Stage A contract: model writes bodies; application supplies headings. */
+export function buildDecisionBriefSectionScaffoldPrompt(
+  input: GenerateDecisionBriefInput,
+  findingLines: string[] = [],
+  previousSectionBodies?: Record<string, string>,
+): string {
+  const tone = input.toneGuidance ?? "Concise, executive-ready, direct, and decision-oriented.";
+  if (previousSectionBodies) {
+    return [
+      "You are correcting section bodies for a Decision Brief that failed writing validation.",
+      "Return one JSON object with exactly the same eight fields shown below.",
+      "Copy every non-failing field unchanged. Rewrite only fields named by the validation findings.",
+      "Preserve all substantive facts, conditions, and qualifications in rewritten fields. Do not add unsupported content.",
+      "Rewrite a failing Summary as at most two complete sentences and at most 50 total words; retain every material fact and qualification.",
+      "Rewrite any other failing prose or list item so each complete sentence or item is at most 30 words.",
+      "Use genuine sentences and one Markdown list item per line. Do not use arbitrary soft line breaks inside sentences.",
+      "",
+      "Validation findings:",
+      ...findingLines.map((line) => `- ${line}`),
+      "",
+      "Previous section bodies:",
+      JSON.stringify(previousSectionBodies, null, 2),
+      NO_REASONING_INSTRUCTION,
+    ].join("\n");
+  }
+  return [
+    "You are a decision brief writer. Write the eight section bodies for a concise Decision Brief.",
+    "The application adds canonical Markdown headings in the required order. Do not write headings inside field values.",
+    "Keep the result concise. Do not repeat or concatenate every Capture Layer item into section prose.",
+    "Return one JSON object with exactly these eight non-empty string fields:",
+    ...STAGE_A_SECTION_FIELDS.map(([field, heading, contract]) => `- ${field}: body content for ${heading}; ${contract}`),
+    "",
+    `Brief type: ${input.briefType.id}`,
+    "Brief type guidance:",
+    formatGuidance(input.briefTypeGuidance),
+    "",
+    `Tone: ${tone}`,
+    "",
+    ...buildMarkdownOnlyDecisionBriefRules().map((rule) =>
+      rule === "- The markdown field must contain the complete Decision Brief Markdown as a JSON string value."
+        ? "- Each JSON field must contain only the substantive Markdown body for its named section."
+        : rule,
+    ),
+    "- recommendation must retain every word from captureLayer.recommendation_candidate in the same order, with no inserted, deleted, substituted, or reordered words.",
+    "- Genuine sentence-ending punctuation may split an overlong recommendation at a clause boundary; punctuation, boundary capitalization, and whitespace may change without changing meaning.",
+    ...(findingLines.length > 0
+      ? [
+          "",
+          "The previous response failed validation. Correct every finding:",
+          ...findingLines.map((line) => `- ${line}`),
+        ]
+      : []),
+    NO_REASONING_INSTRUCTION,
+    "",
+    "Capture Layer JSON:",
+    JSON.stringify(input.captureLayer, null, 2),
+  ].join("\n");
+}
+
+export type StageACorrectionPromptField = {
+  field: string;
+  section: string;
+  body: string;
+  findings: string[];
+};
+
+export function buildDecisionBriefTargetedCorrectionPrompt(
+  fields: readonly StageACorrectionPromptField[],
+): string {
+  return [
+    "You are correcting only the failing Decision Brief section bodies listed below.",
+    `Return valid JSON with exactly these fields and no others: ${fields.map((item) => item.field).join(", ")}.`,
+    "Preserve supported meaning, material facts, conditions, and qualifications in each body.",
+    "Do not add unsupported facts. Use genuine sentences and Markdown list items, not arbitrary soft line breaks.",
+    "Validator hard limits remain unchanged: Summary is rejected above 60 words, and prose sentences are rejected above 35 words.",
+    "",
+    ...fields.flatMap((item) => [
+      `Field: ${item.field}`,
+      `Canonical section: ${item.section}`,
+      "Current failing body:",
+      item.body,
+      "Findings:",
+      ...item.findings.map((finding) => `- ${finding}`),
+      ...(item.section === "Summary"
+        ? [
+            "Safer rewrite target: rewrite this Summary to no more than 50 whitespace-delimited words. Count the words before returning.",
+          ]
+        : []),
+      ...(item.findings.some((finding) => finding.includes("sentence-length"))
+        ? [
+            "Safer rewrite target: rewrite every prose sentence in this field to no more than 30 whitespace-delimited words. Count each sentence before returning.",
+          ]
+        : []),
+      "",
+    ]),
+    NO_REASONING_INSTRUCTION,
+  ].join("\n");
+}
+
 export type DecisionBriefPromptMode = "legacy" | "structured_response" | "markdown_only";
 
 const DECISION_BRIEF_RESULT_SCHEMA = JSON.stringify(

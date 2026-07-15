@@ -119,6 +119,7 @@ describe("generationRunTelemetry", () => {
         },
         briefFirstAttemptSemanticFindings: {
           missingRequiredSections: [],
+          emptyRequiredSections: [],
           traceReadinessFailures: [],
           alignmentFailures: [],
           writingHardFailures: [],

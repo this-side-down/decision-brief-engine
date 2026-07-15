@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { STRATEGY_DECISION_BRIEF } from "../../data/briefTypes";
-import { CAPTURE_LAYER_FIELDS } from "./types";
+import { DECISION_BRIEF_REQUIRED_SECTIONS } from "../../evaluation/decisionBriefWritingRules";
+import { CAPTURE_LAYER_FIELDS, DECISION_BRIEF_MARKDOWN_STRUCTURE } from "./types";
 import {
   buildCaptureLayerPrompt,
+  buildDecisionBriefSectionScaffoldPrompt,
   resolveCapturePromptVariant,
 } from "./prompts";
 
@@ -38,6 +40,28 @@ describe("resolveCapturePromptVariant", () => {
     );
     process.env.VITE_CAPTURE_PROMPT_VARIANT = "schema_skeleton";
     expect(resolveCapturePromptVariant()).toBe("schema_skeleton");
+  });
+});
+
+describe("buildDecisionBriefSectionScaffoldPrompt", () => {
+  it("uses the validator's eight canonical sections as exact scaffold fields", () => {
+    const briefType = STRATEGY_DECISION_BRIEF;
+    const prompt = buildDecisionBriefSectionScaffoldPrompt({
+      captureLayer: {
+        source_summary: "Summary", decision_context: "Context", stated_decision: "", implied_decision: "Decision",
+        goals: ["Goal"], stakeholders: ["Owner"], options_considered: ["Option"], constraints: ["Constraint"],
+        risks: ["Risk"], assumptions: ["Assumption"], evidence: ["Evidence"], open_questions: ["Question"],
+        tensions: ["Tension"], recommendation_candidate: "Choose the grounded option.", confidence: "Medium",
+        missing_context: ["Missing"], suggested_next_steps: ["Do the grounded step."],
+      },
+      briefType,
+      briefTypeGuidance: briefType.guidance,
+      markdownStructure: [...DECISION_BRIEF_MARKDOWN_STRUCTURE],
+    });
+    for (const section of DECISION_BRIEF_REQUIRED_SECTIONS) {
+      expect(prompt).toContain(`body content for ${section}`);
+    }
+    expect(prompt).toContain("application adds canonical Markdown headings");
   });
 });
 

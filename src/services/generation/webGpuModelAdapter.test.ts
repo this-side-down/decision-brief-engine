@@ -381,6 +381,7 @@ describe("createWebGpuModelAdapter", () => {
       }),
       semanticFindings: expect.objectContaining({
         missingRequiredSections: [],
+        emptyRequiredSections: [],
       }),
     });
     expect(onCompletionDiagnostics).toHaveBeenCalledWith(

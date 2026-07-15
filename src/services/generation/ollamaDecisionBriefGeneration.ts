@@ -8,23 +8,34 @@ import type {
   DecisionArtifactDiagnostics,
   DecisionArtifactDiagnosticsHolder,
   MarkdownRetryReasonCategory,
+  MarkdownAttemptDiagnostic,
 } from "./decisionArtifactDiagnostics";
 import {
   evaluateDecisionBriefMarkdownOnlyAcceptance,
   formatMarkdownOnlyAcceptanceFindingLines,
   type MarkdownOnlyAcceptanceFailureCategory,
 } from "./decisionBriefMarkdownOnlyAcceptance";
-import { DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA } from "./decisionBriefResultSchema";
-import { parseDecisionBriefMarkdownOnlyJson } from "./parseDecisionBriefMarkdownOnly";
 import {
-  buildDecisionBriefMarkdownOnlyRetryPrompt,
-  buildDecisionBriefPrompt,
+  buildOllamaStageACorrectionSchema,
+  OLLAMA_STAGE_A_SECTIONS_JSON_SCHEMA,
+  type OllamaStageASectionField,
+} from "./decisionBriefResultSchema";
+import {
+  assembleDecisionBriefSectionBodies,
+  parseDecisionBriefSectionsJson,
+  parseStageACorrectionFieldsJson,
+  type StageASectionField,
+} from "./parseDecisionBriefSections";
+import {
+  buildDecisionBriefSectionScaffoldPrompt,
+  buildDecisionBriefTargetedCorrectionPrompt,
 } from "./prompts";
 import type {
   DecisionBriefResult,
   GenerateDecisionBriefInput,
   GenerateDecisionBriefOptions,
 } from "./types";
+import { parseDecisionBriefSections } from "../../evaluation/decisionBriefWritingChecks";
 
 /** Stage A allows at most one semantic/parse retry (#154). */
 const MAX_MARKDOWN_RETRIES = 1;
@@ -63,11 +74,12 @@ function readStageAAttemptCount(error: unknown): number | null {
 
 async function requestMarkdownOnlyDecisionBrief(
   prompt: string,
+  format: Record<string, unknown> = OLLAMA_STAGE_A_SECTIONS_JSON_SCHEMA,
   signal?: AbortSignal,
 ): Promise<string> {
   return ollamaGenerate({
     prompt,
-    format: DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA,
+    format,
     temperature: 0,
     think: false,
     signal,
@@ -90,7 +102,81 @@ type StageAMarkdownResult = {
   attemptCount: number;
   retryReasonCategory: MarkdownRetryReasonCategory;
   latencyMs: number;
+  attempts: MarkdownAttemptDiagnostic[];
 };
+
+const SECTION_BODY_FIELDS = [
+  ["summary", "Summary"],
+  ["decisionContext", "Decision Context"],
+  ["optionsConsidered", "Options Considered"],
+  ["recommendation", "Recommendation"],
+  ["risksAndConstraints", "Risks and Constraints"],
+  ["openQuestions", "Open Questions"],
+  ["suggestedNextSteps", "Suggested Next Steps"],
+  ["confidence", "Confidence"],
+] as const;
+
+const MODEL_OWNED_SECTION_TO_FIELD = new Map<string, OllamaStageASectionField>([
+  ["Summary", "summary"],
+  ["Decision Context", "decisionContext"],
+  ["Options Considered", "optionsConsidered"],
+  ["Risks and Constraints", "risksAndConstraints"],
+  ["Open Questions", "openQuestions"],
+  ["Confidence", "confidence"],
+]);
+
+function extractSectionBodyRecord(markdown: string): Record<string, string> {
+  const sections = parseDecisionBriefSections(markdown);
+  return Object.fromEntries(
+    SECTION_BODY_FIELDS.map(([field, heading]) => [field, sections.get(heading) ?? ""]),
+  );
+}
+
+function selectCorrectionFields(
+  acceptance: ReturnType<typeof evaluateDecisionBriefMarkdownOnlyAcceptance>,
+  bodies: Record<string, string>,
+): OllamaStageASectionField[] {
+  const selected = new Set<OllamaStageASectionField>();
+  for (const section of [
+    ...acceptance.detailedFindings.missingRequiredSections,
+    ...acceptance.detailedFindings.emptyRequiredSections,
+    ...acceptance.detailedFindings.writingHardFailures.map((finding) => {
+      if (finding.section) return finding.section;
+      const excerpt = finding.excerpt?.toLowerCase();
+      if (!excerpt) return "";
+      return SECTION_BODY_FIELDS.find(([field]) =>
+        bodies[field]?.toLowerCase().includes(excerpt),
+      )?.[1] ?? "";
+    }),
+  ]) {
+    const field = MODEL_OWNED_SECTION_TO_FIELD.get(section);
+    if (field) selected.add(field);
+  }
+  return [...selected];
+}
+
+function buildTargetedPromptFields(
+  fields: readonly OllamaStageASectionField[],
+  bodies: Record<string, string>,
+  acceptance: ReturnType<typeof evaluateDecisionBriefMarkdownOnlyAcceptance>,
+) {
+  return fields.map((field) => {
+    const section = SECTION_BODY_FIELDS.find(([candidate]) => candidate === field)?.[1] ?? field;
+    const findings = acceptance.detailedFindings.writingHardFailures
+      .filter((finding) =>
+        finding.section === section ||
+        (!finding.section && Boolean(finding.excerpt) && bodies[field]?.toLowerCase().includes(finding.excerpt!.toLowerCase())),
+      )
+      .map((finding) => `Writing rule ${finding.ruleId} in ${section}: ${finding.message}`);
+    if (acceptance.detailedFindings.missingRequiredSections.includes(section)) {
+      findings.push(`Missing required section: ${section}`);
+    }
+    if (acceptance.detailedFindings.emptyRequiredSections.includes(section)) {
+      findings.push(`Empty required section: ${section}`);
+    }
+    return { field, section, body: bodies[field] ?? "", findings };
+  });
+}
 
 /**
  * Stage A: model-generated Markdown only. Reuses the existing markdown_only
@@ -118,17 +204,29 @@ async function generateStageAMarkdown(
   let lastFindingLines: string[] = [];
   let lastRetryReasonCategory: MarkdownOnlyAcceptanceFailureCategory | "parse_or_schema" =
     "required_sections";
+  const attemptDiagnostics: MarkdownAttemptDiagnostic[] = [];
+  let lastRejectedSectionBodies: Record<string, string> | undefined;
+  let correctionFields: OllamaStageASectionField[] = [];
+  let firstAcceptance: ReturnType<typeof evaluateDecisionBriefMarkdownOnlyAcceptance> | null = null;
 
   for (let attempt = 0; attempt <= MAX_MARKDOWN_RETRIES; attempt += 1) {
-    const prompt =
-      attempt === 0
-        ? buildDecisionBriefPrompt(input, { mode: "markdown_only" })
-        : buildDecisionBriefMarkdownOnlyRetryPrompt(input, lastFindingLines);
+    const prompt = attempt === 0
+      ? buildDecisionBriefSectionScaffoldPrompt(input)
+      : buildDecisionBriefTargetedCorrectionPrompt(
+          buildTargetedPromptFields(
+            correctionFields,
+            lastRejectedSectionBodies!,
+            firstAcceptance!,
+          ),
+        );
+    const responseSchema = attempt === 0
+      ? OLLAMA_STAGE_A_SECTIONS_JSON_SCHEMA
+      : buildOllamaStageACorrectionSchema(correctionFields);
 
     let rawText: string;
 
     try {
-      rawText = await requestMarkdownOnlyDecisionBrief(prompt, signal);
+      rawText = await requestMarkdownOnlyDecisionBrief(prompt, responseSchema, signal);
     } catch (networkError) {
       // Cancellation, timeout, and infrastructure/network failures are
       // never retried: they propagate immediately, with the same identity
@@ -142,19 +240,42 @@ async function generateStageAMarkdown(
     let parsed: DecisionBriefResult;
 
     try {
-      parsed = parseDecisionBriefMarkdownOnlyJson(rawText);
+      const markdown = attempt === 0
+        ? parseDecisionBriefSectionsJson(rawText, { captureLayer: input.captureLayer })
+        : assembleDecisionBriefSectionBodies(
+            {
+              ...(lastRejectedSectionBodies as Record<StageASectionField, string>),
+              ...parseStageACorrectionFieldsJson(rawText, correctionFields),
+            },
+            { captureLayer: input.captureLayer },
+          );
+      parsed = {
+        markdown,
+        decisionTrace: { entries: [], created_at: "" },
+      };
     } catch (parseError) {
       const message =
         parseError instanceof Error
           ? parseError.message
           : "Decision Brief markdown-only result failed to parse.";
 
-      if (attempt >= MAX_MARKDOWN_RETRIES) {
+      attemptDiagnostics.push({
+        attemptNumber: attempt + 1,
+        outcome: "parse_or_schema_failure",
+        failureCategories: ["parse_or_schema"],
+        validatorFindingLines: [message],
+        outputLength: rawText.length,
+        possibleTruncation: !rawText.trimEnd().endsWith("}"),
+        ...(attempt > 0 ? { requestedCorrectionFields: [...correctionFields] } : {}),
+      });
+
+      if (attempt >= MAX_MARKDOWN_RETRIES || attempt === 0) {
         throw new StageAMarkdownGenerationError({
           message,
           attemptCount: attempt + 1,
           retryReasonCategory: "parse_or_schema",
           markdownLatencyMs: Date.now() - started,
+          attemptDiagnostics,
         });
       }
 
@@ -169,13 +290,34 @@ async function generateStageAMarkdown(
     });
 
     if (acceptance.accepted) {
+      attemptDiagnostics.push({
+        attemptNumber: attempt + 1,
+        outcome: "accepted",
+        failureCategories: [],
+        validatorFindingLines: [],
+        outputLength: rawText.length,
+        possibleTruncation: false,
+        ...(attempt > 0 ? { requestedCorrectionFields: [...correctionFields] } : {}),
+      });
       return {
         markdown: parsed.markdown,
         attemptCount: attempt + 1,
         retryReasonCategory: attempt === 0 ? "none" : lastRetryReasonCategory,
         latencyMs: Date.now() - started,
+        attempts: attemptDiagnostics,
       };
     }
+
+    const findingLines = formatMarkdownOnlyAcceptanceFindingLines(acceptance.detailedFindings);
+    attemptDiagnostics.push({
+      attemptNumber: attempt + 1,
+      outcome: "quality_failure",
+      failureCategories: [...acceptance.failureCategories],
+      validatorFindingLines: findingLines,
+      outputLength: rawText.length,
+      possibleTruncation: false,
+      ...(attempt > 0 ? { requestedCorrectionFields: [...correctionFields] } : {}),
+    });
 
     if (attempt >= MAX_MARKDOWN_RETRIES) {
       throw new StageAMarkdownGenerationError({
@@ -183,11 +325,24 @@ async function generateStageAMarkdown(
         attemptCount: attempt + 1,
         retryReasonCategory: lastRetryReasonCategory,
         markdownLatencyMs: Date.now() - started,
+        attemptDiagnostics,
       });
     }
 
-    lastFindingLines = formatMarkdownOnlyAcceptanceFindingLines(acceptance.detailedFindings);
+    lastFindingLines = findingLines;
+    lastRejectedSectionBodies = extractSectionBodyRecord(parsed.markdown);
+    firstAcceptance = acceptance;
+    correctionFields = selectCorrectionFields(acceptance, lastRejectedSectionBodies);
     lastRetryReasonCategory = acceptance.failureCategories[0] ?? "required_sections";
+    if (correctionFields.length === 0) {
+      throw new StageAMarkdownGenerationError({
+        message: "Decision Brief failed validation with no model-owned section eligible for targeted correction.",
+        attemptCount: 1,
+        retryReasonCategory: lastRetryReasonCategory,
+        markdownLatencyMs: Date.now() - started,
+        attemptDiagnostics,
+      });
+    }
   }
 
   // Unreachable: the loop above always returns or throws by the final
@@ -209,6 +364,7 @@ function buildStageAFailureDiagnostics(error: unknown, started: number): Decisio
       traceConstructionLatencyMs: null,
       traceConstructionStrategy: null,
       totalModelCallCount: error.attemptCount,
+      markdownAttempts: error.attemptDiagnostics,
     };
   }
 
@@ -284,6 +440,7 @@ export async function generateOllamaDecisionBrief(
       traceConstructionLatencyMs: traceLatencyMs,
       traceConstructionStrategy: "source_bound_projection",
       totalModelCallCount: stageA.attemptCount,
+      markdownAttempts: stageA.attempts,
     });
 
     return { markdown: stageA.markdown, decisionTrace };
@@ -305,6 +462,7 @@ export async function generateOllamaDecisionBrief(
       traceConstructionLatencyMs: traceLatencyMs,
       traceConstructionStrategy: "source_bound_projection",
       totalModelCallCount: stageA.attemptCount,
+      markdownAttempts: stageA.attempts,
     });
 
     throw error;

@@ -22,6 +22,7 @@ export type SemanticAcceptanceFailureCategory =
 
 export type SemanticAcceptanceDetailedFindings = {
   missingRequiredSections: string[];
+  emptyRequiredSections: string[];
   traceReadinessFailures: Array<{ id: string; detail: string }>;
   alignmentFailures: Array<{ id: string; detail: string }>;
   writingHardFailures: Array<{
@@ -52,9 +53,14 @@ function requiredDecisionBriefSectionsPass(markdown: string): boolean {
 
 function collectMissingRequiredSections(markdown: string): string[] {
   const sections = parseDecisionBriefSections(markdown);
+  return getDefaultRequiredSections().filter((name) => !sections.has(name));
+}
+
+function collectEmptyRequiredSections(markdown: string): string[] {
+  const sections = parseDecisionBriefSections(markdown);
   return getDefaultRequiredSections().filter((name) => {
     const body = sections.get(name);
-    return typeof body !== "string" || body.trim().length === 0;
+    return typeof body === "string" && body.trim().length === 0;
   });
 }
 
@@ -86,7 +92,8 @@ export function evaluateDecisionBriefSemanticAcceptance(options: {
   }
 
   const missingRequiredSections = collectMissingRequiredSections(result.markdown);
-  if (missingRequiredSections.length > 0) {
+  const emptyRequiredSections = collectEmptyRequiredSections(result.markdown);
+  if (missingRequiredSections.length > 0 || emptyRequiredSections.length > 0) {
     failureCategories.push("required_sections");
   }
 
@@ -131,6 +138,7 @@ export function evaluateDecisionBriefSemanticAcceptance(options: {
 
   const detailedFindings: SemanticAcceptanceDetailedFindings = {
     missingRequiredSections,
+    emptyRequiredSections,
     traceReadinessFailures: traceReadiness.checks
       .filter((check) => !check.pass)
       .map((check) => ({ id: check.id, detail: check.detail })),
@@ -165,6 +173,10 @@ export function formatSemanticAcceptanceFindingLines(
     lines.push(
       `Missing required sections: ${findings.missingRequiredSections.join(", ")}`,
     );
+  }
+
+  if (findings.emptyRequiredSections?.length > 0) {
+    lines.push(`Empty required sections: ${findings.emptyRequiredSections.join(", ")}`);
   }
 
   for (const failure of findings.traceReadinessFailures) {
