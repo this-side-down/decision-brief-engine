@@ -80,6 +80,23 @@ describe("parseDecisionBriefSectionsJson", () => {
     );
   });
 
+  it("preserves validator-valid headroom ranges without shortening them", () => {
+    const summary = Array.from({ length: 55 }, (_, index) => `summary${index + 1}`).join(" ");
+    const sentence = `${Array.from({ length: 33 }, (_, index) => `context${index + 1}`).join(" ")}.`;
+    const markdown = parseDecisionBriefSectionsJson(
+      JSON.stringify({ ...valid, summary, decisionContext: sentence }),
+    );
+    const sections = parseDecisionBriefSections(markdown);
+    expect(sections.get("Summary")).toBe(summary);
+    expect(sections.get("Decision Context")).toBe(sentence);
+    expect(evaluateDecisionBriefWriting(markdown).errors).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ ruleId: "summary-length" }),
+        expect.objectContaining({ ruleId: "sentence-length" }),
+      ]),
+    );
+  });
+
   it("rejects missing and additional scaffold fields", () => {
     const { confidence: _confidence, ...missing } = valid;
     expect(() => parseDecisionBriefSectionsJson(JSON.stringify(missing))).toThrow("exactly eight");

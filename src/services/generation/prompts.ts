@@ -305,7 +305,7 @@ export function buildDecisionBriefTargetedCorrectionPrompt(
     `Return valid JSON with exactly these fields and no others: ${fields.map((item) => item.field).join(", ")}.`,
     "Preserve supported meaning, material facts, conditions, and qualifications in each body.",
     "Do not add unsupported facts. Use genuine sentences and Markdown list items, not arbitrary soft line breaks.",
-    "Summary must be at most 60 words. Every prose sentence or list item must be at most 35 words.",
+    "Validator hard limits remain unchanged: Summary is rejected above 60 words, and prose sentences are rejected above 35 words.",
     "",
     ...fields.flatMap((item) => [
       `Field: ${item.field}`,
@@ -314,6 +314,16 @@ export function buildDecisionBriefTargetedCorrectionPrompt(
       item.body,
       "Findings:",
       ...item.findings.map((finding) => `- ${finding}`),
+      ...(item.section === "Summary"
+        ? [
+            "Safer rewrite target: rewrite this Summary to no more than 50 whitespace-delimited words. Count the words before returning.",
+          ]
+        : []),
+      ...(item.findings.some((finding) => finding.includes("sentence-length"))
+        ? [
+            "Safer rewrite target: rewrite every prose sentence in this field to no more than 30 whitespace-delimited words. Count each sentence before returning.",
+          ]
+        : []),
       "",
     ]),
     NO_REASONING_INSTRUCTION,

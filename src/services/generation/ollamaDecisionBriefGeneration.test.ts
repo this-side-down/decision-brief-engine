@@ -278,7 +278,8 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
     const result = await generateOllamaDecisionBrief(baseInput, { diagnostics });
     const retryPrompt = mockOllamaGenerate.mock.calls[1]?.[0]?.prompt as string;
     expect(retryPrompt).toContain(longSummary);
-    expect(retryPrompt).toContain("at most 60 words");
+    expect(retryPrompt).toContain("rejected above 60 words");
+    expect(retryPrompt).toContain("no more than 50 whitespace-delimited words");
     expect(retryPrompt).toContain("Field: summary");
     expect(retryPrompt).not.toContain("Copy every non-failing field unchanged");
     expect(retryPrompt).not.toContain("Capture Layer JSON:");
@@ -309,6 +310,7 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
     expect(retry?.prompt).toContain("Canonical section: Decision Context");
     expect(retry?.prompt).toContain("36");
     expect(retry?.prompt).toContain("35");
+    expect(retry?.prompt).toContain("no more than 30 whitespace-delimited words");
     expect(retry?.prompt).not.toContain("The platform team may fall behind without senior engineers");
     expect(retry?.prompt).not.toContain(captureLayer.recommendation_candidate);
     expect(retry?.prompt).not.toContain(captureLayer.suggested_next_steps[0]);
