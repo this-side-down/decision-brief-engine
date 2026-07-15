@@ -194,27 +194,47 @@ export function buildDecisionBriefMarkdownOnlyRetryPrompt(
 }
 
 const STAGE_A_SECTION_FIELDS = [
-  ["summary", "Summary"],
-  ["decisionContext", "Decision Context"],
-  ["optionsConsidered", "Options Considered"],
-  ["recommendation", "Recommendation"],
-  ["risksAndConstraints", "Risks and Constraints"],
-  ["openQuestions", "Open Questions"],
-  ["suggestedNextSteps", "Suggested Next Steps"],
-  ["confidence", "Confidence"],
+  ["summary", "Summary", "one concise paragraph, at most 60 words"],
+  ["decisionContext", "Decision Context", "concise prose; every sentence at most 35 words"],
+  ["optionsConsidered", "Options Considered", "Markdown list, one option per line; each item at most 35 words"],
+  ["recommendation", "Recommendation", "concise prose; every sentence at most 35 words"],
+  ["risksAndConstraints", "Risks and Constraints", "Markdown list, one risk or constraint per line; each item at most 35 words"],
+  ["openQuestions", "Open Questions", "Markdown list, one question per line; each item at most 35 words"],
+  ["suggestedNextSteps", "Suggested Next Steps", "Markdown list, one step per line; each item at most 35 words"],
+  ["confidence", "Confidence", "label plus concise explanation; every sentence at most 35 words"],
 ] as const;
 
 /** Ollama Stage A contract: model writes bodies; application supplies headings. */
 export function buildDecisionBriefSectionScaffoldPrompt(
   input: GenerateDecisionBriefInput,
   findingLines: string[] = [],
+  previousSectionBodies?: Record<string, string>,
 ): string {
   const tone = input.toneGuidance ?? "Concise, executive-ready, direct, and decision-oriented.";
+  if (previousSectionBodies) {
+    return [
+      "You are correcting section bodies for a Decision Brief that failed writing validation.",
+      "Return one JSON object with exactly the same eight fields shown below.",
+      "Copy every non-failing field unchanged. Rewrite only fields named by the validation findings.",
+      "Preserve all substantive facts, conditions, and qualifications in rewritten fields. Do not add unsupported content.",
+      "Rewrite a failing Summary as at most two complete sentences and at most 50 total words; retain every material fact and qualification.",
+      "Rewrite any other failing prose or list item so each complete sentence or item is at most 30 words.",
+      "Use genuine sentences and one Markdown list item per line. Do not use arbitrary soft line breaks inside sentences.",
+      "",
+      "Validation findings:",
+      ...findingLines.map((line) => `- ${line}`),
+      "",
+      "Previous section bodies:",
+      JSON.stringify(previousSectionBodies, null, 2),
+      NO_REASONING_INSTRUCTION,
+    ].join("\n");
+  }
   return [
     "You are a decision brief writer. Write the eight section bodies for a concise Decision Brief.",
     "The application adds canonical Markdown headings in the required order. Do not write headings inside field values.",
+    "Keep the result concise. Do not repeat or concatenate every Capture Layer item into section prose.",
     "Return one JSON object with exactly these eight non-empty string fields:",
-    ...STAGE_A_SECTION_FIELDS.map(([field, heading]) => `- ${field}: body content for ${heading}`),
+    ...STAGE_A_SECTION_FIELDS.map(([field, heading, contract]) => `- ${field}: body content for ${heading}; ${contract}`),
     "",
     `Brief type: ${input.briefType.id}`,
     "Brief type guidance:",
@@ -227,8 +247,8 @@ export function buildDecisionBriefSectionScaffoldPrompt(
         ? "- Each JSON field must contain only the substantive Markdown body for its named section."
         : rule,
     ),
-    "- recommendation must begin with captureLayer.recommendation_candidate verbatim.",
-    `- If that exact recommendation exceeds ${SENTENCE_ERROR_WORDS} words, wrap it across plain lines of at most ${SENTENCE_ERROR_WORDS} words without changing words, order, or punctuation.`,
+    "- recommendation must retain every word from captureLayer.recommendation_candidate in the same order, with no inserted, deleted, substituted, or reordered words.",
+    "- Genuine sentence-ending punctuation may split an overlong recommendation at a clause boundary; punctuation, boundary capitalization, and whitespace may change without changing meaning.",
     ...(findingLines.length > 0
       ? [
           "",

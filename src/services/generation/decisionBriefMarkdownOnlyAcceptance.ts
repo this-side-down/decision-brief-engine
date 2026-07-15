@@ -132,7 +132,7 @@ export function formatMarkdownOnlyAcceptanceFindingLines(
   }
 
   if (findings.alignmentFailures.some((failure) => failure.id === "recommendation_alignment")) {
-    lines.push("Recommendation section must begin with captureLayer.recommendation_candidate verbatim; line-wrap it without changing the text if it exceeds the sentence limit.");
+    lines.push("Recommendation must retain every source word in order. It may add genuine sentence-ending punctuation at clause boundaries, with only required boundary capitalization and whitespace normalization.");
   }
 
   if (findings.alignmentFailures.some((failure) => failure.id === "next_step_alignment")) {

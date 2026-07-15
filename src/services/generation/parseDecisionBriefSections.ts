@@ -1,6 +1,7 @@
 import { DECISION_BRIEF_REQUIRED_SECTIONS } from "../../evaluation/decisionBriefWritingRules";
 import type { CaptureLayer } from "../../types/captureLayer";
 import { DecisionBriefContractError } from "./decisionBriefContractErrors";
+import { splitOverlongRecommendation } from "./recommendationSourceBinding";
 
 const FIELD_NAMES = [
   "summary",
@@ -13,26 +14,17 @@ const FIELD_NAMES = [
   "confidence",
 ] as const;
 
-function wrapLines(body: string, maxWords = 35): string {
-  return body.split("\n").flatMap((line) => {
-    const words = line.trim().split(/\s+/).filter(Boolean);
-    if (words.length <= maxWords) return [line.trim()];
-    const lines: string[] = [];
-    for (let index = 0; index < words.length; index += maxWords) {
-      lines.push(words.slice(index, index + maxWords).join(" "));
-    }
-    return lines;
-  }).join("\n");
-}
-
-function boundSummary(body: string): string {
-  const words = body.trim().split(/\s+/).filter(Boolean);
-  return words.slice(0, 60).join(" ");
-}
-
-function formatBody(body: string, heading: string): string {
-  const normalized = body.replace(/\u2014/g, " - ").trim();
-  return wrapLines(heading === "Summary" ? boundSummary(normalized) : normalized);
+function normalizePunctuation(body: string): string {
+  return body
+    .replace(/\u2014/g, " - ")
+    .trim()
+    .split(/\n\s*\n+/)
+    .map((paragraph) => {
+      const lines = paragraph.split("\n").map((line) => line.trim());
+      const isList = lines.every((line) => !line || /^[-*+]\s+|^\d+\.\s+/.test(line));
+      return isList ? lines.join("\n") : lines.filter(Boolean).join(" ");
+    })
+    .join("\n\n");
 }
 
 export function parseDecisionBriefSectionsJson(
@@ -61,12 +53,14 @@ export function parseDecisionBriefSectionsJson(
     }
     const heading = DECISION_BRIEF_REQUIRED_SECTIONS[index];
     if (heading === "Recommendation" && options.captureLayer?.recommendation_candidate) {
-      return wrapLines(options.captureLayer.recommendation_candidate);
+      return splitOverlongRecommendation(
+        normalizePunctuation(options.captureLayer.recommendation_candidate),
+      );
     }
     if (heading === "Suggested Next Steps" && options.captureLayer) {
       return options.captureLayer.suggested_next_steps.map((step) => `- ${step}`).join("\n");
     }
-    return formatBody(body, heading);
+    return normalizePunctuation(body);
   });
   return [
     "# Decision Brief",

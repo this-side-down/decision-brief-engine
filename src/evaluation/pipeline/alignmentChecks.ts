@@ -6,6 +6,7 @@ import {
   parseDecisionBriefSections,
 } from "../decisionBriefWritingChecks";
 import type { StructuralCheck } from "../types";
+import { recommendationWordsAlign } from "../../services/generation/recommendationSourceBinding";
 
 function check(id: string, pass: boolean, detail: string): StructuralCheck {
   return { id, pass, detail };
@@ -75,16 +76,16 @@ export function evaluateArtifactAlignment(options: {
 
   const briefMatchesCapture =
     !captureRecommendation ||
-    correspondsToText(briefRecommendation, captureRecommendation);
+    recommendationWordsAlign(captureRecommendation, briefRecommendation);
   const traceMatchesCapture =
     !captureRecommendation ||
     recommendationEntries.some((entry) =>
-      correspondsToText(entry.statement, captureRecommendation),
+      recommendationWordsAlign(captureRecommendation, entry.statement),
     );
   const briefMatchesTrace =
     !captureRecommendation ||
     !traceRecommendation ||
-    correspondsToText(briefRecommendation, traceRecommendation);
+    recommendationWordsAlign(traceRecommendation, briefRecommendation);
 
   const recommendationAlignmentPass =
     briefMatchesCapture && traceMatchesCapture && briefMatchesTrace;
@@ -173,7 +174,7 @@ export function evaluateBriefMarkdownAlignment(options: {
 
   const briefMatchesCapture =
     !captureRecommendation ||
-    correspondsToText(briefRecommendation, captureRecommendation);
+    recommendationWordsAlign(captureRecommendation, briefRecommendation);
 
   findings.push(
     check(

@@ -98,14 +98,14 @@ export const DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_JSON = JSON.stringify(
 );
 
 const REQUIRED_STAGE_A_SECTION_PROPERTIES = {
-  summary: { type: "string" },
-  decisionContext: { type: "string" },
-  optionsConsidered: { type: "string" },
-  recommendation: { type: "string" },
-  risksAndConstraints: { type: "string" },
-  openQuestions: { type: "string" },
-  suggestedNextSteps: { type: "string" },
-  confidence: { type: "string" },
+  summary: { type: "string", description: "One concise paragraph of at most 60 words. Every sentence is at most 35 words." },
+  decisionContext: { type: "string", description: "Concise prose. Every sentence is at most 35 words." },
+  optionsConsidered: { type: "string", description: "Markdown list with one option per line. Every list item is at most 35 words." },
+  recommendation: { type: "string", description: "Recommendation prose. Every sentence is at most 35 words." },
+  risksAndConstraints: { type: "string", description: "Markdown list with one risk or constraint per line. Every list item is at most 35 words." },
+  openQuestions: { type: "string", description: "Markdown list with one question per line. Every list item is at most 35 words." },
+  suggestedNextSteps: { type: "string", description: "Markdown list with one next step per line. Every list item is at most 35 words." },
+  confidence: { type: "string", description: "Confidence label and concise explanation. Every sentence is at most 35 words." },
 } as const;
 
 /** Ollama-only deterministic Stage A section scaffold (#154). */

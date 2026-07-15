@@ -25,6 +25,7 @@ import type {
   GenerateDecisionBriefInput,
   GenerateDecisionBriefOptions,
 } from "./types";
+import { parseDecisionBriefSections } from "../../evaluation/decisionBriefWritingChecks";
 
 /** Stage A allows at most one semantic/parse retry (#154). */
 const MAX_MARKDOWN_RETRIES = 1;
@@ -93,6 +94,24 @@ type StageAMarkdownResult = {
   attempts: MarkdownAttemptDiagnostic[];
 };
 
+const SECTION_BODY_FIELDS = [
+  ["summary", "Summary"],
+  ["decisionContext", "Decision Context"],
+  ["optionsConsidered", "Options Considered"],
+  ["recommendation", "Recommendation"],
+  ["risksAndConstraints", "Risks and Constraints"],
+  ["openQuestions", "Open Questions"],
+  ["suggestedNextSteps", "Suggested Next Steps"],
+  ["confidence", "Confidence"],
+] as const;
+
+function extractSectionBodyRecord(markdown: string): Record<string, string> {
+  const sections = parseDecisionBriefSections(markdown);
+  return Object.fromEntries(
+    SECTION_BODY_FIELDS.map(([field, heading]) => [field, sections.get(heading) ?? ""]),
+  );
+}
+
 /**
  * Stage A: model-generated Markdown only. Reuses the existing markdown_only
  * prompt/schema/parser/acceptance infrastructure (#141). Allows at most one
@@ -120,12 +139,17 @@ async function generateStageAMarkdown(
   let lastRetryReasonCategory: MarkdownOnlyAcceptanceFailureCategory | "parse_or_schema" =
     "required_sections";
   const attemptDiagnostics: MarkdownAttemptDiagnostic[] = [];
+  let lastRejectedSectionBodies: Record<string, string> | undefined;
 
   for (let attempt = 0; attempt <= MAX_MARKDOWN_RETRIES; attempt += 1) {
     const prompt =
       attempt === 0
         ? buildDecisionBriefSectionScaffoldPrompt(input)
-        : buildDecisionBriefSectionScaffoldPrompt(input, lastFindingLines);
+        : buildDecisionBriefSectionScaffoldPrompt(
+            input,
+            lastFindingLines,
+            lastRejectedSectionBodies,
+          );
 
     let rawText: string;
 
@@ -222,6 +246,7 @@ async function generateStageAMarkdown(
     }
 
     lastFindingLines = findingLines;
+    lastRejectedSectionBodies = extractSectionBodyRecord(parsed.markdown);
     lastRetryReasonCategory = acceptance.failureCategories[0] ?? "required_sections";
   }
 

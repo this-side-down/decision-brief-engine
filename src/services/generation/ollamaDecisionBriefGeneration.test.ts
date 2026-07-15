@@ -252,6 +252,24 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
     expect(retryPrompt).not.toContain(firstMarkdown);
   });
 
+  it("supplies only complete writing-failing section bodies for bounded retry", async () => {
+    const longSummary = Array.from({ length: 61 }, (_, index) => `summary${index + 1}`).join(" ");
+    const firstMarkdown = buildValidMarkdown().replace(
+      "Engineering must staff the hospital project before the fixed Q4 deadline.",
+      longSummary,
+    );
+    mockOllamaGenerate
+      .mockResolvedValueOnce(markdownOnlyEnvelope(firstMarkdown))
+      .mockResolvedValueOnce(markdownOnlyEnvelope(buildValidMarkdown()));
+    await generateOllamaDecisionBrief(baseInput);
+    const retryPrompt = mockOllamaGenerate.mock.calls[1]?.[0]?.prompt as string;
+    expect(retryPrompt).toContain(longSummary);
+    expect(retryPrompt).toContain("at most 50 total words");
+    expect(retryPrompt).toContain("Copy every non-failing field unchanged");
+    expect(retryPrompt).not.toContain("Capture Layer JSON:");
+    expect(retryPrompt).not.toContain(firstMarkdown);
+  });
+
   it("terminal semantic failure after two attempts records attempt count 2 and retry count 1 (not 0)", async () => {
     mockOllamaGenerate.mockResolvedValue(
       markdownOnlyEnvelope(buildValidMarkdown({ omitRisksSection: true })),
