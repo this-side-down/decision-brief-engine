@@ -1,0 +1,1118 @@
+{
+  "evidenceFormatVersion": 1,
+  "issue": "154",
+  "buildCommit": "40d698179cd9d944214e7a23f3183fca993d55ef",
+  "strategy": "split_stage",
+  "traceConstructionStrategy": "source_bound_projection",
+  "generationMode": "ollama",
+  "modelId": "ollama:qwen3:4b",
+  "caseIds": [
+    "q4-workforce-allocation",
+    "platform-rearchitecture-review",
+    "regional-launch-readiness-review"
+  ],
+  "recordedAt": "2026-07-15T05:56:47.195626Z",
+  "note": "Two corrected full-pipeline runs of the split-stage Ollama Decision Brief generator (Stage A: model-generated Markdown only with at most one retry; Stage B: deterministic source-bound Decision Trace with no model call) against the three required fixtures. Raw PipelineRunSummary objects are preserved verbatim under runs. This evidence verifies that failed Stage A cases retain attempt count, retry count, retry reason, latency, and total model-call count, and that promptVariant is reported as markdown_only_split_stage.",
+  "runs": [
+    {
+      "resultFormatVersion": 1,
+      "runId": "pipeline-2026-07-15T05-48-17-593Z",
+      "timestamp": "2026-07-15T05:48:17.641Z",
+      "buildCommit": "40d698179cd9d944214e7a23f3183fca993d55ef",
+      "generationMode": "ollama",
+      "modelId": "ollama:qwen3:4b",
+      "caseIds": [
+        "q4-workforce-allocation",
+        "platform-rearchitecture-review",
+        "regional-launch-readiness-review"
+      ],
+      "results": [
+        {
+          "runId": "pipeline-2026-07-15T05-48-17-593Z",
+          "timestamp": "2026-07-15T05:48:31.930Z",
+          "buildCommit": "40d698179cd9d944214e7a23f3183fca993d55ef",
+          "fixtureId": "q4-workforce-allocation",
+          "fixtureName": "Q4 Workforce Allocation",
+          "fixtureCategory": "gallery-example",
+          "generationMode": "ollama",
+          "modelId": "ollama:qwen3:4b",
+          "runtimeLibraryVersion": null,
+          "promptVariant": "markdown_only_split_stage",
+          "captureLayerFirstAttemptParsePass": true,
+          "captureLayerFinalParsePass": true,
+          "captureLayerSchemaPass": true,
+          "captureLayerStructuralReadinessPass": true,
+          "captureLayerReadinessFindings": [
+            {
+              "id": "decision_present",
+              "pass": true,
+              "detail": "stated_decision or implied_decision is non-empty"
+            },
+            {
+              "id": "options_count",
+              "pass": true,
+              "detail": "6 options (min 3)"
+            },
+            {
+              "id": "stakeholders_count",
+              "pass": true,
+              "detail": "7 stakeholders (min 4)"
+            },
+            {
+              "id": "risks_count",
+              "pass": true,
+              "detail": "6 risks (min 3)"
+            },
+            {
+              "id": "assumptions_count",
+              "pass": true,
+              "detail": "4 assumptions (min 2)"
+            },
+            {
+              "id": "open_questions_count",
+              "pass": true,
+              "detail": "5 open questions (min 3)"
+            },
+            {
+              "id": "missing_context_count",
+              "pass": true,
+              "detail": "5 missing-context items (min 2)"
+            },
+            {
+              "id": "recommendation_present",
+              "pass": true,
+              "detail": "recommendation_candidate is non-empty"
+            },
+            {
+              "id": "confidence_present",
+              "pass": true,
+              "detail": "confidence=Medium"
+            }
+          ],
+          "inventedStatedDecisionFinding": null,
+          "captureLayerRetryCount": 0,
+          "captureLayerLatencyMs": 8178,
+          "decisionBriefAttempted": true,
+          "decisionBriefGenerationSuccess": false,
+          "decisionBriefLatencyMs": 6108,
+          "decisionTraceSchemaPass": null,
+          "decisionTraceStructuralReadinessPass": null,
+          "decisionTraceFindings": [],
+          "recommendationAlignmentPass": null,
+          "nextStepAlignmentPass": null,
+          "requiredDecisionBriefSectionsPass": null,
+          "writingHardFailures": [],
+          "writingWarnings": [],
+          "writingReportOnlyFindings": [],
+          "deterministicUsableBrief": false,
+          "evaluatorNotes": [
+            "Decision Brief generation failed: Decision Brief markdown-only result failed quality validation: writing_hard_failure."
+          ],
+          "supportLimitations": [
+            "Manual score fields stay null until a human reviewer records them.",
+            "Deterministic usable-brief is separate from human usable-brief judgment."
+          ],
+          "rawErrorCategory": "brief_generation",
+          "failureKind": "product_quality",
+          "artifactPaths": {
+            "captureLayer": "C:\\dev\\decision-brief-engine-clean\\.local\\evidence\\split-stage-corrected-run-1\\artifacts\\q4-workforce-allocation.capture-layer.json"
+          },
+          "webGpu": null,
+          "longInputDiagnostics": {
+            "strategy": "single_pass",
+            "chunkCount": null,
+            "sourceCoverageComplete": null,
+            "totalSourceLength": null,
+            "coveredSourceLength": null,
+            "chunkRetryCounts": null,
+            "totalChunkRetries": null,
+            "planningLatencyMs": null,
+            "chunkExtractionLatencyMs": null,
+            "mergeLatencyMs": null,
+            "validationLatencyMs": null
+          },
+          "decisionArtifactDiagnostics": {
+            "strategy": "split_stage",
+            "briefRetryCount": 1,
+            "traceRetryCount": null,
+            "briefGenerationLatencyMs": 6108,
+            "traceGenerationLatencyMs": null,
+            "markdownAttemptCount": 2,
+            "markdownRetryReasonCategory": "writing_hard_failure",
+            "markdownGenerationLatencyMs": 6108,
+            "traceConstructionLatencyMs": null,
+            "traceConstructionStrategy": null,
+            "totalModelCallCount": 2
+          },
+          "resultFormatVersion": 1,
+          "captureLayerSchemaVersion": "1",
+          "decisionTraceSchemaVersion": "0.2",
+          "manualScores": {
+            "decisionUsefulness": null,
+            "groundingAndTraceability": null,
+            "clarity": null,
+            "actionability": null,
+            "totalScore": null,
+            "reviewerNotes": null,
+            "humanUsableBrief": null
+          }
+        },
+        {
+          "runId": "pipeline-2026-07-15T05-48-17-593Z",
+          "timestamp": "2026-07-15T05:49:05.022Z",
+          "buildCommit": "40d698179cd9d944214e7a23f3183fca993d55ef",
+          "fixtureId": "platform-rearchitecture-review",
+          "fixtureName": "Platform Re-Architecture Review",
+          "fixtureCategory": "gallery-example",
+          "generationMode": "ollama",
+          "modelId": "ollama:qwen3:4b",
+          "runtimeLibraryVersion": null,
+          "promptVariant": "markdown_only_split_stage",
+          "captureLayerFirstAttemptParsePass": true,
+          "captureLayerFinalParsePass": true,
+          "captureLayerSchemaPass": true,
+          "captureLayerStructuralReadinessPass": true,
+          "captureLayerReadinessFindings": [
+            {
+              "id": "decision_present",
+              "pass": true,
+              "detail": "stated_decision or implied_decision is non-empty"
+            },
+            {
+              "id": "options_count",
+              "pass": true,
+              "detail": "12 options (min 3)"
+            },
+            {
+              "id": "stakeholders_count",
+              "pass": true,
+              "detail": "20 stakeholders (min 4)"
+            },
+            {
+              "id": "risks_count",
+              "pass": true,
+              "detail": "15 risks (min 3)"
+            },
+            {
+              "id": "assumptions_count",
+              "pass": true,
+              "detail": "11 assumptions (min 2)"
+            },
+            {
+              "id": "open_questions_count",
+              "pass": true,
+              "detail": "13 open questions (min 3)"
+            },
+            {
+              "id": "missing_context_count",
+              "pass": true,
+              "detail": "19 missing-context items (min 2)"
+            },
+            {
+              "id": "recommendation_present",
+              "pass": true,
+              "detail": "recommendation_candidate is non-empty"
+            },
+            {
+              "id": "confidence_present",
+              "pass": true,
+              "detail": "confidence=Medium"
+            }
+          ],
+          "inventedStatedDecisionFinding": "Invented stated_decision treated as fact: \"No final architecture decision made Pursue Helix modular-monolith with staged invoice remediation track and tracing/SLO gates, with microservices extraction as later phase if module boundaries fail No stated final decision today\"",
+          "captureLayerRetryCount": 0,
+          "captureLayerLatencyMs": 24843,
+          "decisionBriefAttempted": true,
+          "decisionBriefGenerationSuccess": false,
+          "decisionBriefLatencyMs": 8246,
+          "decisionTraceSchemaPass": null,
+          "decisionTraceStructuralReadinessPass": null,
+          "decisionTraceFindings": [],
+          "recommendationAlignmentPass": null,
+          "nextStepAlignmentPass": null,
+          "requiredDecisionBriefSectionsPass": null,
+          "writingHardFailures": [],
+          "writingWarnings": [],
+          "writingReportOnlyFindings": [],
+          "deterministicUsableBrief": false,
+          "evaluatorNotes": [
+            "Decision Brief generation failed: Decision Brief markdown-only result failed quality validation: required_sections, recommendation_alignment, next_step_alignment, writing_hard_failure."
+          ],
+          "supportLimitations": [
+            "Manual score fields stay null until a human reviewer records them.",
+            "Deterministic usable-brief is separate from human usable-brief judgment."
+          ],
+          "rawErrorCategory": "brief_generation",
+          "failureKind": "product_quality",
+          "artifactPaths": {
+            "captureLayer": "C:\\dev\\decision-brief-engine-clean\\.local\\evidence\\split-stage-corrected-run-1\\artifacts\\platform-rearchitecture-review.capture-layer.json"
+          },
+          "webGpu": null,
+          "longInputDiagnostics": {
+            "strategy": "hierarchical",
+            "chunkCount": 5,
+            "sourceCoverageComplete": true,
+            "totalSourceLength": 7558,
+            "coveredSourceLength": 7558,
+            "chunkRetryCounts": {
+              "chunk-001": 0,
+              "chunk-002": 0,
+              "chunk-003": 0,
+              "chunk-004": 0,
+              "chunk-005": 0
+            },
+            "totalChunkRetries": 0,
+            "planningLatencyMs": 1,
+            "chunkExtractionLatencyMs": 24841,
+            "mergeLatencyMs": 1,
+            "validationLatencyMs": 0
+          },
+          "decisionArtifactDiagnostics": {
+            "strategy": "split_stage",
+            "briefRetryCount": 1,
+            "traceRetryCount": null,
+            "briefGenerationLatencyMs": 8246,
+            "traceGenerationLatencyMs": null,
+            "markdownAttemptCount": 2,
+            "markdownRetryReasonCategory": "required_sections",
+            "markdownGenerationLatencyMs": 8246,
+            "traceConstructionLatencyMs": null,
+            "traceConstructionStrategy": null,
+            "totalModelCallCount": 2
+          },
+          "resultFormatVersion": 1,
+          "captureLayerSchemaVersion": "1",
+          "decisionTraceSchemaVersion": "0.2",
+          "manualScores": {
+            "decisionUsefulness": null,
+            "groundingAndTraceability": null,
+            "clarity": null,
+            "actionability": null,
+            "totalScore": null,
+            "reviewerNotes": null,
+            "humanUsableBrief": null
+          }
+        },
+        {
+          "runId": "pipeline-2026-07-15T05-48-17-593Z",
+          "timestamp": "2026-07-15T05:50:06.228Z",
+          "buildCommit": "40d698179cd9d944214e7a23f3183fca993d55ef",
+          "fixtureId": "regional-launch-readiness-review",
+          "fixtureName": "Regional launch readiness review",
+          "fixtureCategory": "evaluation-fixture",
+          "generationMode": "ollama",
+          "modelId": "ollama:qwen3:4b",
+          "runtimeLibraryVersion": null,
+          "promptVariant": "markdown_only_split_stage",
+          "captureLayerFirstAttemptParsePass": true,
+          "captureLayerFinalParsePass": true,
+          "captureLayerSchemaPass": true,
+          "captureLayerStructuralReadinessPass": true,
+          "captureLayerReadinessFindings": [
+            {
+              "id": "decision_present",
+              "pass": true,
+              "detail": "stated_decision or implied_decision is non-empty"
+            },
+            {
+              "id": "options_count",
+              "pass": true,
+              "detail": "21 options (min 3)"
+            },
+            {
+              "id": "stakeholders_count",
+              "pass": true,
+              "detail": "14 stakeholders (min 4)"
+            },
+            {
+              "id": "risks_count",
+              "pass": true,
+              "detail": "23 risks (min 3)"
+            },
+            {
+              "id": "assumptions_count",
+              "pass": true,
+              "detail": "20 assumptions (min 2)"
+            },
+            {
+              "id": "open_questions_count",
+              "pass": true,
+              "detail": "21 open questions (min 3)"
+            },
+            {
+              "id": "missing_context_count",
+              "pass": true,
+              "detail": "32 missing-context items (min 2)"
+            },
+            {
+              "id": "recommendation_present",
+              "pass": true,
+              "detail": "recommendation_candidate is non-empty"
+            },
+            {
+              "id": "confidence_present",
+              "pass": true,
+              "detail": "confidence=Medium"
+            }
+          ],
+          "inventedStatedDecisionFinding": null,
+          "captureLayerRetryCount": 0,
+          "captureLayerLatencyMs": 42717,
+          "decisionBriefAttempted": true,
+          "decisionBriefGenerationSuccess": false,
+          "decisionBriefLatencyMs": 18487,
+          "decisionTraceSchemaPass": null,
+          "decisionTraceStructuralReadinessPass": null,
+          "decisionTraceFindings": [],
+          "recommendationAlignmentPass": null,
+          "nextStepAlignmentPass": null,
+          "requiredDecisionBriefSectionsPass": null,
+          "writingHardFailures": [],
+          "writingWarnings": [],
+          "writingReportOnlyFindings": [],
+          "deterministicUsableBrief": false,
+          "evaluatorNotes": [
+            "Decision Brief generation failed: Decision Brief markdown-only result failed quality validation: recommendation_alignment, next_step_alignment."
+          ],
+          "supportLimitations": [
+            "Manual score fields stay null until a human reviewer records them.",
+            "Deterministic usable-brief is separate from human usable-brief judgment."
+          ],
+          "rawErrorCategory": "brief_generation",
+          "failureKind": "product_quality",
+          "artifactPaths": {
+            "captureLayer": "C:\\dev\\decision-brief-engine-clean\\.local\\evidence\\split-stage-corrected-run-1\\artifacts\\regional-launch-readiness-review.capture-layer.json"
+          },
+          "webGpu": null,
+          "longInputDiagnostics": {
+            "strategy": "hierarchical",
+            "chunkCount": 6,
+            "sourceCoverageComplete": true,
+            "totalSourceLength": 9872,
+            "coveredSourceLength": 9872,
+            "chunkRetryCounts": {
+              "chunk-001": 0,
+              "chunk-002": 0,
+              "chunk-003": 0,
+              "chunk-004": 0,
+              "chunk-005": 0,
+              "chunk-006": 0
+            },
+            "totalChunkRetries": 0,
+            "planningLatencyMs": 0,
+            "chunkExtractionLatencyMs": 42716,
+            "mergeLatencyMs": 1,
+            "validationLatencyMs": 0
+          },
+          "decisionArtifactDiagnostics": {
+            "strategy": "split_stage",
+            "briefRetryCount": 1,
+            "traceRetryCount": null,
+            "briefGenerationLatencyMs": 18487,
+            "traceGenerationLatencyMs": null,
+            "markdownAttemptCount": 2,
+            "markdownRetryReasonCategory": "required_sections",
+            "markdownGenerationLatencyMs": 18487,
+            "traceConstructionLatencyMs": null,
+            "traceConstructionStrategy": null,
+            "totalModelCallCount": 2
+          },
+          "resultFormatVersion": 1,
+          "captureLayerSchemaVersion": "1",
+          "decisionTraceSchemaVersion": "0.2",
+          "manualScores": {
+            "decisionUsefulness": null,
+            "groundingAndTraceability": null,
+            "clarity": null,
+            "actionability": null,
+            "totalScore": null,
+            "reviewerNotes": null,
+            "humanUsableBrief": null
+          }
+        }
+      ],
+      "infrastructureFailure": false,
+      "harnessExecutionError": null
+    },
+    {
+      "resultFormatVersion": 1,
+      "runId": "pipeline-2026-07-15T05-50-06-982Z",
+      "timestamp": "2026-07-15T05:50:07.031Z",
+      "buildCommit": "40d698179cd9d944214e7a23f3183fca993d55ef",
+      "generationMode": "ollama",
+      "modelId": "ollama:qwen3:4b",
+      "caseIds": [
+        "q4-workforce-allocation",
+        "platform-rearchitecture-review",
+        "regional-launch-readiness-review"
+      ],
+      "results": [
+        {
+          "runId": "pipeline-2026-07-15T05-50-06-982Z",
+          "timestamp": "2026-07-15T05:50:17.946Z",
+          "buildCommit": "40d698179cd9d944214e7a23f3183fca993d55ef",
+          "fixtureId": "q4-workforce-allocation",
+          "fixtureName": "Q4 Workforce Allocation",
+          "fixtureCategory": "gallery-example",
+          "generationMode": "ollama",
+          "modelId": "ollama:qwen3:4b",
+          "runtimeLibraryVersion": null,
+          "promptVariant": "markdown_only_split_stage",
+          "captureLayerFirstAttemptParsePass": true,
+          "captureLayerFinalParsePass": true,
+          "captureLayerSchemaPass": true,
+          "captureLayerStructuralReadinessPass": true,
+          "captureLayerReadinessFindings": [
+            {
+              "id": "decision_present",
+              "pass": true,
+              "detail": "stated_decision or implied_decision is non-empty"
+            },
+            {
+              "id": "options_count",
+              "pass": true,
+              "detail": "6 options (min 3)"
+            },
+            {
+              "id": "stakeholders_count",
+              "pass": true,
+              "detail": "5 stakeholders (min 4)"
+            },
+            {
+              "id": "risks_count",
+              "pass": true,
+              "detail": "6 risks (min 3)"
+            },
+            {
+              "id": "assumptions_count",
+              "pass": true,
+              "detail": "4 assumptions (min 2)"
+            },
+            {
+              "id": "open_questions_count",
+              "pass": true,
+              "detail": "5 open questions (min 3)"
+            },
+            {
+              "id": "missing_context_count",
+              "pass": true,
+              "detail": "5 missing-context items (min 2)"
+            },
+            {
+              "id": "recommendation_present",
+              "pass": true,
+              "detail": "recommendation_candidate is non-empty"
+            },
+            {
+              "id": "confidence_present",
+              "pass": true,
+              "detail": "confidence=Medium"
+            }
+          ],
+          "inventedStatedDecisionFinding": null,
+          "captureLayerRetryCount": 0,
+          "captureLayerLatencyMs": 7991,
+          "decisionBriefAttempted": true,
+          "decisionBriefGenerationSuccess": true,
+          "decisionBriefLatencyMs": 2916,
+          "decisionTraceSchemaPass": true,
+          "decisionTraceStructuralReadinessPass": true,
+          "decisionTraceFindings": [
+            {
+              "id": "recommendation_coverage",
+              "pass": true,
+              "detail": "a recommendation entry statement corresponds to recommendation_candidate"
+            },
+            {
+              "id": "next_step_count",
+              "pass": true,
+              "detail": "4 next_step entries for 4 suggested_next_steps"
+            },
+            {
+              "id": "next_step_statement_coverage",
+              "pass": true,
+              "detail": "every suggested_next_steps item has a corresponding next_step entry statement"
+            },
+            {
+              "id": "entries_have_intent",
+              "pass": true,
+              "detail": "every entry has a non-empty basis.intent"
+            },
+            {
+              "id": "entries_have_confidence",
+              "pass": true,
+              "detail": "every entry has a valid per-item confidence"
+            },
+            {
+              "id": "entries_have_non_empty_basis",
+              "pass": true,
+              "detail": "every entry has at least one non-empty basis array field"
+            },
+            {
+              "id": "would_change_if_specific",
+              "pass": true,
+              "detail": "every entry has at least one specific, non-generic would_change_if condition"
+            },
+            {
+              "id": "intent_grounded_in_goals",
+              "pass": true,
+              "detail": "every non-empty basis.intent is grounded in captureLayer.goals"
+            },
+            {
+              "id": "basis_grounded_in_capture_layer",
+              "pass": true,
+              "detail": "every basis array item is grounded in the corresponding Capture Layer field"
+            },
+            {
+              "id": "recommendation_alignment",
+              "pass": true,
+              "detail": "Recommendation statement aligns across Capture Layer, Decision Trace, and Decision Brief"
+            },
+            {
+              "id": "next_step_alignment",
+              "pass": true,
+              "detail": "Next-step statements align across Capture Layer, Decision Trace, and Decision Brief"
+            }
+          ],
+          "recommendationAlignmentPass": true,
+          "nextStepAlignmentPass": true,
+          "requiredDecisionBriefSectionsPass": true,
+          "writingHardFailures": [],
+          "writingWarnings": [
+            "sentence-length-warning: Sentence is 34 words (warning range 25-35)."
+          ],
+          "writingReportOnlyFindings": [
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Internal.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Ops.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Jim.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: General Superintendent.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Dana.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Project Executive.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Talent.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Safety.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Training.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Meeting.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Key.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Assumptions.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: September.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: October.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: No.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Prioritize.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Staff.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Don.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Make.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Promotion.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Self.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Travel.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Overloading Marcus.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Schedule.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Attrition.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Weak.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Exact.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Certification.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Carlos Real.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Cost.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Friday Luis.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: Carlos Project.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: VP.",
+            "missing-source-proper-noun: Capture Layer proper noun not found in brief: OSHA.",
+            "missing-source-quantity: Capture Layer quantity not found in brief: 30.",
+            "high-capture-reuse: Brief shares 91% token overlap with Capture Layer text."
+          ],
+          "deterministicUsableBrief": true,
+          "evaluatorNotes": [],
+          "supportLimitations": [
+            "Manual score fields stay null until a human reviewer records them.",
+            "Deterministic usable-brief is separate from human usable-brief judgment."
+          ],
+          "rawErrorCategory": "none",
+          "failureKind": "none",
+          "artifactPaths": {
+            "captureLayer": "C:\\dev\\decision-brief-engine-clean\\.local\\evidence\\split-stage-corrected-run-2\\artifacts\\q4-workforce-allocation.capture-layer.json",
+            "decisionBrief": "C:\\dev\\decision-brief-engine-clean\\.local\\evidence\\split-stage-corrected-run-2\\artifacts\\q4-workforce-allocation.decision-brief.md",
+            "decisionTrace": "C:\\dev\\decision-brief-engine-clean\\.local\\evidence\\split-stage-corrected-run-2\\artifacts\\q4-workforce-allocation.decision-trace.json"
+          },
+          "webGpu": null,
+          "longInputDiagnostics": {
+            "strategy": "single_pass",
+            "chunkCount": null,
+            "sourceCoverageComplete": null,
+            "totalSourceLength": null,
+            "coveredSourceLength": null,
+            "chunkRetryCounts": null,
+            "totalChunkRetries": null,
+            "planningLatencyMs": null,
+            "chunkExtractionLatencyMs": null,
+            "mergeLatencyMs": null,
+            "validationLatencyMs": null
+          },
+          "decisionArtifactDiagnostics": {
+            "strategy": "split_stage",
+            "briefRetryCount": 0,
+            "traceRetryCount": 0,
+            "briefGenerationLatencyMs": 2915,
+            "traceGenerationLatencyMs": 1,
+            "markdownAttemptCount": 1,
+            "markdownRetryReasonCategory": "none",
+            "markdownGenerationLatencyMs": 2915,
+            "traceConstructionLatencyMs": 1,
+            "traceConstructionStrategy": "source_bound_projection",
+            "totalModelCallCount": 1
+          },
+          "resultFormatVersion": 1,
+          "captureLayerSchemaVersion": "1",
+          "decisionTraceSchemaVersion": "0.2",
+          "manualScores": {
+            "decisionUsefulness": null,
+            "groundingAndTraceability": null,
+            "clarity": null,
+            "actionability": null,
+            "totalScore": null,
+            "reviewerNotes": null,
+            "humanUsableBrief": null
+          }
+        },
+        {
+          "runId": "pipeline-2026-07-15T05-50-06-982Z",
+          "timestamp": "2026-07-15T05:50:52.960Z",
+          "buildCommit": "40d698179cd9d944214e7a23f3183fca993d55ef",
+          "fixtureId": "platform-rearchitecture-review",
+          "fixtureName": "Platform Re-Architecture Review",
+          "fixtureCategory": "gallery-example",
+          "generationMode": "ollama",
+          "modelId": "ollama:qwen3:4b",
+          "runtimeLibraryVersion": null,
+          "promptVariant": "markdown_only_split_stage",
+          "captureLayerFirstAttemptParsePass": true,
+          "captureLayerFinalParsePass": true,
+          "captureLayerSchemaPass": true,
+          "captureLayerStructuralReadinessPass": true,
+          "captureLayerReadinessFindings": [
+            {
+              "id": "decision_present",
+              "pass": true,
+              "detail": "stated_decision or implied_decision is non-empty"
+            },
+            {
+              "id": "options_count",
+              "pass": true,
+              "detail": "12 options (min 3)"
+            },
+            {
+              "id": "stakeholders_count",
+              "pass": true,
+              "detail": "16 stakeholders (min 4)"
+            },
+            {
+              "id": "risks_count",
+              "pass": true,
+              "detail": "16 risks (min 3)"
+            },
+            {
+              "id": "assumptions_count",
+              "pass": true,
+              "detail": "13 assumptions (min 2)"
+            },
+            {
+              "id": "open_questions_count",
+              "pass": true,
+              "detail": "14 open questions (min 3)"
+            },
+            {
+              "id": "missing_context_count",
+              "pass": true,
+              "detail": "22 missing-context items (min 2)"
+            },
+            {
+              "id": "recommendation_present",
+              "pass": true,
+              "detail": "recommendation_candidate is non-empty"
+            },
+            {
+              "id": "confidence_present",
+              "pass": true,
+              "detail": "confidence=Medium"
+            }
+          ],
+          "inventedStatedDecisionFinding": "Invented stated_decision treated as fact: \"No explicit final decision statement in this chunk Pursue Helix modular-monolith with staged invoice remediation track and tracing/SLO gates No stated final decision today\"",
+          "captureLayerRetryCount": 0,
+          "captureLayerLatencyMs": 25111,
+          "decisionBriefAttempted": true,
+          "decisionBriefGenerationSuccess": false,
+          "decisionBriefLatencyMs": 9901,
+          "decisionTraceSchemaPass": null,
+          "decisionTraceStructuralReadinessPass": null,
+          "decisionTraceFindings": [],
+          "recommendationAlignmentPass": null,
+          "nextStepAlignmentPass": null,
+          "requiredDecisionBriefSectionsPass": null,
+          "writingHardFailures": [],
+          "writingWarnings": [],
+          "writingReportOnlyFindings": [],
+          "deterministicUsableBrief": false,
+          "evaluatorNotes": [
+            "Decision Brief generation failed: Decision Brief markdown-only result failed quality validation: required_sections, recommendation_alignment, next_step_alignment, writing_hard_failure."
+          ],
+          "supportLimitations": [
+            "Manual score fields stay null until a human reviewer records them.",
+            "Deterministic usable-brief is separate from human usable-brief judgment."
+          ],
+          "rawErrorCategory": "brief_generation",
+          "failureKind": "product_quality",
+          "artifactPaths": {
+            "captureLayer": "C:\\dev\\decision-brief-engine-clean\\.local\\evidence\\split-stage-corrected-run-2\\artifacts\\platform-rearchitecture-review.capture-layer.json"
+          },
+          "webGpu": null,
+          "longInputDiagnostics": {
+            "strategy": "hierarchical",
+            "chunkCount": 5,
+            "sourceCoverageComplete": true,
+            "totalSourceLength": 7558,
+            "coveredSourceLength": 7558,
+            "chunkRetryCounts": {
+              "chunk-001": 0,
+              "chunk-002": 0,
+              "chunk-003": 0,
+              "chunk-004": 0,
+              "chunk-005": 0
+            },
+            "totalChunkRetries": 0,
+            "planningLatencyMs": 0,
+            "chunkExtractionLatencyMs": 25108,
+            "mergeLatencyMs": 2,
+            "validationLatencyMs": 0
+          },
+          "decisionArtifactDiagnostics": {
+            "strategy": "split_stage",
+            "briefRetryCount": 1,
+            "traceRetryCount": null,
+            "briefGenerationLatencyMs": 9901,
+            "traceGenerationLatencyMs": null,
+            "markdownAttemptCount": 2,
+            "markdownRetryReasonCategory": "required_sections",
+            "markdownGenerationLatencyMs": 9901,
+            "traceConstructionLatencyMs": null,
+            "traceConstructionStrategy": null,
+            "totalModelCallCount": 2
+          },
+          "resultFormatVersion": 1,
+          "captureLayerSchemaVersion": "1",
+          "decisionTraceSchemaVersion": "0.2",
+          "manualScores": {
+            "decisionUsefulness": null,
+            "groundingAndTraceability": null,
+            "clarity": null,
+            "actionability": null,
+            "totalScore": null,
+            "reviewerNotes": null,
+            "humanUsableBrief": null
+          }
+        },
+        {
+          "runId": "pipeline-2026-07-15T05-50-06-982Z",
+          "timestamp": "2026-07-15T05:52:08.541Z",
+          "buildCommit": "40d698179cd9d944214e7a23f3183fca993d55ef",
+          "fixtureId": "regional-launch-readiness-review",
+          "fixtureName": "Regional launch readiness review",
+          "fixtureCategory": "evaluation-fixture",
+          "generationMode": "ollama",
+          "modelId": "ollama:qwen3:4b",
+          "runtimeLibraryVersion": null,
+          "promptVariant": "markdown_only_split_stage",
+          "captureLayerFirstAttemptParsePass": true,
+          "captureLayerFinalParsePass": true,
+          "captureLayerSchemaPass": true,
+          "captureLayerStructuralReadinessPass": true,
+          "captureLayerReadinessFindings": [
+            {
+              "id": "decision_present",
+              "pass": true,
+              "detail": "stated_decision or implied_decision is non-empty"
+            },
+            {
+              "id": "options_count",
+              "pass": true,
+              "detail": "21 options (min 3)"
+            },
+            {
+              "id": "stakeholders_count",
+              "pass": true,
+              "detail": "14 stakeholders (min 4)"
+            },
+            {
+              "id": "risks_count",
+              "pass": true,
+              "detail": "22 risks (min 3)"
+            },
+            {
+              "id": "assumptions_count",
+              "pass": true,
+              "detail": "21 assumptions (min 2)"
+            },
+            {
+              "id": "open_questions_count",
+              "pass": true,
+              "detail": "24 open questions (min 3)"
+            },
+            {
+              "id": "missing_context_count",
+              "pass": true,
+              "detail": "37 missing-context items (min 2)"
+            },
+            {
+              "id": "recommendation_present",
+              "pass": true,
+              "detail": "recommendation_candidate is non-empty"
+            },
+            {
+              "id": "confidence_present",
+              "pass": true,
+              "detail": "confidence=Medium"
+            }
+          ],
+          "inventedStatedDecisionFinding": null,
+          "captureLayerRetryCount": 0,
+          "captureLayerLatencyMs": 44170,
+          "decisionBriefAttempted": true,
+          "decisionBriefGenerationSuccess": false,
+          "decisionBriefLatencyMs": 31409,
+          "decisionTraceSchemaPass": null,
+          "decisionTraceStructuralReadinessPass": null,
+          "decisionTraceFindings": [],
+          "recommendationAlignmentPass": null,
+          "nextStepAlignmentPass": null,
+          "requiredDecisionBriefSectionsPass": null,
+          "writingHardFailures": [],
+          "writingWarnings": [],
+          "writingReportOnlyFindings": [],
+          "deterministicUsableBrief": false,
+          "evaluatorNotes": [
+            "Decision Brief generation failed: Decision Brief markdown-only result failed quality validation: required_sections, recommendation_alignment, next_step_alignment, writing_hard_failure."
+          ],
+          "supportLimitations": [
+            "Manual score fields stay null until a human reviewer records them.",
+            "Deterministic usable-brief is separate from human usable-brief judgment."
+          ],
+          "rawErrorCategory": "brief_generation",
+          "failureKind": "product_quality",
+          "artifactPaths": {
+            "captureLayer": "C:\\dev\\decision-brief-engine-clean\\.local\\evidence\\split-stage-corrected-run-2\\artifacts\\regional-launch-readiness-review.capture-layer.json"
+          },
+          "webGpu": null,
+          "longInputDiagnostics": {
+            "strategy": "hierarchical",
+            "chunkCount": 6,
+            "sourceCoverageComplete": true,
+            "totalSourceLength": 9872,
+            "coveredSourceLength": 9872,
+            "chunkRetryCounts": {
+              "chunk-001": 0,
+              "chunk-002": 0,
+              "chunk-003": 0,
+              "chunk-004": 0,
+              "chunk-005": 0,
+              "chunk-006": 0
+            },
+            "totalChunkRetries": 0,
+            "planningLatencyMs": 0,
+            "chunkExtractionLatencyMs": 44168,
+            "mergeLatencyMs": 1,
+            "validationLatencyMs": 1
+          },
+          "decisionArtifactDiagnostics": {
+            "strategy": "split_stage",
+            "briefRetryCount": 1,
+            "traceRetryCount": null,
+            "briefGenerationLatencyMs": 31409,
+            "traceGenerationLatencyMs": null,
+            "markdownAttemptCount": 2,
+            "markdownRetryReasonCategory": "parse_or_schema",
+            "markdownGenerationLatencyMs": 31409,
+            "traceConstructionLatencyMs": null,
+            "traceConstructionStrategy": null,
+            "totalModelCallCount": 2
+          },
+          "resultFormatVersion": 1,
+          "captureLayerSchemaVersion": "1",
+          "decisionTraceSchemaVersion": "0.2",
+          "manualScores": {
+            "decisionUsefulness": null,
+            "groundingAndTraceability": null,
+            "clarity": null,
+            "actionability": null,
+            "totalScore": null,
+            "reviewerNotes": null,
+            "humanUsableBrief": null
+          }
+        }
+      ],
+      "infrastructureFailure": false,
+      "harnessExecutionError": null
+    }
+  ],
+  "perFixtureSummary": [
+    {
+      "fixtureId": "q4-workforce-allocation",
+      "run1": {
+        "decisionBriefGenerationSuccess": false,
+        "deterministicUsableBrief": false,
+        "promptVariant": "markdown_only_split_stage",
+        "markdownAttemptCount": 2,
+        "briefRetryCount": 1,
+        "markdownRetryReasonCategory": "writing_hard_failure",
+        "briefGenerationLatencyMs": 6108,
+        "traceConstructionLatencyMs": null,
+        "traceConstructionStrategy": null,
+        "totalModelCallCount": 2,
+        "inventedStatedDecisionFinding": null,
+        "evaluatorNotes": [
+          "Decision Brief generation failed: Decision Brief markdown-only result failed quality validation: writing_hard_failure."
+        ]
+      },
+      "run2": {
+        "decisionBriefGenerationSuccess": true,
+        "deterministicUsableBrief": true,
+        "promptVariant": "markdown_only_split_stage",
+        "markdownAttemptCount": 1,
+        "briefRetryCount": 0,
+        "markdownRetryReasonCategory": "none",
+        "briefGenerationLatencyMs": 2915,
+        "traceConstructionLatencyMs": 1,
+        "traceConstructionStrategy": "source_bound_projection",
+        "totalModelCallCount": 1,
+        "inventedStatedDecisionFinding": null,
+        "evaluatorNotes": []
+      },
+      "stableAcrossRuns": false
+    },
+    {
+      "fixtureId": "platform-rearchitecture-review",
+      "run1": {
+        "decisionBriefGenerationSuccess": false,
+        "deterministicUsableBrief": false,
+        "promptVariant": "markdown_only_split_stage",
+        "markdownAttemptCount": 2,
+        "briefRetryCount": 1,
+        "markdownRetryReasonCategory": "required_sections",
+        "briefGenerationLatencyMs": 8246,
+        "traceConstructionLatencyMs": null,
+        "traceConstructionStrategy": null,
+        "totalModelCallCount": 2,
+        "inventedStatedDecisionFinding": "Invented stated_decision treated as fact: \"No final architecture decision made Pursue Helix modular-monolith with staged invoice remediation track and tracing/SLO gates, with microservices extraction as later phase if module boundaries fail No stated final decision today\"",
+        "evaluatorNotes": [
+          "Decision Brief generation failed: Decision Brief markdown-only result failed quality validation: required_sections, recommendation_alignment, next_step_alignment, writing_hard_failure."
+        ]
+      },
+      "run2": {
+        "decisionBriefGenerationSuccess": false,
+        "deterministicUsableBrief": false,
+        "promptVariant": "markdown_only_split_stage",
+        "markdownAttemptCount": 2,
+        "briefRetryCount": 1,
+        "markdownRetryReasonCategory": "required_sections",
+        "briefGenerationLatencyMs": 9901,
+        "traceConstructionLatencyMs": null,
+        "traceConstructionStrategy": null,
+        "totalModelCallCount": 2,
+        "inventedStatedDecisionFinding": "Invented stated_decision treated as fact: \"No explicit final decision statement in this chunk Pursue Helix modular-monolith with staged invoice remediation track and tracing/SLO gates No stated final decision today\"",
+        "evaluatorNotes": [
+          "Decision Brief generation failed: Decision Brief markdown-only result failed quality validation: required_sections, recommendation_alignment, next_step_alignment, writing_hard_failure."
+        ]
+      },
+      "stableAcrossRuns": true
+    },
+    {
+      "fixtureId": "regional-launch-readiness-review",
+      "run1": {
+        "decisionBriefGenerationSuccess": false,
+        "deterministicUsableBrief": false,
+        "promptVariant": "markdown_only_split_stage",
+        "markdownAttemptCount": 2,
+        "briefRetryCount": 1,
+        "markdownRetryReasonCategory": "required_sections",
+        "briefGenerationLatencyMs": 18487,
+        "traceConstructionLatencyMs": null,
+        "traceConstructionStrategy": null,
+        "totalModelCallCount": 2,
+        "inventedStatedDecisionFinding": null,
+        "evaluatorNotes": [
+          "Decision Brief generation failed: Decision Brief markdown-only result failed quality validation: recommendation_alignment, next_step_alignment."
+        ]
+      },
+      "run2": {
+        "decisionBriefGenerationSuccess": false,
+        "deterministicUsableBrief": false,
+        "promptVariant": "markdown_only_split_stage",
+        "markdownAttemptCount": 2,
+        "briefRetryCount": 1,
+        "markdownRetryReasonCategory": "parse_or_schema",
+        "briefGenerationLatencyMs": 31409,
+        "traceConstructionLatencyMs": null,
+        "traceConstructionStrategy": null,
+        "totalModelCallCount": 2,
+        "inventedStatedDecisionFinding": null,
+        "evaluatorNotes": [
+          "Decision Brief generation failed: Decision Brief markdown-only result failed quality validation: required_sections, recommendation_alignment, next_step_alignment, writing_hard_failure."
+        ]
+      },
+      "stableAcrossRuns": true
+    }
+  ],
+  "acceptanceCriteria": [
+    {
+      "id": "q4_no_regression",
+      "description": "Q4 must not regress.",
+      "pass": false,
+      "detail": "Q4 failed Stage A on run 1 after two attempts (retry reason: writing_hard_failure) and passed fully on run 2 on the first attempt. It is not stable across runs."
+    },
+    {
+      "id": "long_form_required_sections",
+      "description": "Both long-form cases must produce every required section.",
+      "pass": false,
+      "detail": "Platform failed required_sections in both runs. Regional's final Stage A failure included required_sections in run 2; neither long-form fixture produced an accepted Markdown brief in either run."
+    },
+    {
+      "id": "long_form_next_step_cardinality",
+      "description": "Both long-form cases must preserve exact next-step cardinality.",
+      "pass": false,
+      "detail": "Stage A was never accepted for platform or regional in either run, so Stage B did not execute for either long-form case. Cardinality is therefore unverified in measured long-form evidence, although the deterministic constructor preserves it by construction when reached."
+    },
+    {
+      "id": "trace_grounding_by_construction",
+      "description": "Trace grounding must pass by construction.",
+      "pass": true,
+      "detail": "Confirmed on Q4 run 2, the only accepted Stage A result: trace schema, structural readiness, intent grounding, basis grounding, recommendation alignment, and next-step alignment all passed. Stage B uses exact source-bound projection and no model-generated trace text."
+    },
+    {
+      "id": "long_form_deterministic_usable",
+      "description": "At least one long-form case must be deterministic usable without manual rescue.",
+      "pass": false,
+      "detail": "Neither platform nor regional achieved deterministicUsableBrief=true in either run."
+    },
+    {
+      "id": "max_one_markdown_retry",
+      "description": "No case may require more than one Markdown retry.",
+      "pass": true,
+      "detail": "Every failed Stage A case recorded exactly two attempts, one retry, and two model calls. Q4 run 2 succeeded with one attempt and no retry."
+    },
+    {
+      "id": "platform_only_155_blocker",
+      "description": "Platform may still fail only #155's independent invented-stated-decision gate.",
+      "pass": false,
+      "detail": "Platform reproduced #155 in both runs and also failed Stage A quality gates including required sections, recommendation alignment, next-step alignment, and writing quality."
+    },
+    {
+      "id": "regional_retains_genuine_decision",
+      "description": "Regional must retain its genuine explicit stated decision.",
+      "pass": true,
+      "detail": "inventedStatedDecisionFinding is null for regional in both runs."
+    },
+    {
+      "id": "validators_unchanged",
+      "description": "Validators and release gates must remain unchanged.",
+      "pass": true,
+      "detail": "The corrected implementation preserves the existing semantic, alignment, writing, and release validators. This correction only preserves terminal diagnostics and reports the actual split-stage prompt variant."
+    }
+  ],
+  "overallAssessment": "The diagnostics defect and evaluation strategy-label defect are fixed. Every failed Stage A case now records two attempts, one retry, a concrete retry reason, measured latency, and two model calls; every case reports promptVariant=markdown_only_split_stage. PR #157 proves that Stage B produces a schema-valid, structurally ready, fully grounded, cardinality-preserving Decision Trace when Stage A succeeds, demonstrated by Q4 run 2. The complete #154 quality gate is not met: Q4 is unstable across runs, neither long-form fixture is deterministic usable, and platform still reproduces #155 while also failing additional Stage A quality gates. Four of nine acceptance criteria pass. #154 remains open, #155 remains open, and #152 remains blocked."
+}

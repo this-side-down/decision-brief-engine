@@ -78,3 +78,25 @@ export const DECISION_BRIEF_RESULT_SCHEMA_JSON = JSON.stringify(
 /** Backward-compatible alias used by WebGPU tests and telemetry. */
 export const DECISION_BRIEF_RESULT_RESPONSE_SCHEMA_JSON =
   DECISION_BRIEF_RESULT_SCHEMA_JSON;
+
+/**
+ * Runtime-neutral JSON Schema for the Markdown-only Decision Brief response.
+ * Used by the Ollama split-stage generator (Stage A) and the WebGPU
+ * markdown_only experiment (#141). No runtime-specific (WebGPU) types are
+ * referenced here so this schema can be imported directly by any adapter.
+ */
+export const DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA = {
+  type: "object",
+  properties: {
+    markdown: { type: "string" },
+  },
+  required: ["markdown"],
+} as const;
+
+export const DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_JSON = JSON.stringify(
+  DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA,
+);
+
+/** Backward-compatible alias matching the prior WebGPU-module export name. */
+export const DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_SCHEMA_JSON =
+  DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_JSON;

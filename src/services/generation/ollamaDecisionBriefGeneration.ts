@@ -1,31 +1,73 @@
 import { ollamaGenerate } from "./ollamaClient";
-import { DecisionBriefContractError } from "./decisionBriefContractErrors";
+import { buildSourceBoundDecisionTrace } from "./buildSourceBoundDecisionTrace";
+import {
+  DecisionBriefContractError,
+  StageAMarkdownGenerationError,
+} from "./decisionBriefContractErrors";
 import type {
   DecisionArtifactDiagnostics,
   DecisionArtifactDiagnosticsHolder,
+  MarkdownRetryReasonCategory,
 } from "./decisionArtifactDiagnostics";
-import { DECISION_BRIEF_RESULT_JSON_SCHEMA } from "./decisionBriefResultSchema";
-import { parseDecisionBriefResultStrict } from "./parseDecisionBriefResultStrict";
 import {
+  evaluateDecisionBriefMarkdownOnlyAcceptance,
+  formatMarkdownOnlyAcceptanceFindingLines,
+  type MarkdownOnlyAcceptanceFailureCategory,
+} from "./decisionBriefMarkdownOnlyAcceptance";
+import { DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA } from "./decisionBriefResultSchema";
+import { parseDecisionBriefMarkdownOnlyJson } from "./parseDecisionBriefMarkdownOnly";
+import {
+  buildDecisionBriefMarkdownOnlyRetryPrompt,
   buildDecisionBriefPrompt,
-  buildDecisionBriefRetryPrompt,
 } from "./prompts";
 import type {
   DecisionBriefResult,
   GenerateDecisionBriefInput,
   GenerateDecisionBriefOptions,
 } from "./types";
-import { GenerationCancelledError } from "./webGpuErrors";
 
-const MAX_DECISION_BRIEF_RETRIES = 1;
+/** Stage A allows at most one semantic/parse retry (#154). */
+const MAX_MARKDOWN_RETRIES = 1;
 
-async function requestCombinedDecisionBrief(
+/**
+ * Non-enumerable property used to attach the Stage A attempt count to a
+ * cancellation/timeout/network error before rethrowing it unchanged. These
+ * errors are never retried and must keep their original identity (callers
+ * elsewhere check `instanceof GenerationCancelledError` and specific
+ * messages), so the attempt count travels as a side-channel property rather
+ * than by wrapping the error in a different type.
+ */
+const STAGE_A_ATTEMPT_COUNT_KEY = "stageAAttemptCount";
+
+function attachStageAAttemptCount(error: unknown, attemptCount: number): void {
+  if (error && typeof error === "object") {
+    Object.defineProperty(error, STAGE_A_ATTEMPT_COUNT_KEY, {
+      value: attemptCount,
+      enumerable: false,
+      configurable: true,
+    });
+  }
+}
+
+function readStageAAttemptCount(error: unknown): number | null {
+  if (
+    error &&
+    typeof error === "object" &&
+    STAGE_A_ATTEMPT_COUNT_KEY in error
+  ) {
+    const value = (error as Record<string, unknown>)[STAGE_A_ATTEMPT_COUNT_KEY];
+    return typeof value === "number" ? value : null;
+  }
+  return null;
+}
+
+async function requestMarkdownOnlyDecisionBrief(
   prompt: string,
   signal?: AbortSignal,
 ): Promise<string> {
   return ollamaGenerate({
     prompt,
-    format: DECISION_BRIEF_RESULT_JSON_SCHEMA,
+    format: DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA,
     temperature: 0,
     think: false,
     signal,
@@ -43,64 +85,228 @@ function recordDecisionArtifactDiagnostics(
   holder.value = diagnostics;
 }
 
+type StageAMarkdownResult = {
+  markdown: string;
+  attemptCount: number;
+  retryReasonCategory: MarkdownRetryReasonCategory;
+  latencyMs: number;
+};
+
+/**
+ * Stage A: model-generated Markdown only. Reuses the existing markdown_only
+ * prompt/schema/parser/acceptance infrastructure (#141). Allows at most one
+ * typed retry, using concise validator findings only — never the raw
+ * rejected output and never hidden reasoning.
+ *
+ * Cancellation, timeout, and network/infrastructure failures from
+ * ollamaGenerate propagate immediately and are never retried, but the
+ * in-flight attempt count is attached to them (see
+ * attachStageAAttemptCount) so the caller can still record how many model
+ * calls were actually made.
+ *
+ * A terminal parse/schema or semantic-acceptance failure (after the one
+ * allowed retry is exhausted) throws a typed StageAMarkdownGenerationError
+ * carrying the attempt count, the retry reason, and elapsed latency, so
+ * diagnostics never have to report a false "0 retries" / "1 call" for a
+ * Stage A run that actually made two calls.
+ */
+async function generateStageAMarkdown(
+  input: GenerateDecisionBriefInput,
+  signal: AbortSignal | undefined,
+): Promise<StageAMarkdownResult> {
+  const started = Date.now();
+  let lastFindingLines: string[] = [];
+  let lastRetryReasonCategory: MarkdownOnlyAcceptanceFailureCategory | "parse_or_schema" =
+    "required_sections";
+
+  for (let attempt = 0; attempt <= MAX_MARKDOWN_RETRIES; attempt += 1) {
+    const prompt =
+      attempt === 0
+        ? buildDecisionBriefPrompt(input, { mode: "markdown_only" })
+        : buildDecisionBriefMarkdownOnlyRetryPrompt(input, lastFindingLines);
+
+    let rawText: string;
+
+    try {
+      rawText = await requestMarkdownOnlyDecisionBrief(prompt, signal);
+    } catch (networkError) {
+      // Cancellation, timeout, and infrastructure/network failures are
+      // never retried: they propagate immediately, with the same identity
+      // and message the caller already handles, regardless of attempt
+      // number. Record how many calls were actually attempted (1-indexed)
+      // before rethrowing unchanged.
+      attachStageAAttemptCount(networkError, attempt + 1);
+      throw networkError;
+    }
+
+    let parsed: DecisionBriefResult;
+
+    try {
+      parsed = parseDecisionBriefMarkdownOnlyJson(rawText);
+    } catch (parseError) {
+      const message =
+        parseError instanceof Error
+          ? parseError.message
+          : "Decision Brief markdown-only result failed to parse.";
+
+      if (attempt >= MAX_MARKDOWN_RETRIES) {
+        throw new StageAMarkdownGenerationError({
+          message,
+          attemptCount: attempt + 1,
+          retryReasonCategory: "parse_or_schema",
+          markdownLatencyMs: Date.now() - started,
+        });
+      }
+
+      lastFindingLines = [message];
+      lastRetryReasonCategory = "parse_or_schema";
+      continue;
+    }
+
+    const acceptance = evaluateDecisionBriefMarkdownOnlyAcceptance({
+      result: parsed,
+      captureLayer: input.captureLayer,
+    });
+
+    if (acceptance.accepted) {
+      return {
+        markdown: parsed.markdown,
+        attemptCount: attempt + 1,
+        retryReasonCategory: attempt === 0 ? "none" : lastRetryReasonCategory,
+        latencyMs: Date.now() - started,
+      };
+    }
+
+    if (attempt >= MAX_MARKDOWN_RETRIES) {
+      throw new StageAMarkdownGenerationError({
+        message: `Decision Brief markdown-only result failed quality validation: ${acceptance.failureCategories.join(", ")}.`,
+        attemptCount: attempt + 1,
+        retryReasonCategory: lastRetryReasonCategory,
+        markdownLatencyMs: Date.now() - started,
+      });
+    }
+
+    lastFindingLines = formatMarkdownOnlyAcceptanceFindingLines(acceptance.detailedFindings);
+    lastRetryReasonCategory = acceptance.failureCategories[0] ?? "required_sections";
+  }
+
+  // Unreachable: the loop above always returns or throws by the final
+  // iteration (attempt === MAX_MARKDOWN_RETRIES).
+  throw new DecisionBriefContractError("Decision Brief markdown-only generation failed.");
+}
+
+function buildStageAFailureDiagnostics(error: unknown, started: number): DecisionArtifactDiagnostics {
+  if (error instanceof StageAMarkdownGenerationError) {
+    return {
+      strategy: "split_stage",
+      briefRetryCount: error.attemptCount - 1,
+      traceRetryCount: null,
+      briefGenerationLatencyMs: error.markdownLatencyMs,
+      traceGenerationLatencyMs: null,
+      markdownAttemptCount: error.attemptCount,
+      markdownRetryReasonCategory: error.retryReasonCategory,
+      markdownGenerationLatencyMs: error.markdownLatencyMs,
+      traceConstructionLatencyMs: null,
+      traceConstructionStrategy: null,
+      totalModelCallCount: error.attemptCount,
+    };
+  }
+
+  // Cancellation, timeout, or network/infrastructure failure. The attempt
+  // count is whatever was in flight when the error was thrown (attached by
+  // generateStageAMarkdown); fall back to 1 if it is somehow missing rather
+  // than under-reporting as 0, since at least one call was always attempted.
+  const attemptCount = readStageAAttemptCount(error) ?? 1;
+  const elapsed = Date.now() - started;
+
+  return {
+    strategy: "split_stage",
+    briefRetryCount: attemptCount - 1,
+    traceRetryCount: null,
+    briefGenerationLatencyMs: elapsed,
+    traceGenerationLatencyMs: null,
+    markdownAttemptCount: attemptCount,
+    markdownRetryReasonCategory: null,
+    markdownGenerationLatencyMs: elapsed,
+    traceConstructionLatencyMs: null,
+    traceConstructionStrategy: null,
+    totalModelCallCount: attemptCount,
+  };
+}
+
+/**
+ * Split-stage Ollama Decision Brief generation (#154).
+ *
+ * Stage A generates Markdown only (model call, <=1 retry). Stage B builds the
+ * Decision Trace deterministically from the accepted Capture Layer — no
+ * model call, so it is never retried; a structurally-unready Capture Layer
+ * surfaces as a typed SourceBoundDecisionTraceConstructionError instead of a
+ * second unconstrained model call.
+ */
 export async function generateOllamaDecisionBrief(
   input: GenerateDecisionBriefInput,
   options: GenerateDecisionBriefOptions = {},
 ): Promise<DecisionBriefResult> {
   const started = Date.now();
-  let retryCount = 0;
-  let lastError = "Decision Brief generation failed.";
   const diagnosticsHolder = options.diagnostics;
 
   if (diagnosticsHolder) {
     diagnosticsHolder.value = null;
   }
 
-  const writeDiagnostics = (briefRetryCount: number) => {
-    recordDecisionArtifactDiagnostics(diagnosticsHolder, {
-      strategy: "combined",
-      briefRetryCount,
-      traceRetryCount: null,
-      briefGenerationLatencyMs: Date.now() - started,
-      traceGenerationLatencyMs: null,
-    });
-  };
+  let stageA: StageAMarkdownResult;
 
-  for (let attempt = 0; attempt <= MAX_DECISION_BRIEF_RETRIES; attempt += 1) {
-    const prompt =
-      attempt === 0
-        ? buildDecisionBriefPrompt(input, { mode: "structured_response" })
-        : buildDecisionBriefRetryPrompt(input, lastError);
-
-    try {
-      const rawText = await requestCombinedDecisionBrief(prompt, options.signal);
-      const result = parseDecisionBriefResultStrict(rawText);
-
-      writeDiagnostics(retryCount);
-
-      return result;
-    } catch (error) {
-      if (error instanceof GenerationCancelledError) {
-        writeDiagnostics(retryCount);
-        throw error;
-      }
-
-      if (!(error instanceof DecisionBriefContractError)) {
-        writeDiagnostics(retryCount);
-        throw error;
-      }
-
-      lastError = error.message;
-
-      if (attempt >= MAX_DECISION_BRIEF_RETRIES) {
-        writeDiagnostics(retryCount);
-        throw error;
-      }
-
-      retryCount += 1;
-    }
+  try {
+    stageA = await generateStageAMarkdown(input, options.signal);
+  } catch (error) {
+    // Terminal contract failure (StageAMarkdownGenerationError) or a
+    // cancellation/timeout/network failure — no trace was attempted either
+    // way, but the attempt count is now always known, never falsely zero.
+    recordDecisionArtifactDiagnostics(diagnosticsHolder, buildStageAFailureDiagnostics(error, started));
+    throw error;
   }
 
-  writeDiagnostics(retryCount);
-  throw new DecisionBriefContractError(lastError);
+  const traceStarted = Date.now();
+
+  try {
+    const decisionTrace = buildSourceBoundDecisionTrace(input.captureLayer);
+    const traceLatencyMs = Date.now() - traceStarted;
+
+    recordDecisionArtifactDiagnostics(diagnosticsHolder, {
+      strategy: "split_stage",
+      briefRetryCount: stageA.attemptCount - 1,
+      traceRetryCount: 0,
+      briefGenerationLatencyMs: stageA.latencyMs,
+      traceGenerationLatencyMs: traceLatencyMs,
+      markdownAttemptCount: stageA.attemptCount,
+      markdownRetryReasonCategory: stageA.retryReasonCategory,
+      markdownGenerationLatencyMs: stageA.latencyMs,
+      traceConstructionLatencyMs: traceLatencyMs,
+      traceConstructionStrategy: "source_bound_projection",
+      totalModelCallCount: stageA.attemptCount,
+    });
+
+    return { markdown: stageA.markdown, decisionTrace };
+  } catch (error) {
+    // Includes SourceBoundDecisionTraceConstructionError: a structurally-
+    // unready Capture Layer surfaces as a typed contract error here rather
+    // than falling back to another model call (#154).
+    const traceLatencyMs = Date.now() - traceStarted;
+
+    recordDecisionArtifactDiagnostics(diagnosticsHolder, {
+      strategy: "split_stage",
+      briefRetryCount: stageA.attemptCount - 1,
+      traceRetryCount: 0,
+      briefGenerationLatencyMs: stageA.latencyMs,
+      traceGenerationLatencyMs: traceLatencyMs,
+      markdownAttemptCount: stageA.attemptCount,
+      markdownRetryReasonCategory: stageA.retryReasonCategory,
+      markdownGenerationLatencyMs: stageA.latencyMs,
+      traceConstructionLatencyMs: traceLatencyMs,
+      traceConstructionStrategy: "source_bound_projection",
+      totalModelCallCount: stageA.attemptCount,
+    });
+
+    throw error;
+  }
 }

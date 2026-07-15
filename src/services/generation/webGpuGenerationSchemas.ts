@@ -1,5 +1,7 @@
 import type { ResponseFormat } from "@mlc-ai/web-llm";
 import {
+  DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA,
+  DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_JSON,
   DECISION_BRIEF_RESULT_JSON_SCHEMA,
   DECISION_BRIEF_RESULT_SCHEMA_JSON,
 } from "./decisionBriefResultSchema";
@@ -9,6 +11,14 @@ export {
   DECISION_BRIEF_RESULT_JSON_SCHEMA,
   DECISION_BRIEF_RESULT_SCHEMA_JSON,
   DECISION_BRIEF_RESULT_RESPONSE_SCHEMA_JSON,
+  /**
+   * Moved to decisionBriefResultSchema.ts so runtime-neutral adapters (Ollama)
+   * do not need to import this WebGPU-specific module. Re-exported here for
+   * backward compatibility with existing WebGPU experiment call sites.
+   */
+  DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA,
+  DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_JSON,
+  DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_SCHEMA_JSON,
 } from "./decisionBriefResultSchema";
 
 /** Telemetry identifier for the Capture Layer WebLLM output schema. */
@@ -69,21 +79,8 @@ export const CAPTURE_LAYER_JSON_SCHEMA = {
   required: [...CAPTURE_LAYER_FIELDS],
 } as const;
 
-/** Evaluation-only schema: Markdown Decision Brief without Decision Trace. */
-export const DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA = {
-  type: "object",
-  properties: {
-    markdown: { type: "string" },
-  },
-  required: ["markdown"],
-} as const;
-
 export const CAPTURE_LAYER_RESPONSE_SCHEMA_JSON = JSON.stringify(
   CAPTURE_LAYER_JSON_SCHEMA,
-);
-
-export const DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_SCHEMA_JSON = JSON.stringify(
-  DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA,
 );
 
 export function buildWebGpuJsonResponseFormat(schemaJson: string): ResponseFormat {
@@ -102,4 +99,4 @@ export const DECISION_BRIEF_RESULT_RESPONSE_FORMAT = buildWebGpuJsonResponseForm
 );
 
 export const DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_FORMAT =
-  buildWebGpuJsonResponseFormat(DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_SCHEMA_JSON);
+  buildWebGpuJsonResponseFormat(DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_JSON);

@@ -125,3 +125,108 @@ Backward compatible: field omitted/null on older artifacts and non-Ollama modes.
 ## Test-only structural diagnosis
 
 `diagnoseDecisionBriefResponseShape(rawText)` summarizes top-level keys, value types, and markdown/trace presence without logging raw model text. Used in unit tests and available for local debugging.
+
+## Split-stage architecture (superseding combined generation)
+
+The combined strategy above solved envelope reliability (non-empty `markdown`,
+parseable `decisionTrace`) but not artifact completeness or grounding at
+long-form scale. Measured on `qwen3:4b` against
+`fixtures/evaluation/baselines/ollama-decision-artifact-v0.3-candidate.json`:
+
+- `q4-workforce-allocation`: required sections and next-step count/coverage
+  passed, but recommendation trace coverage and intent/basis grounding failed
+  because the model paraphrased free-text basis fields instead of copying
+  Capture Layer content verbatim.
+- `platform-rearchitecture-review` (16 suggested next steps): one
+  recommendation trace entry and **zero** next-step trace entries; required
+  Markdown sections failed.
+- `regional-launch-readiness-review` (24 suggested next steps): same failure
+  shape — one recommendation entry, zero next-step entries, all required
+  sections failed.
+
+**Root cause:** at long-form scale, `qwen3:4b` was asked in a single combined
+call to produce a complete structured Markdown brief, one recommendation
+trace entry, 16-24 next-step trace entries, and rich free-text basis content
+for every entry. The result was schema-valid but incomplete. Free-text trace
+generation is also structurally incompatible with the deterministic grounding
+gate (`evaluateDecisionTraceReadiness`): reasonable paraphrases fail the
+exact/substring source-correspondence check by design.
+
+**Why not another combined prompt variant:** the problem is not prompt
+wording, it is asking a 4B local model to both compose Markdown prose and
+invent grounded structured rationale for up to 24 items in one pass. No
+combined-prompt variant changes that shape.
+
+### Selected split architecture
+
+- **Stage A (model call):** `generateStageAMarkdown` in
+  `ollamaDecisionBriefGeneration.ts` generates **Markdown only**, reusing the
+  existing `markdown_only` prompt (`buildDecisionBriefPrompt(input, { mode:
+  "markdown_only" })`), the runtime-neutral
+  `DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA` (moved from
+  `webGpuGenerationSchemas.ts` into `decisionBriefResultSchema.ts` so the
+  Ollama adapter never imports a WebGPU-specific module), the existing
+  `parseDecisionBriefMarkdownOnlyJson` parser, and the existing
+  `evaluateDecisionBriefMarkdownOnlyAcceptance` gate (required sections,
+  recommendation alignment, next-step alignment, writing hard failures,
+  placeholder leakage). At most **one** retry is allowed, triggered by either
+  a parse/schema failure or a semantic acceptance failure. The retry prompt
+  (`buildDecisionBriefMarkdownOnlyRetryPrompt`) includes only concise
+  validator finding lines — never the raw rejected Markdown and never hidden
+  reasoning. Cancellation, timeout, and network/infrastructure errors from
+  `ollamaGenerate` propagate immediately and are never retried.
+- **Stage B (no model call):** `buildSourceBoundDecisionTrace` in the new
+  `src/services/generation/buildSourceBoundDecisionTrace.ts` deterministically
+  projects the already-accepted Capture Layer into a Decision Trace. Every
+  recommendation/next-step statement, basis item, and `would_change_if`
+  condition is copied **exactly** from the Capture Layer — nothing is
+  generated free-text, so grounding holds by construction rather than by
+  post-hoc validation:
+  - One `recommendation` entry when `recommendation_candidate` is non-empty;
+    one `next_step` entry per `suggested_next_steps` item, in order.
+  - `basis.intent` is selected from `captureLayer.goals` by deterministic
+    token-overlap scoring against the entry statement, with a stable
+    fallback to the first non-empty goal when every score is zero.
+  - Basis arrays (`supporting_evidence`, `assumptions_relied_on`,
+    `risks_addressed`, `constraints_respected`, `tradeoffs`,
+    `alternatives_considered`, `missing_context_caveats`) are populated with
+    up to three exact source items ranked by the same token-overlap
+    function; empty is acceptable when nothing overlaps. `risks_accepted` is
+    always empty — deterministic construction cannot distinguish an
+    "accepted" risk from an "addressed" one without model judgment, so that
+    distinction is explicitly out of scope for Stage B.
+  - `would_change_if` is built once per trace from exact source text, using
+    fallback priority `open_questions` -> `missing_context` -> `assumptions`
+    -> `risks`.
+  - If a structurally-ready Capture Layer still cannot yield a valid trace
+    (no goals, no `would_change_if` source text, or literally no lexical
+    overlap for some statement's basis), Stage B throws a typed
+    `SourceBoundDecisionTraceConstructionError` rather than falling back to a
+    second, unconstrained model call. No such fallback is implemented
+    preemptively; per #154 it is only justified if measured evidence later
+    shows deterministic construction is materially too shallow.
+
+### Model-call count (split-stage)
+
+| Stage | Calls |
+| --- | ---: |
+| Capture Layer | unchanged (1 single-pass or hierarchical) |
+| Stage A (Markdown) | 1, or 2 if the one allowed retry fires |
+| Stage B (Trace) | 0 (deterministic, no model call) |
+
+### Diagnostics (split-stage)
+
+`DecisionArtifactDiagnostics` gains, alongside the existing `combined` fields
+(kept for backward compatibility with historical evidence):
+
+- `strategy: "split_stage"`
+- `markdownAttemptCount`, `markdownRetryReasonCategory`,
+  `markdownGenerationLatencyMs`
+- `traceConstructionLatencyMs`, `traceConstructionStrategy:
+  "source_bound_projection"`
+- `totalModelCallCount`
+
+New evidence for the split-stage strategy is recorded in
+`fixtures/evaluation/baselines/ollama-split-artifact-v0.3-candidate.json`,
+separate from the historical `ollama-decision-artifact-v0.3-candidate.json`
+combined-strategy baseline above.
