@@ -97,6 +97,25 @@ export const DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_JSON = JSON.stringify(
   DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA,
 );
 
+const REQUIRED_STAGE_A_SECTION_PROPERTIES = {
+  summary: { type: "string" },
+  decisionContext: { type: "string" },
+  optionsConsidered: { type: "string" },
+  recommendation: { type: "string" },
+  risksAndConstraints: { type: "string" },
+  openQuestions: { type: "string" },
+  suggestedNextSteps: { type: "string" },
+  confidence: { type: "string" },
+} as const;
+
+/** Ollama-only deterministic Stage A section scaffold (#154). */
+export const OLLAMA_STAGE_A_SECTIONS_JSON_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: REQUIRED_STAGE_A_SECTION_PROPERTIES,
+  required: Object.keys(REQUIRED_STAGE_A_SECTION_PROPERTIES),
+} as const;
+
 /** Backward-compatible alias matching the prior WebGPU-module export name. */
 export const DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_SCHEMA_JSON =
   DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_JSON;

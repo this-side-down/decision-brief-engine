@@ -176,6 +176,7 @@ function formatFirstAttemptSummary(value: boolean | null): string {
 function emptySemanticFindings(): SemanticAcceptanceDetailedFindings {
   return {
     missingRequiredSections: [],
+    emptyRequiredSections: [],
     traceReadinessFailures: [],
     alignmentFailures: [],
     writingHardFailures: [],

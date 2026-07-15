@@ -193,6 +193,56 @@ export function buildDecisionBriefMarkdownOnlyRetryPrompt(
   ].join("\n");
 }
 
+const STAGE_A_SECTION_FIELDS = [
+  ["summary", "Summary"],
+  ["decisionContext", "Decision Context"],
+  ["optionsConsidered", "Options Considered"],
+  ["recommendation", "Recommendation"],
+  ["risksAndConstraints", "Risks and Constraints"],
+  ["openQuestions", "Open Questions"],
+  ["suggestedNextSteps", "Suggested Next Steps"],
+  ["confidence", "Confidence"],
+] as const;
+
+/** Ollama Stage A contract: model writes bodies; application supplies headings. */
+export function buildDecisionBriefSectionScaffoldPrompt(
+  input: GenerateDecisionBriefInput,
+  findingLines: string[] = [],
+): string {
+  const tone = input.toneGuidance ?? "Concise, executive-ready, direct, and decision-oriented.";
+  return [
+    "You are a decision brief writer. Write the eight section bodies for a concise Decision Brief.",
+    "The application adds canonical Markdown headings in the required order. Do not write headings inside field values.",
+    "Return one JSON object with exactly these eight non-empty string fields:",
+    ...STAGE_A_SECTION_FIELDS.map(([field, heading]) => `- ${field}: body content for ${heading}`),
+    "",
+    `Brief type: ${input.briefType.id}`,
+    "Brief type guidance:",
+    formatGuidance(input.briefTypeGuidance),
+    "",
+    `Tone: ${tone}`,
+    "",
+    ...buildMarkdownOnlyDecisionBriefRules().map((rule) =>
+      rule === "- The markdown field must contain the complete Decision Brief Markdown as a JSON string value."
+        ? "- Each JSON field must contain only the substantive Markdown body for its named section."
+        : rule,
+    ),
+    "- recommendation must begin with captureLayer.recommendation_candidate verbatim.",
+    `- If that exact recommendation exceeds ${SENTENCE_ERROR_WORDS} words, wrap it across plain lines of at most ${SENTENCE_ERROR_WORDS} words without changing words, order, or punctuation.`,
+    ...(findingLines.length > 0
+      ? [
+          "",
+          "The previous response failed validation. Correct every finding:",
+          ...findingLines.map((line) => `- ${line}`),
+        ]
+      : []),
+    NO_REASONING_INSTRUCTION,
+    "",
+    "Capture Layer JSON:",
+    JSON.stringify(input.captureLayer, null, 2),
+  ].join("\n");
+}
+
 export type DecisionBriefPromptMode = "legacy" | "structured_response" | "markdown_only";
 
 const DECISION_BRIEF_RESULT_SCHEMA = JSON.stringify(

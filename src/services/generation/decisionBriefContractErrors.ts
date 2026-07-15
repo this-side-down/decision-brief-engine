@@ -1,3 +1,5 @@
+import type { MarkdownAttemptDiagnostic } from "./decisionArtifactDiagnostics";
+
 export class DecisionBriefContractError extends Error {
   constructor(message: string) {
     super(message);
@@ -32,17 +34,20 @@ export class StageAMarkdownGenerationError extends DecisionBriefContractError {
     | "writing_hard_failure"
     | "placeholder_leakage";
   readonly markdownLatencyMs: number;
+  readonly attemptDiagnostics: MarkdownAttemptDiagnostic[];
 
   constructor(options: {
     message: string;
     attemptCount: number;
     retryReasonCategory: StageAMarkdownGenerationError["retryReasonCategory"];
     markdownLatencyMs: number;
+    attemptDiagnostics: MarkdownAttemptDiagnostic[];
   }) {
     super(options.message);
     this.name = "StageAMarkdownGenerationError";
     this.attemptCount = options.attemptCount;
     this.retryReasonCategory = options.retryReasonCategory;
     this.markdownLatencyMs = options.markdownLatencyMs;
+    this.attemptDiagnostics = options.attemptDiagnostics;
   }
 }

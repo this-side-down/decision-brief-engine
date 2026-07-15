@@ -19,6 +19,15 @@ export type MarkdownRetryReasonCategory =
  */
 export type TraceConstructionStrategy = "source_bound_projection";
 
+export type MarkdownAttemptDiagnostic = {
+  attemptNumber: number;
+  outcome: "accepted" | "quality_failure" | "parse_or_schema_failure";
+  failureCategories: MarkdownRetryReasonCategory[];
+  validatorFindingLines: string[];
+  outputLength: number;
+  possibleTruncation: boolean;
+};
+
 export type DecisionArtifactDiagnostics = {
   strategy: "combined" | "split_stage";
   /**
@@ -41,6 +50,8 @@ export type DecisionArtifactDiagnostics = {
   traceConstructionLatencyMs: number | null;
   traceConstructionStrategy: TraceConstructionStrategy | null;
   totalModelCallCount: number | null;
+  /** Per-attempt Stage A findings; omitted by historical/combined diagnostics. */
+  markdownAttempts?: MarkdownAttemptDiagnostic[];
 };
 
 export type DecisionArtifactDiagnosticsHolder = {

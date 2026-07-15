@@ -8,17 +8,17 @@ import type {
   DecisionArtifactDiagnostics,
   DecisionArtifactDiagnosticsHolder,
   MarkdownRetryReasonCategory,
+  MarkdownAttemptDiagnostic,
 } from "./decisionArtifactDiagnostics";
 import {
   evaluateDecisionBriefMarkdownOnlyAcceptance,
   formatMarkdownOnlyAcceptanceFindingLines,
   type MarkdownOnlyAcceptanceFailureCategory,
 } from "./decisionBriefMarkdownOnlyAcceptance";
-import { DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA } from "./decisionBriefResultSchema";
-import { parseDecisionBriefMarkdownOnlyJson } from "./parseDecisionBriefMarkdownOnly";
+import { OLLAMA_STAGE_A_SECTIONS_JSON_SCHEMA } from "./decisionBriefResultSchema";
+import { parseDecisionBriefSectionsJson } from "./parseDecisionBriefSections";
 import {
-  buildDecisionBriefMarkdownOnlyRetryPrompt,
-  buildDecisionBriefPrompt,
+  buildDecisionBriefSectionScaffoldPrompt,
 } from "./prompts";
 import type {
   DecisionBriefResult,
@@ -67,7 +67,7 @@ async function requestMarkdownOnlyDecisionBrief(
 ): Promise<string> {
   return ollamaGenerate({
     prompt,
-    format: DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA,
+    format: OLLAMA_STAGE_A_SECTIONS_JSON_SCHEMA,
     temperature: 0,
     think: false,
     signal,
@@ -90,6 +90,7 @@ type StageAMarkdownResult = {
   attemptCount: number;
   retryReasonCategory: MarkdownRetryReasonCategory;
   latencyMs: number;
+  attempts: MarkdownAttemptDiagnostic[];
 };
 
 /**
@@ -118,12 +119,13 @@ async function generateStageAMarkdown(
   let lastFindingLines: string[] = [];
   let lastRetryReasonCategory: MarkdownOnlyAcceptanceFailureCategory | "parse_or_schema" =
     "required_sections";
+  const attemptDiagnostics: MarkdownAttemptDiagnostic[] = [];
 
   for (let attempt = 0; attempt <= MAX_MARKDOWN_RETRIES; attempt += 1) {
     const prompt =
       attempt === 0
-        ? buildDecisionBriefPrompt(input, { mode: "markdown_only" })
-        : buildDecisionBriefMarkdownOnlyRetryPrompt(input, lastFindingLines);
+        ? buildDecisionBriefSectionScaffoldPrompt(input)
+        : buildDecisionBriefSectionScaffoldPrompt(input, lastFindingLines);
 
     let rawText: string;
 
@@ -142,12 +144,24 @@ async function generateStageAMarkdown(
     let parsed: DecisionBriefResult;
 
     try {
-      parsed = parseDecisionBriefMarkdownOnlyJson(rawText);
+      parsed = {
+        markdown: parseDecisionBriefSectionsJson(rawText, { captureLayer: input.captureLayer }),
+        decisionTrace: { entries: [], created_at: "" },
+      };
     } catch (parseError) {
       const message =
         parseError instanceof Error
           ? parseError.message
           : "Decision Brief markdown-only result failed to parse.";
+
+      attemptDiagnostics.push({
+        attemptNumber: attempt + 1,
+        outcome: "parse_or_schema_failure",
+        failureCategories: ["parse_or_schema"],
+        validatorFindingLines: [message],
+        outputLength: rawText.length,
+        possibleTruncation: !rawText.trimEnd().endsWith("}"),
+      });
 
       if (attempt >= MAX_MARKDOWN_RETRIES) {
         throw new StageAMarkdownGenerationError({
@@ -155,6 +169,7 @@ async function generateStageAMarkdown(
           attemptCount: attempt + 1,
           retryReasonCategory: "parse_or_schema",
           markdownLatencyMs: Date.now() - started,
+          attemptDiagnostics,
         });
       }
 
@@ -169,13 +184,32 @@ async function generateStageAMarkdown(
     });
 
     if (acceptance.accepted) {
+      attemptDiagnostics.push({
+        attemptNumber: attempt + 1,
+        outcome: "accepted",
+        failureCategories: [],
+        validatorFindingLines: [],
+        outputLength: rawText.length,
+        possibleTruncation: false,
+      });
       return {
         markdown: parsed.markdown,
         attemptCount: attempt + 1,
         retryReasonCategory: attempt === 0 ? "none" : lastRetryReasonCategory,
         latencyMs: Date.now() - started,
+        attempts: attemptDiagnostics,
       };
     }
+
+    const findingLines = formatMarkdownOnlyAcceptanceFindingLines(acceptance.detailedFindings);
+    attemptDiagnostics.push({
+      attemptNumber: attempt + 1,
+      outcome: "quality_failure",
+      failureCategories: [...acceptance.failureCategories],
+      validatorFindingLines: findingLines,
+      outputLength: rawText.length,
+      possibleTruncation: false,
+    });
 
     if (attempt >= MAX_MARKDOWN_RETRIES) {
       throw new StageAMarkdownGenerationError({
@@ -183,10 +217,11 @@ async function generateStageAMarkdown(
         attemptCount: attempt + 1,
         retryReasonCategory: lastRetryReasonCategory,
         markdownLatencyMs: Date.now() - started,
+        attemptDiagnostics,
       });
     }
 
-    lastFindingLines = formatMarkdownOnlyAcceptanceFindingLines(acceptance.detailedFindings);
+    lastFindingLines = findingLines;
     lastRetryReasonCategory = acceptance.failureCategories[0] ?? "required_sections";
   }
 
@@ -209,6 +244,7 @@ function buildStageAFailureDiagnostics(error: unknown, started: number): Decisio
       traceConstructionLatencyMs: null,
       traceConstructionStrategy: null,
       totalModelCallCount: error.attemptCount,
+      markdownAttempts: error.attemptDiagnostics,
     };
   }
 
@@ -284,6 +320,7 @@ export async function generateOllamaDecisionBrief(
       traceConstructionLatencyMs: traceLatencyMs,
       traceConstructionStrategy: "source_bound_projection",
       totalModelCallCount: stageA.attemptCount,
+      markdownAttempts: stageA.attempts,
     });
 
     return { markdown: stageA.markdown, decisionTrace };
@@ -305,6 +342,7 @@ export async function generateOllamaDecisionBrief(
       traceConstructionLatencyMs: traceLatencyMs,
       traceConstructionStrategy: "source_bound_projection",
       totalModelCallCount: stageA.attemptCount,
+      markdownAttempts: stageA.attempts,
     });
 
     throw error;

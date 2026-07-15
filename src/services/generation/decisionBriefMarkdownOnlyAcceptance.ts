@@ -27,12 +27,18 @@ export type MarkdownOnlyAcceptanceResult = {
   detailedFindings: SemanticAcceptanceDetailedFindings;
 };
 
-function collectMissingRequiredSections(markdown: string): string[] {
+function collectRequiredSectionFindings(markdown: string): {
+  missing: string[];
+  empty: string[];
+} {
   const sections = parseDecisionBriefSections(markdown);
-  return getDefaultRequiredSections().filter((name) => {
+  return {
+    missing: getDefaultRequiredSections().filter((name) => !sections.has(name)),
+    empty: getDefaultRequiredSections().filter((name) => {
     const body = sections.get(name);
-    return typeof body !== "string" || body.trim().length === 0;
-  });
+      return typeof body === "string" && body.trim().length === 0;
+    }),
+  };
 }
 
 /**
@@ -51,8 +57,8 @@ export function evaluateDecisionBriefMarkdownOnlyAcceptance(options: {
     failureCategories.push("placeholder_leakage");
   }
 
-  const missingRequiredSections = collectMissingRequiredSections(result.markdown);
-  if (missingRequiredSections.length > 0) {
+  const requiredSections = collectRequiredSectionFindings(result.markdown);
+  if (requiredSections.missing.length > 0 || requiredSections.empty.length > 0) {
     failureCategories.push("required_sections");
   }
 
@@ -83,7 +89,8 @@ export function evaluateDecisionBriefMarkdownOnlyAcceptance(options: {
       : [];
 
   const detailedFindings: SemanticAcceptanceDetailedFindings = {
-    missingRequiredSections,
+    missingRequiredSections: requiredSections.missing,
+    emptyRequiredSections: requiredSections.empty,
     traceReadinessFailures: [],
     alignmentFailures: alignment.findings
       .filter((check) => !check.pass)
@@ -119,8 +126,18 @@ export function formatMarkdownOnlyAcceptanceFindingLines(
     );
   }
 
-  for (const failure of findings.alignmentFailures) {
-    lines.push(`Alignment (${failure.id}): ${failure.detail}`);
+
+  if (findings.emptyRequiredSections?.length > 0) {
+    lines.push(`Empty required sections: ${findings.emptyRequiredSections.join(", ")}`);
+  }
+
+  if (findings.alignmentFailures.some((failure) => failure.id === "recommendation_alignment")) {
+    lines.push("Recommendation section must begin with captureLayer.recommendation_candidate verbatim; line-wrap it without changing the text if it exceeds the sentence limit.");
+  }
+
+  if (findings.alignmentFailures.some((failure) => failure.id === "next_step_alignment")) {
+    const detail = findings.alignmentFailures.find((failure) => failure.id === "next_step_alignment")?.detail;
+    lines.push(`Suggested Next Steps must represent every captureLayer.suggested_next_steps item exactly once in source order. ${detail ?? ""}`.trim());
   }
 
   for (const failure of findings.writingHardFailures) {
@@ -131,20 +148,6 @@ export function formatMarkdownOnlyAcceptanceFindingLines(
   for (const finding of findings.placeholderFindings) {
     lines.push(
       `Placeholder leakage (${finding.category}) at ${finding.fieldPath}: ${finding.description}`,
-    );
-  }
-
-  if (findings.uncoveredRecommendationStatements.length > 0) {
-    lines.push(
-      `Recommendation alignment sources: ${findings.uncoveredRecommendationStatements.join("; ")}`,
-    );
-  }
-
-  if (findings.uncoveredNextStepStatements.length > 0) {
-    lines.push(
-      `Uncovered next steps: ${findings.uncoveredNextStepStatements
-        .map((step) => `"${step}"`)
-        .join("; ")}`,
     );
   }
 

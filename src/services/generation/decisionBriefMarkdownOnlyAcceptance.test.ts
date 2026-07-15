@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import householdCapture from "../../../fixtures/examples/household-move-planning/expected-capture-layer.json";
 import {
   evaluateDecisionBriefMarkdownOnlyAcceptance,
+  formatMarkdownOnlyAcceptanceFindingLines,
 } from "./decisionBriefMarkdownOnlyAcceptance";
 
 const fixtureRoot = join(
@@ -46,6 +47,42 @@ describe("evaluateDecisionBriefMarkdownOnlyAcceptance", () => {
     expect(result.detailedFindings.missingRequiredSections.length).toBeGreaterThan(0);
   });
 
+  it("distinguishes an empty required section from a missing section", () => {
+    const markdown = VALID_MARKDOWN.replace(
+      /## Open Questions\s+[\s\S]*?(?=\n## Suggested Next Steps)/,
+      "## Open Questions\n",
+    );
+    const result = evaluateDecisionBriefMarkdownOnlyAcceptance({
+      result: { markdown, decisionTrace: { entries: [], created_at: new Date().toISOString() } },
+      captureLayer: householdCapture,
+    });
+    expect(result.failureCategories).toContain("required_sections");
+    expect(result.detailedFindings.emptyRequiredSections).toContain("Open Questions");
+    expect(result.detailedFindings.missingRequiredSections).not.toContain("Open Questions");
+  });
+
+  it("reports multiple missing canonical sections", () => {
+    const markdown = VALID_MARKDOWN
+      .replace(/## Options Considered[\s\S]*?(?=\n## Recommendation)/, "")
+      .replace(/## Open Questions[\s\S]*?(?=\n## Suggested Next Steps)/, "");
+    const result = evaluateDecisionBriefMarkdownOnlyAcceptance({
+      result: { markdown, decisionTrace: { entries: [], created_at: new Date().toISOString() } },
+      captureLayer: householdCapture,
+    });
+    expect(result.detailedFindings.missingRequiredSections).toEqual(
+      expect.arrayContaining(["Options Considered", "Open Questions"]),
+    );
+  });
+
+  it("does not silently accept non-canonical heading formatting", () => {
+    const markdown = VALID_MARKDOWN.replace("## Summary", "### Summary");
+    const result = evaluateDecisionBriefMarkdownOnlyAcceptance({
+      result: { markdown, decisionTrace: { entries: [], created_at: new Date().toISOString() } },
+      captureLayer: householdCapture,
+    });
+    expect(result.detailedFindings.missingRequiredSections).toContain("Summary");
+  });
+
   it("detects recommendation misalignment against Capture Layer", () => {
     const result = evaluateDecisionBriefMarkdownOnlyAcceptance({
       result: {
@@ -60,5 +97,20 @@ describe("evaluateDecisionBriefMarkdownOnlyAcceptance", () => {
 
     expect(result.accepted).toBe(false);
     expect(result.failureCategories).toContain("recommendation_alignment");
+  });
+
+  it("detects next-step misalignment and formats bounded retry feedback", () => {
+    const markdown = VALID_MARKDOWN.replace(
+      /## Suggested Next Steps[\s\S]*?(?=\n## Confidence)/,
+      "## Suggested Next Steps\n- Unrelated step.\n",
+    );
+    const result = evaluateDecisionBriefMarkdownOnlyAcceptance({
+      result: { markdown, decisionTrace: { entries: [], created_at: new Date().toISOString() } },
+      captureLayer: householdCapture,
+    });
+    expect(result.failureCategories).toContain("next_step_alignment");
+    const feedback = formatMarkdownOnlyAcceptanceFindingLines(result.detailedFindings).join("\n");
+    expect(feedback).toContain("exactly once in source order");
+    expect(feedback).not.toContain("Uncovered next steps:");
   });
 });

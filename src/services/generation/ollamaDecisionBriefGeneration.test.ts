@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { STRATEGY_DECISION_BRIEF } from "../../data/briefTypes";
 import type { CaptureLayer } from "../../types/captureLayer";
+import { parseDecisionBriefSections } from "../../evaluation/decisionBriefWritingChecks";
 import { ollamaGenerate } from "./ollamaClient";
-import { DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA } from "./decisionBriefResultSchema";
+import { OLLAMA_STAGE_A_SECTIONS_JSON_SCHEMA } from "./decisionBriefResultSchema";
 import {
   DecisionBriefContractError,
   StageAMarkdownGenerationError,
@@ -108,7 +109,17 @@ function buildValidMarkdown(overrides: {
 }
 
 function markdownOnlyEnvelope(markdown: string): string {
-  return JSON.stringify({ markdown });
+  const sections = parseDecisionBriefSections(markdown);
+  return JSON.stringify({
+    summary: sections.get("Summary") ?? "",
+    decisionContext: sections.get("Decision Context") ?? "",
+    optionsConsidered: sections.get("Options Considered") ?? "",
+    recommendation: sections.get("Recommendation") ?? "",
+    risksAndConstraints: sections.get("Risks and Constraints") ?? "",
+    openQuestions: sections.get("Open Questions") ?? "",
+    suggestedNextSteps: sections.get("Suggested Next Steps") ?? "",
+    confidence: sections.get("Confidence") ?? "",
+  });
 }
 
 function createDiagnosticsHolder(): DecisionArtifactDiagnosticsHolder {
@@ -126,7 +137,7 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
     await generateOllamaDecisionBrief(baseInput);
 
     expect(mockOllamaGenerate.mock.calls[0]?.[0]).toMatchObject({
-      format: DECISION_BRIEF_MARKDOWN_ONLY_JSON_SCHEMA,
+      format: OLLAMA_STAGE_A_SECTIONS_JSON_SCHEMA,
       temperature: 0,
       think: false,
     });
@@ -138,7 +149,8 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
     await generateOllamaDecisionBrief(baseInput);
 
     const prompt = mockOllamaGenerate.mock.calls[0]?.[0]?.prompt as string;
-    expect(prompt).toContain("Return a single JSON object with one top-level field:");
+    expect(prompt).toContain("exactly these eight non-empty string fields");
+    expect(prompt).toContain("application adds canonical Markdown headings");
     expect(prompt).not.toContain("Decision Trace rules:");
     expect(prompt).not.toContain("basis.intent must name");
   });
@@ -177,7 +189,7 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
     expect(diagnostics.value?.markdownRetryReasonCategory).toBe("required_sections");
   });
 
-  it("retries once on a recommendation mismatch, then succeeds", async () => {
+  it("source-binds a model recommendation mismatch without a retry", async () => {
     mockOllamaGenerate
       .mockResolvedValueOnce(
         markdownOnlyEnvelope(buildValidMarkdown({ recommendation: "Do something unrelated instead." })),
@@ -188,11 +200,11 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
     const result = await generateOllamaDecisionBrief(baseInput, { diagnostics });
 
     expect(result.markdown).toContain(captureLayer.recommendation_candidate);
-    expect(mockOllamaGenerate).toHaveBeenCalledTimes(2);
-    expect(diagnostics.value?.markdownRetryReasonCategory).toBe("recommendation_alignment");
+    expect(mockOllamaGenerate).toHaveBeenCalledTimes(1);
+    expect(diagnostics.value?.markdownRetryReasonCategory).toBe("none");
   });
 
-  it("retries once when next steps are uncovered, then succeeds", async () => {
+  it("source-binds uncovered next steps without a retry", async () => {
     mockOllamaGenerate
       .mockResolvedValueOnce(
         markdownOnlyEnvelope(buildValidMarkdown({ nextSteps: ["A completely different plan."] })),
@@ -203,15 +215,16 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
     const result = await generateOllamaDecisionBrief(baseInput, { diagnostics });
 
     expect(result.markdown).toContain("# Decision Brief");
-    expect(mockOllamaGenerate).toHaveBeenCalledTimes(2);
-    expect(diagnostics.value?.markdownRetryReasonCategory).toBe("next_step_alignment");
+    expect(result.markdown).toContain(captureLayer.suggested_next_steps[0]);
+    expect(mockOllamaGenerate).toHaveBeenCalledTimes(1);
+    expect(diagnostics.value?.markdownRetryReasonCategory).toBe("none");
   });
 
-  it("retries once on a writing hard failure (em dash), then succeeds", async () => {
+  it("retries once on a writing hard failure, then succeeds", async () => {
     mockOllamaGenerate
       .mockResolvedValueOnce(
         markdownOnlyEnvelope(
-          buildValidMarkdown({ riskSentence: "The platform team — without senior engineers — may slip." }),
+          buildValidMarkdown({ riskSentence: "Moving forward, the platform team may slip." }),
         ),
       )
       .mockResolvedValueOnce(markdownOnlyEnvelope(buildValidMarkdown()));
@@ -219,7 +232,7 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
 
     const result = await generateOllamaDecisionBrief(baseInput, { diagnostics });
 
-    expect(result.markdown).not.toContain("—");
+    expect(result.markdown).not.toContain("Moving forward");
     expect(mockOllamaGenerate).toHaveBeenCalledTimes(2);
     expect(diagnostics.value?.markdownRetryReasonCategory).toBe("writing_hard_failure");
   });
@@ -233,7 +246,7 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
     await generateOllamaDecisionBrief(baseInput);
 
     const retryPrompt = mockOllamaGenerate.mock.calls[1]?.[0]?.prompt as string;
-    expect(retryPrompt).toContain("Missing required sections");
+    expect(retryPrompt).toContain("Empty required sections");
     expect(retryPrompt.toLowerCase()).toContain("risks and constraints");
     // The raw rejected Markdown body must not be echoed back wholesale.
     expect(retryPrompt).not.toContain(firstMarkdown);
@@ -264,6 +277,10 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
     });
     expect(diagnostics.value?.briefGenerationLatencyMs).toBeGreaterThanOrEqual(0);
     expect(diagnostics.value?.markdownGenerationLatencyMs).toBeGreaterThanOrEqual(0);
+    expect(diagnostics.value?.markdownAttempts).toHaveLength(2);
+    expect(diagnostics.value?.markdownAttempts?.map((attempt) => attempt.attemptNumber)).toEqual([1, 2]);
+    expect(diagnostics.value?.markdownAttempts?.every((attempt) => attempt.outcome === "quality_failure")).toBe(true);
+    expect(diagnostics.value?.markdownAttempts?.every((attempt) => attempt.validatorFindingLines.length > 0)).toBe(true);
   });
 
   it("terminal parse/schema failure after two attempts records attempt count 2", async () => {
