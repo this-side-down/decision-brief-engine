@@ -9,6 +9,7 @@ import type {
 } from "./types";
 import {
   acceptChunkStatedDecision,
+  areCompatibleRepeatedDecisions,
   areDirectlyConflictingDecisions,
 } from "./statedDecisionHygiene";
 
@@ -203,13 +204,16 @@ export function mergePartialCaptureSignals(
   ];
 
   const chunksById = new Map(input.plan.chunks.map((chunk) => [chunk.id, chunk]));
-  const statedDecisionValues = dedupeStrings(
-    partialResults.map((partial) => {
+  const acceptedStatedDecisions = partialResults.map((partial) => {
       const chunk = chunksById.get(partial.chunkId);
       return chunk
         ? acceptChunkStatedDecision(partial.stated_decision ?? "", chunk.text)
         : "";
-    }),
+    }).filter(Boolean);
+  const statedDecisionValues = acceptedStatedDecisions.filter(
+    (decision, index, all) =>
+      all.findIndex((other) => areCompatibleRepeatedDecisions(decision, other)) ===
+      index,
   );
   const conflictingDecisionPairs: Array<[string, string]> = [];
   for (let left = 0; left < statedDecisionValues.length; left += 1) {

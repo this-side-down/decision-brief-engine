@@ -27,6 +27,12 @@ describe("chunk stated-decision hygiene", () => {
         "Recommendation: pursue the Helix modular-monolith path.",
       ),
     ).toBe("");
+    expect(
+      acceptChunkStatedDecision(
+        "Select option A.",
+        "The team prefers option A because it is cheaper.",
+      ),
+    ).toBe("");
   });
 
   it("rejects tentative alignment without commitment", () => {
@@ -44,7 +50,34 @@ describe("chunk stated-decision hygiene", () => {
         "Use Alpha for the billing migration.",
         "We decided last month to use Alpha for the billing migration. Today there is no final decision on the launch date.",
       ),
-    ).toBe("Use Alpha for the billing migration.");
+    ).toBe("We decided last month to use Alpha for the billing migration.");
+  });
+
+  it("preserves an explicit decision that selects option A", () => {
+    expect(
+      acceptChunkStatedDecision(
+        "Select option A.",
+        "The team decided to select option A.",
+      ),
+    ).toBe("The team decided to select option A.");
+  });
+
+  it("preserves prior alignment converted into a final commitment", () => {
+    expect(
+      acceptChunkStatedDecision(
+        "Commit to the pilot-first path.",
+        "We were previously aligned on pilot-first. Final decision: we committed to the pilot-first path.",
+      ),
+    ).toBe("Final decision: we committed to the pilot-first path.");
+  });
+
+  it("preserves a decision whose rationale contains should", () => {
+    expect(
+      acceptChunkStatedDecision(
+        "Select option A because it should reduce latency.",
+        "The team decided to select option A because it should reduce latency.",
+      ),
+    ).toBe("The team decided to select option A because it should reduce latency.");
   });
 
   it("preserves one genuine explicit decision late in a chunk", () => {
@@ -54,9 +87,35 @@ describe("chunk stated-decision hygiene", () => {
         "Support remains constrained. Recommendation was pilot-first. Final decision for the record: we are proceeding with a limited pilot on April 14 with 12 accounts in Singapore and Sydney.",
       ),
     ).toBe(
-      "Proceed with a limited pilot on April 14 with 12 accounts in Singapore and Sydney.",
+      "Final decision for the record: we are proceeding with a limited pilot on April 14 with 12 accounts in Singapore and Sydney.",
     );
   });
+
+  it.each([
+    [
+      "Proceed with the pilot on April 21.",
+      "The team decided to proceed with the pilot.",
+    ],
+    [
+      "Proceed with the pilot if finance approves.",
+      "The team decided to proceed with the pilot.",
+    ],
+    [
+      "Proceed with a Singapore pilot for 12 accounts.",
+      "The team decided to proceed with a pilot.",
+    ],
+    [
+      "The board approved the pilot.",
+      "The team decided to proceed with the pilot.",
+    ],
+  ])(
+    "normalizes a mostly grounded candidate with invented details to exact source text",
+    (candidate, source) => {
+      const accepted = acceptChunkStatedDecision(candidate, source);
+      expect(["", source]).toContain(accepted);
+      expect(accepted).not.toBe(candidate);
+    },
+  );
 });
 
 function partial(
@@ -120,7 +179,7 @@ describe("merged stated-decision hygiene", () => {
       fullSourceText: texts.join(""),
     });
 
-    expect(merged.stated_decision).toBe(decision);
+    expect(merged.stated_decision).toBe(texts[0]);
   });
 
   it("surfaces conflicting explicit decisions instead of flattening them", () => {
@@ -141,7 +200,37 @@ describe("merged stated-decision hygiene", () => {
 
     expect(merged.stated_decision).toBe("");
     expect(merged.tensions.join(" ")).toContain("Conflicting explicit decisions");
-    expect(merged.tensions.join(" ")).toContain("Launch on Monday");
-    expect(merged.tensions.join(" ")).toContain("Do not launch on Monday");
+    expect(merged.tensions.join(" ")).toMatch(/launch on Monday/i);
+    expect(merged.tensions.join(" ")).toMatch(/not to launch on Monday/i);
+  });
+
+  it.each([
+    [
+      ["The team decided to launch on Monday.", "The team decided to launch on Tuesday."],
+      ["Launch on Monday.", "Launch on Tuesday."],
+    ],
+    [
+      ["The team decided to select Alpha.", "The team decided to select Beta."],
+      ["Select Alpha.", "Select Beta."],
+    ],
+  ])("surfaces incompatible affirmative decisions", (texts, decisions) => {
+    const plan = planFor(texts);
+    const merged = mergePartialCaptureSignals({
+      plan,
+      partialResults: plan.chunks.map((chunk, index) =>
+        partial(chunk.id, decisions[index], chunk.sourceRange),
+      ),
+      briefType: PRODUCT_DECISION_BRIEF,
+      fullSourceText: texts.join(""),
+    });
+
+    expect(merged.stated_decision).toBe("");
+    expect(merged.tensions.join(" ")).toContain("Conflicting explicit decisions");
+    expect(merged.tensions.join(" ").toLowerCase()).toContain(
+      decisions[0].slice(0, -1).toLowerCase(),
+    );
+    expect(merged.tensions.join(" ").toLowerCase()).toContain(
+      decisions[1].slice(0, -1).toLowerCase(),
+    );
   });
 });

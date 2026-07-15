@@ -1,18 +1,23 @@
 const NO_DECISION_PATTERN =
   /\b(?:no (?:explicit |stated |final |architecture )*decision|not (?:yet )?decided|(?:has|have|had|was|were) not (?:yet )?decided|decision (?:remains|is) (?:open|pending|undecided))\b/i;
 
-const NON_COMMITTAL_PATTERN =
-  /\b(?:recommend(?:ation|ed|s)?|prefer(?:ence|red|s)?|propos(?:al|e|ed|ing)|suggest(?:ion|ed|s)?|tentative(?:ly)?|lean(?:ing|s)?|align(?:ed|ment)|can live with|pushing for|would like|should|could|might|option)\b/i;
+const NON_COMMITTAL_FRAMING_PATTERN =
+  /\b(?:recommendation(?: candidate)?\s*:|(?:we|i|the team) recommend\b|(?:we|i|the team) prefer\b|preference\s*:|proposal\s*:|(?:we|i|the team) propose\b|(?:we|i|the team) suggest\b|tentatively? (?:aligned|agree|decided|committed)|leaning (?:toward|towards|to)|can live with|pushing for|would like|(?:we|the team) should\b|(?:we|the team) could\b|(?:we|the team) might\b)/i;
 
 const AFFIRMATIVE_DECISION_PATTERN =
-  /\b(?:final decision|decision for the record|decision captured|(?:we|the (?:team|group|committee|board)) (?:decided|approved|committed|agreed|resolved|selected|chose|are proceeding|will proceed)|(?:has|have|had) (?:decided|approved|committed|agreed|resolved|selected|chosen)|(?:is|was) approved|committed to|decision\s*:)\b/i;
+  /(?:\b(?:final decision|decision for the record|decision captured|(?:we|the (?:team|group|committee|board)) (?:decided|approved|committed|agreed|resolved|selected|chose|are proceeding|will proceed)|(?:has|have|had) (?:decided|approved|committed|agreed|resolved|selected|chosen)|(?:is|was) approved|committed to)\b|\bdecision\s*:)/i;
 
 const NEGATIVE_ACTION_PATTERN = /\b(?:not|don't|do not|won't|will not)\b/i;
+const DECISION_ACTION_TOKENS = new Set([
+  "adopt", "choose", "chosen", "launch", "proceed", "select", "selected", "use",
+]);
 
 const STOP_WORDS = new Set([
   "a", "an", "and", "are", "as", "at", "be", "by", "decision", "for",
   "from", "has", "have", "in", "is", "it", "of", "on", "or", "our",
-  "that", "the", "this", "to", "was", "we", "were", "will", "with",
+  "agreed", "approved", "board", "captured", "chose", "committee", "committed",
+  "decided", "final", "group", "record", "resolved", "selected", "team", "that",
+  "the", "this", "to", "was", "we", "were", "will", "with",
 ]);
 
 function normalize(value: string): string {
@@ -31,7 +36,7 @@ function contentTokens(value: string): Set<string> {
   );
 }
 
-function candidateIsGrounded(candidate: string, statement: string): boolean {
+function candidateMatchesStatement(candidate: string, statement: string): boolean {
   const normalizedCandidate = normalize(candidate);
   const normalizedStatement = normalize(statement);
   if (
@@ -51,6 +56,19 @@ function candidateIsGrounded(candidate: string, statement: string): boolean {
   return shared.length / candidateTokens.size >= 0.6;
 }
 
+function isNonCommittalFraming(statement: string): boolean {
+  if (!NON_COMMITTAL_FRAMING_PATTERN.test(statement)) {
+    return false;
+  }
+
+  const hasAffirmativeDecision = AFFIRMATIVE_DECISION_PATTERN.test(statement);
+  const explicitlyTentativeCommitment =
+    /\btentatively? (?:agreed|decided|committed|resolved|selected|chose)\b/i.test(
+      statement,
+    );
+  return !hasAffirmativeDecision || explicitlyTentativeCommitment;
+}
+
 function sourceStatements(chunkText: string): string[] {
   return chunkText
     .split(/\r?\n|(?<=[.!?])\s+/)
@@ -66,7 +84,7 @@ export function acceptChunkStatedDecision(
   if (
     !trimmed ||
     NO_DECISION_PATTERN.test(trimmed) ||
-    NON_COMMITTAL_PATTERN.test(trimmed)
+    isNonCommittalFraming(trimmed)
   ) {
     return "";
   }
@@ -74,22 +92,48 @@ export function acceptChunkStatedDecision(
   const groundedAffirmativeStatement = sourceStatements(chunkText).find(
     (statement) =>
       !NO_DECISION_PATTERN.test(statement) &&
-      !NON_COMMITTAL_PATTERN.test(statement) &&
+      !isNonCommittalFraming(statement) &&
       AFFIRMATIVE_DECISION_PATTERN.test(statement) &&
-      candidateIsGrounded(trimmed, statement),
+      candidateMatchesStatement(trimmed, statement),
   );
 
-  return groundedAffirmativeStatement ? trimmed : "";
+  return groundedAffirmativeStatement ?? "";
+}
+
+export function areCompatibleRepeatedDecisions(a: string, b: string): boolean {
+  const aTokens = contentTokens(a);
+  const bTokens = contentTokens(b);
+  return (
+    aTokens.size === bTokens.size &&
+    [...aTokens].every((token) => bTokens.has(token))
+  );
 }
 
 export function areDirectlyConflictingDecisions(a: string, b: string): boolean {
-  if (NEGATIVE_ACTION_PATTERN.test(a) === NEGATIVE_ACTION_PATTERN.test(b)) {
-    return false;
-  }
-
   const aTokens = contentTokens(a);
   const bTokens = contentTokens(b);
-  const shared = [...aTokens].filter((token) => bTokens.has(token));
-  const smallerSize = Math.min(aTokens.size, bTokens.size);
-  return smallerSize > 0 && shared.length / smallerSize >= 0.5;
+  const aNegative = NEGATIVE_ACTION_PATTERN.test(a);
+  const bNegative = NEGATIVE_ACTION_PATTERN.test(b);
+  const aComparable = new Set([...aTokens].filter((token) => token !== "not" && token !== "do"));
+  const bComparable = new Set([...bTokens].filter((token) => token !== "not" && token !== "do"));
+  const shared = [...aComparable].filter((token) => bComparable.has(token));
+  if (aNegative !== bNegative) {
+    const smallerSize = Math.min(aComparable.size, bComparable.size);
+    return smallerSize > 0 && shared.length / smallerSize >= 0.5;
+  }
+
+  const sharedAction = shared.some((token) => DECISION_ACTION_TOKENS.has(token));
+  const aOnly = [...aComparable].filter((token) => !bComparable.has(token));
+  const bOnly = [...bComparable].filter((token) => !aComparable.has(token));
+  if (
+    sharedAction &&
+    aComparable.size <= 3 &&
+    bComparable.size <= 3 &&
+    aOnly.length === 1 &&
+    bOnly.length === 1
+  ) {
+    return true;
+  }
+
+  return false;
 }
