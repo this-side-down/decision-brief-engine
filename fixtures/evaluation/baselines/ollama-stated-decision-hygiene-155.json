@@ -1,11 +1,11 @@
 {
   "issue": 155,
-  "implementationCommit": "0999429028e1828ff256593e5352e66187b16be2",
+  "implementationCommit": "3ac7bbd0f61ce2b7e51a4dd507fb9759a35df266",
   "model": "qwen3:4b",
-  "recordedAt": "2026-07-15T06:46:30Z",
+  "recordedAt": "2026-07-15T07:36:15Z",
   "acceptanceRuns": [
     {
-      "runId": "pipeline-2026-07-15T06-41-46-386Z",
+      "runId": "pipeline-2026-07-15T07-29-29-837Z",
       "platform-rearchitecture-review": {
         "sourceCoverageComplete": true,
         "chunkCount": 5,
@@ -19,14 +19,14 @@
         "sourceCoverageComplete": true,
         "chunkCount": 6,
         "totalChunkRetries": 0,
-        "statedDecision": "April 14 limited pilot, 12 accounts, May 28 expansion if 95% SLA readiness clears",
+        "statedDecision": "Decision captured: April 14 limited pilot, 12 accounts, May 28 expansion if 95% SLA readiness clears.",
         "inventedStatedDecisionFinding": null,
         "captureLayerSchemaPass": true,
         "captureLayerStructuralReadinessPass": true
       }
     },
     {
-      "runId": "pipeline-2026-07-15T06-44-00-348Z",
+      "runId": "pipeline-2026-07-15T07-33-13-982Z",
       "platform-rearchitecture-review": {
         "sourceCoverageComplete": true,
         "chunkCount": 5,
@@ -40,7 +40,7 @@
         "sourceCoverageComplete": true,
         "chunkCount": 6,
         "totalChunkRetries": 0,
-        "statedDecision": "April 14 limited pilot, 12 accounts, May 28 expansion if 95% SLA readiness clears",
+        "statedDecision": "Decision captured: April 14 limited pilot, 12 accounts, May 28 expansion if 95% SLA readiness clears.",
         "inventedStatedDecisionFinding": null,
         "captureLayerSchemaPass": true,
         "captureLayerStructuralReadinessPass": true
@@ -62,10 +62,11 @@
     ]
   },
   "validation": {
-    "tests": "55 files, 534 tests passed",
+    "tests": "55 files, 543 tests passed",
     "typecheck": "passed",
     "build": "passed with existing bundle-size warning",
     "mockPipeline": "10 cases completed without infrastructure failure",
+    "ollamaRun1DownstreamNote": "Regional Capture Layer passed every #155 gate before the out-of-scope Decision Brief request timed out after 120000ms.",
     "ollamaHealth": "endpoint, qwen3:4b availability, and generation smoke test passed; script then exited nonzero on a Windows libuv handle-closing assertion"
   }
 }
