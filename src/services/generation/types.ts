@@ -9,6 +9,8 @@ export type GenerateCaptureLayerInput = {
   briefTypeGuidance: BriefTypeGuidance;
   captureLayerFields: string[];
   sourceLabel?: string;
+  /** Bounded quality-retry findings; never contains proposed replacement wording. */
+  captureQualityRetryFeedback?: string[];
 };
 
 export type GenerateDecisionBriefInput = {

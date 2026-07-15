@@ -93,6 +93,19 @@ export function buildCaptureLayerPrompt(
           "Return only valid JSON with all required fields. Use string values for text fields and arrays of strings for list fields. confidence must be High, Medium, or Low.",
         ];
 
+  const retryInstructions = input.captureQualityRetryFeedback?.length
+    ? [
+        "",
+        "The previous Capture Layer failed next-step grounding quality validation.",
+        "Unsupported suggested_next_steps:",
+        ...input.captureQualityRetryFeedback.map((finding) => `- ${finding}`),
+        "Return a corrected full Capture Layer. Keep valid next steps in their original order.",
+        "For each unsupported step, preserve material source-specific actors, action objects, subjects, timing, conditions, dependencies, triggers, risks, or unresolved facts from the raw input.",
+        "Do not invent details, silently remove a step, or use generic process wording as a substitute for source-specific conditions.",
+        "No replacement wording is supplied; recover specificity only from the raw input.",
+      ]
+    : [];
+
   return [
     "You are a decision capture analyst. Your job is to convert messy source material into a structured Capture Layer that preserves facts, inference, ambiguity, missing context, tensions, and decision-relevant next steps. Do not write the final Decision Brief.",
     "",
@@ -105,6 +118,8 @@ export function buildCaptureLayerPrompt(
     "",
     ...shapeInstructions,
     "Separate stated facts from inference. Preserve ambiguity instead of flattening it. Do not invent missing facts.",
+    "Every suggested_next_steps item must retain enough source-specific detail to connect honestly to evidence, assumptions, risks, constraints, tensions, options considered, or missing context. Generic process terms or the broad decision topic are not sufficient grounding.",
+    ...retryInstructions,
     NO_REASONING_INSTRUCTION,
     "",
     sourceLabelLine + "Raw input:",
@@ -120,12 +135,24 @@ export function buildChunkExtractionPrompt(input: ChunkExtractionInput): string 
     ? `Source label: ${input.sourceLabel}\n`
     : "";
 
+  const qualityRetry = input.captureQualityRetryFeedback?.length
+    ? [
+        "This is the one bounded Capture Layer quality retry.",
+        "The prior merged Capture Layer contained unsupported next steps:",
+        ...input.captureQualityRetryFeedback.map((step) => `- ${step}`),
+        "If the current chunk contains the source for one of these actions, preserve its material actor, object, timing, condition, dependency, trigger, risk, or unresolved fact.",
+        "Do not propose replacement wording, invent details, or emit generic process language.",
+        "",
+      ]
+    : [];
+
   return [
     "You are a decision capture analyst extracting chunk-local decision signals from a long source document.",
     "Your job is to convert only the current chunk into structured partial signals. Do not write a Decision Brief.",
     "Separate stated facts from inference. Preserve ambiguity, conflicts, and unresolved terminology.",
     "Do not invent a stated_decision unless the chunk contains an explicit final decision statement.",
     "Do not infer stated_decision from recommendations, preferences, or tentative alignment.",
+    ...qualityRetry,
     "",
     `Brief type: ${input.briefType.id}`,
     "Brief type guidance:",
