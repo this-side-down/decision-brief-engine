@@ -290,6 +290,36 @@ export function buildDecisionBriefSectionScaffoldPrompt(
   ].join("\n");
 }
 
+export type StageACorrectionPromptField = {
+  field: string;
+  section: string;
+  body: string;
+  findings: string[];
+};
+
+export function buildDecisionBriefTargetedCorrectionPrompt(
+  fields: readonly StageACorrectionPromptField[],
+): string {
+  return [
+    "You are correcting only the failing Decision Brief section bodies listed below.",
+    `Return valid JSON with exactly these fields and no others: ${fields.map((item) => item.field).join(", ")}.`,
+    "Preserve supported meaning, material facts, conditions, and qualifications in each body.",
+    "Do not add unsupported facts. Use genuine sentences and Markdown list items, not arbitrary soft line breaks.",
+    "Summary must be at most 60 words. Every prose sentence or list item must be at most 35 words.",
+    "",
+    ...fields.flatMap((item) => [
+      `Field: ${item.field}`,
+      `Canonical section: ${item.section}`,
+      "Current failing body:",
+      item.body,
+      "Findings:",
+      ...item.findings.map((finding) => `- ${finding}`),
+      "",
+    ]),
+    NO_REASONING_INSTRUCTION,
+  ].join("\n");
+}
+
 export type DecisionBriefPromptMode = "legacy" | "structured_response" | "markdown_only";
 
 const DECISION_BRIEF_RESULT_SCHEMA = JSON.stringify(

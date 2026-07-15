@@ -142,7 +142,8 @@ export function formatMarkdownOnlyAcceptanceFindingLines(
 
   for (const failure of findings.writingHardFailures) {
     const excerpt = failure.excerpt ? ` — "${failure.excerpt}"` : "";
-    lines.push(`Writing rule ${failure.ruleId}: ${failure.message}${excerpt}`);
+    const section = failure.section ? ` in ${failure.section}` : "";
+    lines.push(`Writing rule ${failure.ruleId}${section}: ${failure.message}${excerpt}`);
   }
 
   for (const finding of findings.placeholderFindings) {

@@ -3,7 +3,7 @@ import type { CaptureLayer } from "../../types/captureLayer";
 import { DecisionBriefContractError } from "./decisionBriefContractErrors";
 import { splitOverlongRecommendation } from "./recommendationSourceBinding";
 
-const FIELD_NAMES = [
+export const STAGE_A_SECTION_FIELD_NAMES = [
   "summary",
   "decisionContext",
   "optionsConsidered",
@@ -13,6 +13,7 @@ const FIELD_NAMES = [
   "suggestedNextSteps",
   "confidence",
 ] as const;
+export type StageASectionField = (typeof STAGE_A_SECTION_FIELD_NAMES)[number];
 
 function normalizePunctuation(body: string): string {
   return body
@@ -27,10 +28,10 @@ function normalizePunctuation(body: string): string {
     .join("\n\n");
 }
 
-export function parseDecisionBriefSectionsJson(
+function parseExactStringRecord(
   rawText: string,
-  options: { captureLayer?: CaptureLayer } = {},
-): string {
+  expectedFields: readonly string[],
+): Record<string, string> {
   let value: unknown;
   try {
     value = JSON.parse(rawText);
@@ -42,15 +43,35 @@ export function parseDecisionBriefSectionsJson(
   }
   const record = value as Record<string, unknown>;
   const actualKeys = Object.keys(record).sort();
-  const expectedKeys = [...FIELD_NAMES].sort();
+  const expectedKeys = [...expectedFields].sort();
   if (JSON.stringify(actualKeys) !== JSON.stringify(expectedKeys)) {
-    throw new DecisionBriefContractError("Decision Brief section scaffold must contain exactly eight required fields.");
+    const countLabel = expectedFields.length === 8 ? "eight" : String(expectedFields.length);
+    throw new DecisionBriefContractError(
+      `Decision Brief section scaffold must contain exactly ${countLabel} required fields.`,
+    );
   }
-  const bodies = FIELD_NAMES.map((field, index) => {
+  return Object.fromEntries(expectedFields.map((field) => {
     const body = record[field];
     if (typeof body !== "string") {
       throw new DecisionBriefContractError(`Decision Brief section field ${field} must be a string.`);
     }
+    return [field, normalizePunctuation(body)];
+  }));
+}
+
+export function parseStageACorrectionFieldsJson(
+  rawText: string,
+  fields: readonly StageASectionField[],
+): Partial<Record<StageASectionField, string>> {
+  return parseExactStringRecord(rawText, fields);
+}
+
+export function assembleDecisionBriefSectionBodies(
+  sectionBodies: Record<StageASectionField, string>,
+  options: { captureLayer?: CaptureLayer } = {},
+): string {
+  const bodies = STAGE_A_SECTION_FIELD_NAMES.map((field, index) => {
+    const body = sectionBodies[field];
     const heading = DECISION_BRIEF_REQUIRED_SECTIONS[index];
     if (heading === "Recommendation" && options.captureLayer?.recommendation_candidate) {
       return splitOverlongRecommendation(
@@ -60,7 +81,7 @@ export function parseDecisionBriefSectionsJson(
     if (heading === "Suggested Next Steps" && options.captureLayer) {
       return options.captureLayer.suggested_next_steps.map((step) => `- ${step}`).join("\n");
     }
-    return normalizePunctuation(body);
+    return body;
   });
   return [
     "# Decision Brief",
@@ -71,4 +92,15 @@ export function parseDecisionBriefSectionsJson(
       "",
     ]),
   ].join("\n").trimEnd();
+}
+
+export function parseDecisionBriefSectionsJson(
+  rawText: string,
+  options: { captureLayer?: CaptureLayer } = {},
+): string {
+  const bodies = parseExactStringRecord(
+    rawText,
+    STAGE_A_SECTION_FIELD_NAMES,
+  ) as Record<StageASectionField, string>;
+  return assembleDecisionBriefSectionBodies(bodies, options);
 }

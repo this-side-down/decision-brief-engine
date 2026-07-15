@@ -26,6 +26,7 @@ export type MarkdownAttemptDiagnostic = {
   validatorFindingLines: string[];
   outputLength: number;
   possibleTruncation: boolean;
+  requestedCorrectionFields?: string[];
 };
 
 export type DecisionArtifactDiagnostics = {

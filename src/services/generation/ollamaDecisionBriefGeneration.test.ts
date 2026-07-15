@@ -122,6 +122,19 @@ function markdownOnlyEnvelope(markdown: string): string {
   });
 }
 
+function targetedEnvelope(markdown: string, fields: string[]): string {
+  const sections = parseDecisionBriefSections(markdown);
+  const fieldToSection: Record<string, string> = {
+    summary: "Summary", decisionContext: "Decision Context",
+    optionsConsidered: "Options Considered", risksAndConstraints: "Risks and Constraints",
+    openQuestions: "Open Questions", confidence: "Confidence",
+  };
+  return JSON.stringify(Object.fromEntries(fields.map((field) => [
+    field,
+    sections.get(fieldToSection[field]) ?? "",
+  ])));
+}
+
 function createDiagnosticsHolder(): DecisionArtifactDiagnosticsHolder {
   return { value: null };
 }
@@ -176,7 +189,7 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
   it("retries once when a required section is missing, then succeeds: records attempt count 2 and the retry reason", async () => {
     mockOllamaGenerate
       .mockResolvedValueOnce(markdownOnlyEnvelope(buildValidMarkdown({ omitRisksSection: true })))
-      .mockResolvedValueOnce(markdownOnlyEnvelope(buildValidMarkdown()));
+      .mockResolvedValueOnce(targetedEnvelope(buildValidMarkdown(), ["risksAndConstraints"]));
     const diagnostics = createDiagnosticsHolder();
 
     const result = await generateOllamaDecisionBrief(baseInput, { diagnostics });
@@ -194,7 +207,7 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
       .mockResolvedValueOnce(
         markdownOnlyEnvelope(buildValidMarkdown({ recommendation: "Do something unrelated instead." })),
       )
-      .mockResolvedValueOnce(markdownOnlyEnvelope(buildValidMarkdown()));
+      .mockResolvedValueOnce(targetedEnvelope(buildValidMarkdown(), ["risksAndConstraints"]));
     const diagnostics = createDiagnosticsHolder();
 
     const result = await generateOllamaDecisionBrief(baseInput, { diagnostics });
@@ -209,7 +222,7 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
       .mockResolvedValueOnce(
         markdownOnlyEnvelope(buildValidMarkdown({ nextSteps: ["A completely different plan."] })),
       )
-      .mockResolvedValueOnce(markdownOnlyEnvelope(buildValidMarkdown()));
+      .mockResolvedValueOnce(targetedEnvelope(buildValidMarkdown(), ["risksAndConstraints"]));
     const diagnostics = createDiagnosticsHolder();
 
     const result = await generateOllamaDecisionBrief(baseInput, { diagnostics });
@@ -227,7 +240,7 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
           buildValidMarkdown({ riskSentence: "Moving forward, the platform team may slip." }),
         ),
       )
-      .mockResolvedValueOnce(markdownOnlyEnvelope(buildValidMarkdown()));
+      .mockResolvedValueOnce(targetedEnvelope(buildValidMarkdown(), ["risksAndConstraints"]));
     const diagnostics = createDiagnosticsHolder();
 
     const result = await generateOllamaDecisionBrief(baseInput, { diagnostics });
@@ -241,12 +254,12 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
     const firstMarkdown = buildValidMarkdown({ omitRisksSection: true });
     mockOllamaGenerate
       .mockResolvedValueOnce(markdownOnlyEnvelope(firstMarkdown))
-      .mockResolvedValueOnce(markdownOnlyEnvelope(buildValidMarkdown()));
+      .mockResolvedValueOnce(targetedEnvelope(buildValidMarkdown(), ["risksAndConstraints"]));
 
     await generateOllamaDecisionBrief(baseInput);
 
     const retryPrompt = mockOllamaGenerate.mock.calls[1]?.[0]?.prompt as string;
-    expect(retryPrompt).toContain("Empty required sections");
+    expect(retryPrompt).toContain("Empty required section: Risks and Constraints");
     expect(retryPrompt.toLowerCase()).toContain("risks and constraints");
     // The raw rejected Markdown body must not be echoed back wholesale.
     expect(retryPrompt).not.toContain(firstMarkdown);
@@ -260,20 +273,91 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
     );
     mockOllamaGenerate
       .mockResolvedValueOnce(markdownOnlyEnvelope(firstMarkdown))
-      .mockResolvedValueOnce(markdownOnlyEnvelope(buildValidMarkdown()));
-    await generateOllamaDecisionBrief(baseInput);
+      .mockResolvedValueOnce(targetedEnvelope(buildValidMarkdown(), ["summary"]));
+    const diagnostics = createDiagnosticsHolder();
+    const result = await generateOllamaDecisionBrief(baseInput, { diagnostics });
     const retryPrompt = mockOllamaGenerate.mock.calls[1]?.[0]?.prompt as string;
     expect(retryPrompt).toContain(longSummary);
-    expect(retryPrompt).toContain("at most 50 total words");
-    expect(retryPrompt).toContain("Copy every non-failing field unchanged");
+    expect(retryPrompt).toContain("at most 60 words");
+    expect(retryPrompt).toContain("Field: summary");
+    expect(retryPrompt).not.toContain("Copy every non-failing field unchanged");
     expect(retryPrompt).not.toContain("Capture Layer JSON:");
     expect(retryPrompt).not.toContain(firstMarkdown);
+    expect(mockOllamaGenerate.mock.calls[1]?.[0]?.format).toMatchObject({
+      required: ["summary"],
+      properties: { summary: expect.any(Object) },
+    });
+    expect(Object.keys((mockOllamaGenerate.mock.calls[1]?.[0]?.format as any).properties)).toEqual(["summary"]);
+    expect(result.markdown).toContain("Senior engineers are needed on the hospital project");
+    expect(diagnostics.value?.markdownAttempts?.[1]?.requestedCorrectionFields).toEqual(["summary"]);
+  });
+
+  it("targets Decision Context with owning-section counts and preserves passing bodies", async () => {
+    const sentence = Array.from({ length: 36 }, (_, index) => `context${index + 1}`).join(" ");
+    const first = buildValidMarkdown().replace(
+      "Senior engineers are needed on the hospital project to hit the Q4 delivery date.",
+      sentence,
+    );
+    const corrected = buildValidMarkdown();
+    mockOllamaGenerate
+      .mockResolvedValueOnce(markdownOnlyEnvelope(first))
+      .mockResolvedValueOnce(targetedEnvelope(corrected, ["decisionContext"]));
+
+    const result = await generateOllamaDecisionBrief(baseInput);
+    const retry = mockOllamaGenerate.mock.calls[1]?.[0];
+    expect((retry?.format as any).required).toEqual(["decisionContext"]);
+    expect(retry?.prompt).toContain("Canonical section: Decision Context");
+    expect(retry?.prompt).toContain("36");
+    expect(retry?.prompt).toContain("35");
+    expect(retry?.prompt).not.toContain("The platform team may fall behind without senior engineers");
+    expect(retry?.prompt).not.toContain(captureLayer.recommendation_candidate);
+    expect(retry?.prompt).not.toContain(captureLayer.suggested_next_steps[0]);
+    expect(result.markdown).toContain("Engineering must staff the hospital project before the fixed Q4 deadline.");
+  });
+
+  it("requests exactly multiple failing model-owned fields", async () => {
+    const summary = Array.from({ length: 61 }, (_, index) => `summary${index}`).join(" ");
+    const context = Array.from({ length: 36 }, (_, index) => `context${index}`).join(" ");
+    const first = buildValidMarkdown()
+      .replace("Engineering must staff the hospital project before the fixed Q4 deadline.", summary)
+      .replace("Senior engineers are needed on the hospital project to hit the Q4 delivery date.", context);
+    mockOllamaGenerate
+      .mockResolvedValueOnce(markdownOnlyEnvelope(first))
+      .mockResolvedValueOnce(targetedEnvelope(buildValidMarkdown(), ["summary", "decisionContext"]));
+    await generateOllamaDecisionBrief(baseInput);
+    const format = mockOllamaGenerate.mock.calls[1]?.[0]?.format as any;
+    expect(format.required).toEqual(["summary", "decisionContext"]);
+    expect(Object.keys(format.properties)).toEqual(["summary", "decisionContext"]);
+    expect(format.properties).not.toHaveProperty("recommendation");
+    expect(format.properties).not.toHaveProperty("suggestedNextSteps");
+  });
+
+  it("terminates when the targeted response fails its narrow schema", async () => {
+    const summary = Array.from({ length: 61 }, (_, index) => `summary${index}`).join(" ");
+    const first = buildValidMarkdown().replace(
+      "Engineering must staff the hospital project before the fixed Q4 deadline.",
+      summary,
+    );
+    const diagnostics = createDiagnosticsHolder();
+    mockOllamaGenerate
+      .mockResolvedValueOnce(markdownOnlyEnvelope(first))
+      .mockResolvedValueOnce(JSON.stringify({ summary: "short", confidence: "extra" }));
+    await expect(generateOllamaDecisionBrief(baseInput, { diagnostics })).rejects.toBeInstanceOf(
+      StageAMarkdownGenerationError,
+    );
+    expect(mockOllamaGenerate).toHaveBeenCalledTimes(2);
+    expect(diagnostics.value?.markdownAttempts?.[1]).toMatchObject({
+      outcome: "parse_or_schema_failure",
+      requestedCorrectionFields: ["summary"],
+    });
   });
 
   it("terminal semantic failure after two attempts records attempt count 2 and retry count 1 (not 0)", async () => {
-    mockOllamaGenerate.mockResolvedValue(
-      markdownOnlyEnvelope(buildValidMarkdown({ omitRisksSection: true })),
-    );
+    mockOllamaGenerate
+      .mockResolvedValueOnce(markdownOnlyEnvelope(buildValidMarkdown({ omitRisksSection: true })))
+      .mockResolvedValueOnce(JSON.stringify({ risksAndConstraints: "" }))
+      .mockResolvedValueOnce(markdownOnlyEnvelope(buildValidMarkdown({ omitRisksSection: true })))
+      .mockResolvedValueOnce(JSON.stringify({ risksAndConstraints: "" }));
     const diagnostics = createDiagnosticsHolder();
 
     await expect(generateOllamaDecisionBrief(baseInput, { diagnostics })).rejects.toBeInstanceOf(
@@ -301,7 +385,7 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
     expect(diagnostics.value?.markdownAttempts?.every((attempt) => attempt.validatorFindingLines.length > 0)).toBe(true);
   });
 
-  it("terminal parse/schema failure after two attempts records attempt count 2", async () => {
+  it("terminal initial parse/schema failure does not make an ineffective retry", async () => {
     mockOllamaGenerate.mockResolvedValue("not valid json at all");
     const diagnostics = createDiagnosticsHolder();
 
@@ -309,12 +393,12 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
       StageAMarkdownGenerationError,
     );
 
-    expect(mockOllamaGenerate).toHaveBeenCalledTimes(2);
+    expect(mockOllamaGenerate).toHaveBeenCalledTimes(1);
     expect(diagnostics.value).toMatchObject({
       strategy: "split_stage",
-      markdownAttemptCount: 2,
-      briefRetryCount: 1,
-      totalModelCallCount: 2,
+      markdownAttemptCount: 1,
+      briefRetryCount: 0,
+      totalModelCallCount: 1,
       markdownRetryReasonCategory: "parse_or_schema",
     });
   });
@@ -388,7 +472,7 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
         return markdownOnlyEnvelope(buildValidMarkdown({ omitRisksSection: true }));
       })
       .mockResolvedValueOnce(markdownOnlyEnvelope(buildValidMarkdown()))
-      .mockResolvedValueOnce(markdownOnlyEnvelope(buildValidMarkdown()));
+      .mockResolvedValueOnce(targetedEnvelope(buildValidMarkdown(), ["risksAndConstraints"]));
 
     const firstDiagnostics = createDiagnosticsHolder();
     const secondDiagnostics = createDiagnosticsHolder();

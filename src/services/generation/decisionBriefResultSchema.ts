@@ -116,6 +116,21 @@ export const OLLAMA_STAGE_A_SECTIONS_JSON_SCHEMA = {
   required: Object.keys(REQUIRED_STAGE_A_SECTION_PROPERTIES),
 } as const;
 
+export type OllamaStageASectionField = keyof typeof REQUIRED_STAGE_A_SECTION_PROPERTIES;
+
+export function buildOllamaStageACorrectionSchema(
+  fields: readonly OllamaStageASectionField[],
+): Record<string, unknown> {
+  return {
+    type: "object",
+    additionalProperties: false,
+    properties: Object.fromEntries(
+      fields.map((field) => [field, REQUIRED_STAGE_A_SECTION_PROPERTIES[field]]),
+    ),
+    required: [...fields],
+  };
+}
+
 /** Backward-compatible alias matching the prior WebGPU-module export name. */
 export const DECISION_BRIEF_MARKDOWN_ONLY_RESPONSE_SCHEMA_JSON =
   DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_JSON;

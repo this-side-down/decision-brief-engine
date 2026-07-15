@@ -15,10 +15,20 @@ import {
   formatMarkdownOnlyAcceptanceFindingLines,
   type MarkdownOnlyAcceptanceFailureCategory,
 } from "./decisionBriefMarkdownOnlyAcceptance";
-import { OLLAMA_STAGE_A_SECTIONS_JSON_SCHEMA } from "./decisionBriefResultSchema";
-import { parseDecisionBriefSectionsJson } from "./parseDecisionBriefSections";
+import {
+  buildOllamaStageACorrectionSchema,
+  OLLAMA_STAGE_A_SECTIONS_JSON_SCHEMA,
+  type OllamaStageASectionField,
+} from "./decisionBriefResultSchema";
+import {
+  assembleDecisionBriefSectionBodies,
+  parseDecisionBriefSectionsJson,
+  parseStageACorrectionFieldsJson,
+  type StageASectionField,
+} from "./parseDecisionBriefSections";
 import {
   buildDecisionBriefSectionScaffoldPrompt,
+  buildDecisionBriefTargetedCorrectionPrompt,
 } from "./prompts";
 import type {
   DecisionBriefResult,
@@ -64,11 +74,12 @@ function readStageAAttemptCount(error: unknown): number | null {
 
 async function requestMarkdownOnlyDecisionBrief(
   prompt: string,
+  format: Record<string, unknown> = OLLAMA_STAGE_A_SECTIONS_JSON_SCHEMA,
   signal?: AbortSignal,
 ): Promise<string> {
   return ollamaGenerate({
     prompt,
-    format: OLLAMA_STAGE_A_SECTIONS_JSON_SCHEMA,
+    format,
     temperature: 0,
     think: false,
     signal,
@@ -105,11 +116,66 @@ const SECTION_BODY_FIELDS = [
   ["confidence", "Confidence"],
 ] as const;
 
+const MODEL_OWNED_SECTION_TO_FIELD = new Map<string, OllamaStageASectionField>([
+  ["Summary", "summary"],
+  ["Decision Context", "decisionContext"],
+  ["Options Considered", "optionsConsidered"],
+  ["Risks and Constraints", "risksAndConstraints"],
+  ["Open Questions", "openQuestions"],
+  ["Confidence", "confidence"],
+]);
+
 function extractSectionBodyRecord(markdown: string): Record<string, string> {
   const sections = parseDecisionBriefSections(markdown);
   return Object.fromEntries(
     SECTION_BODY_FIELDS.map(([field, heading]) => [field, sections.get(heading) ?? ""]),
   );
+}
+
+function selectCorrectionFields(
+  acceptance: ReturnType<typeof evaluateDecisionBriefMarkdownOnlyAcceptance>,
+  bodies: Record<string, string>,
+): OllamaStageASectionField[] {
+  const selected = new Set<OllamaStageASectionField>();
+  for (const section of [
+    ...acceptance.detailedFindings.missingRequiredSections,
+    ...acceptance.detailedFindings.emptyRequiredSections,
+    ...acceptance.detailedFindings.writingHardFailures.map((finding) => {
+      if (finding.section) return finding.section;
+      const excerpt = finding.excerpt?.toLowerCase();
+      if (!excerpt) return "";
+      return SECTION_BODY_FIELDS.find(([field]) =>
+        bodies[field]?.toLowerCase().includes(excerpt),
+      )?.[1] ?? "";
+    }),
+  ]) {
+    const field = MODEL_OWNED_SECTION_TO_FIELD.get(section);
+    if (field) selected.add(field);
+  }
+  return [...selected];
+}
+
+function buildTargetedPromptFields(
+  fields: readonly OllamaStageASectionField[],
+  bodies: Record<string, string>,
+  acceptance: ReturnType<typeof evaluateDecisionBriefMarkdownOnlyAcceptance>,
+) {
+  return fields.map((field) => {
+    const section = SECTION_BODY_FIELDS.find(([candidate]) => candidate === field)?.[1] ?? field;
+    const findings = acceptance.detailedFindings.writingHardFailures
+      .filter((finding) =>
+        finding.section === section ||
+        (!finding.section && Boolean(finding.excerpt) && bodies[field]?.toLowerCase().includes(finding.excerpt!.toLowerCase())),
+      )
+      .map((finding) => `Writing rule ${finding.ruleId} in ${section}: ${finding.message}`);
+    if (acceptance.detailedFindings.missingRequiredSections.includes(section)) {
+      findings.push(`Missing required section: ${section}`);
+    }
+    if (acceptance.detailedFindings.emptyRequiredSections.includes(section)) {
+      findings.push(`Empty required section: ${section}`);
+    }
+    return { field, section, body: bodies[field] ?? "", findings };
+  });
 }
 
 /**
@@ -140,21 +206,27 @@ async function generateStageAMarkdown(
     "required_sections";
   const attemptDiagnostics: MarkdownAttemptDiagnostic[] = [];
   let lastRejectedSectionBodies: Record<string, string> | undefined;
+  let correctionFields: OllamaStageASectionField[] = [];
+  let firstAcceptance: ReturnType<typeof evaluateDecisionBriefMarkdownOnlyAcceptance> | null = null;
 
   for (let attempt = 0; attempt <= MAX_MARKDOWN_RETRIES; attempt += 1) {
-    const prompt =
-      attempt === 0
-        ? buildDecisionBriefSectionScaffoldPrompt(input)
-        : buildDecisionBriefSectionScaffoldPrompt(
-            input,
-            lastFindingLines,
-            lastRejectedSectionBodies,
-          );
+    const prompt = attempt === 0
+      ? buildDecisionBriefSectionScaffoldPrompt(input)
+      : buildDecisionBriefTargetedCorrectionPrompt(
+          buildTargetedPromptFields(
+            correctionFields,
+            lastRejectedSectionBodies!,
+            firstAcceptance!,
+          ),
+        );
+    const responseSchema = attempt === 0
+      ? OLLAMA_STAGE_A_SECTIONS_JSON_SCHEMA
+      : buildOllamaStageACorrectionSchema(correctionFields);
 
     let rawText: string;
 
     try {
-      rawText = await requestMarkdownOnlyDecisionBrief(prompt, signal);
+      rawText = await requestMarkdownOnlyDecisionBrief(prompt, responseSchema, signal);
     } catch (networkError) {
       // Cancellation, timeout, and infrastructure/network failures are
       // never retried: they propagate immediately, with the same identity
@@ -168,8 +240,17 @@ async function generateStageAMarkdown(
     let parsed: DecisionBriefResult;
 
     try {
+      const markdown = attempt === 0
+        ? parseDecisionBriefSectionsJson(rawText, { captureLayer: input.captureLayer })
+        : assembleDecisionBriefSectionBodies(
+            {
+              ...(lastRejectedSectionBodies as Record<StageASectionField, string>),
+              ...parseStageACorrectionFieldsJson(rawText, correctionFields),
+            },
+            { captureLayer: input.captureLayer },
+          );
       parsed = {
-        markdown: parseDecisionBriefSectionsJson(rawText, { captureLayer: input.captureLayer }),
+        markdown,
         decisionTrace: { entries: [], created_at: "" },
       };
     } catch (parseError) {
@@ -185,9 +266,10 @@ async function generateStageAMarkdown(
         validatorFindingLines: [message],
         outputLength: rawText.length,
         possibleTruncation: !rawText.trimEnd().endsWith("}"),
+        ...(attempt > 0 ? { requestedCorrectionFields: [...correctionFields] } : {}),
       });
 
-      if (attempt >= MAX_MARKDOWN_RETRIES) {
+      if (attempt >= MAX_MARKDOWN_RETRIES || attempt === 0) {
         throw new StageAMarkdownGenerationError({
           message,
           attemptCount: attempt + 1,
@@ -215,6 +297,7 @@ async function generateStageAMarkdown(
         validatorFindingLines: [],
         outputLength: rawText.length,
         possibleTruncation: false,
+        ...(attempt > 0 ? { requestedCorrectionFields: [...correctionFields] } : {}),
       });
       return {
         markdown: parsed.markdown,
@@ -233,6 +316,7 @@ async function generateStageAMarkdown(
       validatorFindingLines: findingLines,
       outputLength: rawText.length,
       possibleTruncation: false,
+      ...(attempt > 0 ? { requestedCorrectionFields: [...correctionFields] } : {}),
     });
 
     if (attempt >= MAX_MARKDOWN_RETRIES) {
@@ -247,7 +331,18 @@ async function generateStageAMarkdown(
 
     lastFindingLines = findingLines;
     lastRejectedSectionBodies = extractSectionBodyRecord(parsed.markdown);
+    firstAcceptance = acceptance;
+    correctionFields = selectCorrectionFields(acceptance, lastRejectedSectionBodies);
     lastRetryReasonCategory = acceptance.failureCategories[0] ?? "required_sections";
+    if (correctionFields.length === 0) {
+      throw new StageAMarkdownGenerationError({
+        message: "Decision Brief failed validation with no model-owned section eligible for targeted correction.",
+        attemptCount: 1,
+        retryReasonCategory: lastRetryReasonCategory,
+        markdownLatencyMs: Date.now() - started,
+        attemptDiagnostics,
+      });
+    }
   }
 
   // Unreachable: the loop above always returns or throws by the final
