@@ -29,6 +29,30 @@ describe("next-step basis constructability", () => {
   });
 
   it.each([
+    ["Confirm hospital staffing at the next call", "Monthly school review"],
+    ["Revisit hospital coverage at Thursday's client call", "School staffing review is monthly"],
+    ["Revisit workforce planning at the next meeting", "Quarterly finance review"],
+  ])("rejects unrelated scheduled checkpoints: step=%s constraint=%s", (step, constraint) => {
+    const capture = withStep(step, {
+      evidence: [], assumptions: [], risks: [], constraints: [constraint], tensions: [],
+      options_considered: [], missing_context: [],
+    });
+    expect(findUnsupportedNextSteps(capture)).toEqual([step]);
+  });
+
+  it("accepts compatible checkpoint vocabulary with a shared substantive subject", () => {
+    const step = "Confirm hospital staffing at the Thursday client call";
+    const constraint = "Hospital staffing must be named before the Thursday client call";
+    const capture = withStep(step, {
+      evidence: [], assumptions: [], risks: [], constraints: [constraint], tensions: [],
+      options_considered: [], missing_context: [],
+    });
+    expect(findConstructableNextStepBasis(step, capture)).toEqual([
+      { field: "constraints", item: constraint },
+    ]);
+  });
+
+  it.each([
     "Meet at the next meeting",
     "Review updated context",
     "Revisit the decision plan",

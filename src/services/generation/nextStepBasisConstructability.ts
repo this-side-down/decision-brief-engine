@@ -62,12 +62,26 @@ function overlaps(a: Set<string>, b: Set<string>): boolean {
 function hasScheduledCheckpointRelationship(step: string, basis: string): boolean {
   const stepAll = tokens(step, true);
   const basisAll = tokens(basis, true);
-  const stepHasEvent = [...stepAll].some((token) => SCHEDULE_EVENT_TERMS.has(token));
-  const basisHasEvent = [...basisAll].some((token) => SCHEDULE_EVENT_TERMS.has(token));
-  // Require a non-generic subject in the step as well as schedule language on both sides.
-  const hasSpecificSubject = tokens(step, false).size > 0;
-  const identifiesPlanningCheckpoint = stepAll.has("planning") && stepAll.has("meeting");
-  return stepHasEvent && basisHasEvent && (hasSpecificSubject || identifiesPlanningCheckpoint);
+  const stepSubjects = tokens(step, false);
+  const basisSubjects = tokens(basis, false);
+  const sharedCheckpointTerm = [...stepAll].some(
+    (token) => SCHEDULE_EVENT_TERMS.has(token) && basisAll.has(token),
+  );
+
+  if (overlaps(stepSubjects, basisSubjects) && sharedCheckpointTerm) {
+    return true;
+  }
+
+  // Workforce planning meetings and staffing reviews are two names for the
+  // same recurring staffing checkpoint. Keep this deliberately narrow: both
+  // domain phrases and their respective event nouns must be present.
+  return (
+    stepAll.has("workforce") &&
+    stepAll.has("planning") &&
+    stepAll.has("meeting") &&
+    basisAll.has("staffing") &&
+    basisAll.has("review")
+  );
 }
 
 export type NextStepBasisMatch = {
