@@ -130,6 +130,7 @@ export async function runLongInputCapture(
         fullSourceText: rawInputText,
         chunkCount: plan.chunks.length,
         signal: options.signal,
+        captureQualityRetryFeedback: input.captureQualityRetryFeedback,
       });
       partialResults.push(extraction.signals);
       chunkRetryCounts[chunk.id] = extraction.retryCount;

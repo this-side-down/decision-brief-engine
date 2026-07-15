@@ -6,7 +6,11 @@ import {
   PRODUCT_DECISION_BRIEF,
   STRATEGY_DECISION_BRIEF,
 } from "../../data/briefTypes";
-import { generateCaptureLayerForSession } from "../../services/generation/generateCaptureLayer";
+import {
+  CaptureLayerNextStepQualityError,
+  generateCaptureLayerForSession,
+  type CaptureLayerQualityDiagnostics,
+} from "../../services/generation/generateCaptureLayer";
 import { mockModelAdapter } from "../../services/generation/mockModelAdapter";
 import { ollamaModelAdapter } from "../../services/generation/ollamaModelAdapter";
 import type {
@@ -312,6 +316,9 @@ export async function runSinglePipelineEval(options: {
   const longInputDiagnosticsHolder: {
     value: SessionLongInputDiagnostics | null;
   } = { value: null };
+  const captureQualityDiagnosticsHolder: {
+    value: CaptureLayerQualityDiagnostics | null;
+  } = { value: null };
   try {
     captureLayer = await generateCaptureLayerForSession({
       rawInputText: loaded.rawInputText,
@@ -320,13 +327,15 @@ export async function runSinglePipelineEval(options: {
       adapter,
       mode: options.mode,
       longInputDiagnostics: longInputDiagnosticsHolder,
+      qualityDiagnostics: captureQualityDiagnosticsHolder,
     });
     captureLatencyMs = Date.now() - captureStarted;
   } catch (error) {
     captureLatencyMs = Date.now() - captureStarted;
     captureError = error instanceof Error ? error.message : String(error);
-    rawErrorCategory =
-      options.mode === "ollama" &&
+    rawErrorCategory = error instanceof CaptureLayerNextStepQualityError
+      ? "capture_quality"
+      : options.mode === "ollama" &&
       /fetch failed|ECONNREFUSED|timed out|404|not found|Ollama/i.test(
         captureError,
       )
@@ -518,8 +527,10 @@ export async function runSinglePipelineEval(options: {
     captureLayerReadinessFindings: structural.checks,
     inventedStatedDecisionFinding: invented.finding,
     captureLayerRetryCount:
-      longInputDiagnosticsHolder.value?.totalChunkRetries ?? 0,
+      (longInputDiagnosticsHolder.value?.totalChunkRetries ?? 0) +
+      Math.max(0, (captureQualityDiagnosticsHolder.value?.attemptCount ?? 1) - 1),
     captureLayerLatencyMs: captureLatencyMs,
+    captureLayerQualityDiagnostics: captureQualityDiagnosticsHolder.value,
     decisionBriefAttempted,
     decisionBriefGenerationSuccess: briefGenerationSuccess,
     decisionBriefLatencyMs: briefLatencyMs,

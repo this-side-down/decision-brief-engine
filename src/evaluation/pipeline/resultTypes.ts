@@ -20,6 +20,7 @@ export type PipelineErrorCategory =
   | "capture_generation"
   | "capture_parse"
   | "capture_schema"
+  | "capture_quality"
   | "brief_generation"
   | "trace_parse"
   | "trace_schema"
@@ -96,6 +97,11 @@ export type PipelineEvalResult = {
   inventedStatedDecisionFinding: string | null;
   captureLayerRetryCount: number;
   captureLayerLatencyMs: number | null;
+  captureLayerQualityDiagnostics?: {
+    attemptCount: number;
+    retryCategory: "none" | "unsupported_next_steps";
+    attempts: Array<{ attemptNumber: number; unsupportedNextSteps: string[] }>;
+  } | null;
   decisionBriefAttempted: boolean;
   decisionBriefGenerationSuccess: boolean;
   decisionBriefLatencyMs: number | null;

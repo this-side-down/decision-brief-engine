@@ -79,6 +79,7 @@ export type ChunkExtractionInput = {
   fullSourceText: string;
   chunkCount: number;
   signal?: AbortSignal;
+  captureQualityRetryFeedback?: string[];
 };
 
 export type ChunkExtractionOutput = {

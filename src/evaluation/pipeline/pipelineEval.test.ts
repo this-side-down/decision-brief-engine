@@ -408,6 +408,56 @@ describe("failed Capture Layer stage", () => {
       mockModelAdapter.generateCaptureLayer = original;
     }
   });
+
+  it("records terminal next-step quality diagnostics and never calls Stage A", async () => {
+    const { mockModelAdapter } = await import(
+      "../../services/generation/mockModelAdapter"
+    );
+    const originalCapture = mockModelAdapter.generateCaptureLayer;
+    const originalBrief = mockModelAdapter.generateDecisionBrief;
+    let captureCalls = 0;
+    let briefCalls = 0;
+    mockModelAdapter.generateCaptureLayer = async (input) => {
+      captureCalls += 1;
+      const capture = await originalCapture(input);
+      return {
+        ...capture,
+        suggested_next_steps: [
+          "Revisit workforce allocation at next meeting with updated context",
+        ],
+      };
+    };
+    mockModelAdapter.generateDecisionBrief = async (...args) => {
+      briefCalls += 1;
+      return originalBrief(...args);
+    };
+
+    try {
+      const result = await runSinglePipelineEval({
+        mode: "mock",
+        caseId: "household-move-planning",
+        repoRoot,
+        runId: "test-capture-quality-fail",
+        buildCommit: "test",
+      });
+
+      expect(captureCalls).toBe(2);
+      expect(briefCalls).toBe(0);
+      expect(result.rawErrorCategory).toBe("capture_quality");
+      expect(result.decisionBriefAttempted).toBe(false);
+      expect(result.captureLayerQualityDiagnostics).toMatchObject({
+        attemptCount: 2,
+        retryCategory: "unsupported_next_steps",
+        attempts: [
+          { unsupportedNextSteps: ["Revisit workforce allocation at next meeting with updated context"] },
+          { unsupportedNextSteps: ["Revisit workforce allocation at next meeting with updated context"] },
+        ],
+      });
+    } finally {
+      mockModelAdapter.generateCaptureLayer = originalCapture;
+      mockModelAdapter.generateDecisionBrief = originalBrief;
+    }
+  });
 });
 
 describe("Decision Trace and writing failure classification", () => {
