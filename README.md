@@ -7,7 +7,7 @@ Instead of simply summarizing text, it captures underlying intent, decisions, ri
 ## Status
 
 **Current release:** v0.3.2 — Experimental Browser Inference Metadata Correction  
-**Public demo:** https://decision-brief-engine.vercel.app/  
+**Public demo:** https://dbe.this-side-down.com/  
 **Release notes:** https://github.com/this-side-down/decision-brief-engine/releases/tag/v0.3.2
 
 The hosted demo runs in Mock mode by default for reliability. Local Ollama with `qwen3:4b` remains the supported real-generation path for long inputs. Experimental browser inference can be enabled explicitly for short-to-medium notes using WebGPU and WebLLM with `Qwen3.5-4B-q4f16_1-MLC`.
