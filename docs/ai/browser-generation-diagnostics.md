@@ -1,6 +1,18 @@
-# Browser generation diagnostics (#141)
+# Browser generation diagnostics (#141, #149)
 
 Local-only evidence capture for Live in browser Decision Brief quality investigations. This slice is **diagnostics only** — it does not change generation behavior, prompts, schemas, token budgets, retries, validators, or rollout posture.
+
+## Browser input scope (v0.3.1)
+
+Experimental browser inference currently supports **short-to-medium notes only**. Long-form browser inference is out of scope for v0.3.1.
+
+The Example Scenario dropdown exposes only browser-compatible gallery examples:
+
+- Household Move Planning
+- Q4 Workforce Allocation
+- Local Inference Setup Flow
+
+**Platform Re-Architecture Review** remains preserved under `fixtures/examples/platform-rearchitecture-review/` for Mock, Local Ollama, pipeline evaluation, and long-input tests, but it is **not** exposed in the public browser-compatible gallery because its input exceeds the current browser input budget. Future browser long-input support is tracked in [#166](https://github.com/this-side-down/decision-brief-engine/issues/166).
 
 ## Enable raw-output capture
 
@@ -10,6 +22,17 @@ Local-only evidence capture for Live in browser Decision Brief quality investiga
 VITE_ENABLE_WEBGPU_INFERENCE=true
 VITE_BROWSER_GENERATION_DIAGNOSTICS=true
 ```
+
+For the bounded #149 vertical slice, also set:
+
+```bash
+VITE_WEBGPU_MODEL_ID=Qwen3.5-4B-q4f16_1-MLC
+VITE_WEBGPU_SPLIT_STAGE=true
+```
+
+This selects the preferred candidate only for the explicitly enabled local
+run. The public WebGPU default remains unchanged until a real browser/GPU load
+and complete artifact succeed.
 
 2. Restart the dev server or preview build so Vite loads the flag.
 
@@ -60,6 +83,41 @@ Structured completion diagnostics (nullable when WebLLM omits them):
 | `webLlmVersion` | `string` | Installed `@mlc-ai/web-llm` version |
 | `generationStage` | `capture \| capture_retry \| brief \| brief_retry` | Pipeline stage |
 | `attemptNumber` | `number` | `1` or `2` |
+| `generationDurationMs` | `number \| null` | Adapter-observed wall time |
+| `endToEndLatencySeconds` | `number \| null` | WebLLM usage latency |
+| `prefillTokensPerSecond` | `number \| null` | WebLLM usage throughput |
+| `decodeTokensPerSecond` | `number \| null` | WebLLM usage throughput |
+
+With diagnostics enabled, the browser also appends sanitized model-load and
+completion events to:
+
+```text
+globalThis.__DECISION_BRIEF_ENGINE_WEBGPU_DIAGNOSTICS__
+```
+
+Model-load events record the exact model ID, package version, weights URL,
+model-library URL, approximate download bytes, estimated VRAM, cache status,
+duration, outcome, and a typed failure message. They never contain prompts,
+raw notes, chain-of-thought, or scratchpad content. Structured raw responses
+remain in the local-only artifact files described above.
+
+## #149 ordinary-size vertical-slice procedure
+
+1. Use Chrome or Edge with WebGPU enabled on a device with at least 4 GB of
+   practical GPU memory available to the browser.
+2. Start the local app with the four environment flags above.
+3. Select **Household Move Planning**, then opt into **Live in browser**.
+4. Record the first model-load event, including `wasCached: false` and load
+   duration. Cancel once during a separate run to verify no stale ready state.
+5. Unload or reload the page, repeat the load, and record the cached timing.
+6. Generate the Capture Layer and Decision Brief. The browser path uses the
+   v0.3 split-stage contract: eight section bodies, at most one targeted
+   correction of model-owned failing fields, deterministic Recommendation,
+   Suggested Next Steps, and Decision Trace.
+7. Confirm the complete artifact appears without a typed quality failure and
+   inspect Run Details plus the local diagnostic files.
+8. If Qwen3.5-4B cannot load, change only `VITE_WEBGPU_MODEL_ID` to
+   `Qwen3-4B-q4f16_1-MLC` for the single allowed fallback attempt.
 
 Semantic acceptance adds concrete findings alongside category slugs: missing required section names, Decision Trace readiness check details, alignment mismatches with source statements, writing-rule IDs with safe excerpts, and placeholder field paths.
 

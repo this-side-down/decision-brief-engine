@@ -28,9 +28,10 @@ import {
   WEBGPU_CAPTURE_LAYER_SCHEMA_VERSION,
 } from "./webGpuGenerationSchemas";
 import { WEBGPU_DECISION_BRIEF_PROMPT_MODE_ENV } from "./webGpuDecisionBriefExperiment";
-import { getWebGpuEvalContext, createWebGpuModelAdapter } from "./webGpuModelAdapter";
+import { getWebGpuEvalContext, createWebGpuModelAdapter, normalizeWebGpuStructuredParserInput } from "./webGpuModelAdapter";
 import { BROWSER_GENERATION_DIAGNOSTICS_ENV } from "./browserGenerationDiagnostics";
 import * as browserGenerationLocalCapture from "./browserGenerationLocalCapture";
+import { parseDecisionBriefSections } from "../../evaluation/decisionBriefWritingChecks";
 
 type MockCreateHandler = (
   request: ChatCompletionRequest,
@@ -106,6 +107,56 @@ const VALID_BRIEF_ENVELOPE = {
   markdown: Q4_BRIEF_MARKDOWN,
   decisionTrace: q4DecisionTrace,
 };
+
+function buildStageASectionEnvelope(markdown = Q4_BRIEF_MARKDOWN) {
+  const sections = parseDecisionBriefSections(markdown);
+  return {
+    summary: sections.get("Summary") ?? "",
+    decisionContext: sections.get("Decision Context") ?? "",
+    optionsConsidered: sections.get("Options Considered") ?? "",
+    recommendation: sections.get("Recommendation") ?? "",
+    risksAndConstraints: sections.get("Risks and Constraints") ?? "",
+    openQuestions: sections.get("Open Questions") ?? "",
+    suggestedNextSteps: sections.get("Suggested Next Steps") ?? "",
+    confidence: sections.get("Confidence") ?? "",
+  };
+}
+
+const THINK_OPEN = "<" + "think" + ">";
+const THINK_CLOSE = "</" + "think" + ">";
+
+function wrapWithEmptyThinking(content: string): string {
+  return `${THINK_OPEN}\n${THINK_CLOSE}\n${content}`;
+}
+
+function wrapWithNonEmptyThinking(content: string, thinking = "internal reasoning"): string {
+  return `${THINK_OPEN}${thinking}${THINK_CLOSE}${content}`;
+}
+
+describe("normalizeWebGpuStructuredParserInput", () => {
+  it("leaves plain JSON unchanged", () => {
+    const json = JSON.stringify({ stated_decision: "Proceed" });
+    expect(normalizeWebGpuStructuredParserInput(json)).toBe(json);
+  });
+
+  it("removes one leading empty whitespace-only thinking wrapper", () => {
+    const json = JSON.stringify({ stated_decision: "Proceed" });
+    const wrapped = wrapWithEmptyThinking(json);
+    expect(normalizeWebGpuStructuredParserInput(wrapped)).toBe(json);
+  });
+
+  it("does not strip a non-empty thinking wrapper", () => {
+    const json = JSON.stringify({ stated_decision: "Proceed" });
+    const wrapped = wrapWithNonEmptyThinking(json);
+    expect(normalizeWebGpuStructuredParserInput(wrapped)).toBe(wrapped);
+  });
+
+  it("does not strip text before a thinking wrapper", () => {
+    const json = JSON.stringify({ stated_decision: "Proceed" });
+    const prefixed = `prefix${wrapWithEmptyThinking(json)}`;
+    expect(normalizeWebGpuStructuredParserInput(prefixed)).toBe(prefixed);
+  });
+});
 
 describe("createWebGpuModelAdapter", () => {
   it("requests schema-constrained Capture Layer output", async () => {
@@ -295,6 +346,68 @@ describe("createWebGpuModelAdapter", () => {
     const captureLayer = await adapter.generateCaptureLayer(CAPTURE_INPUT);
 
     expect(parseCaptureLayerJson(JSON.stringify(captureLayer))).toEqual(captureLayer);
+  });
+
+  it("parses Capture Layer JSON prefixed by an empty thinking wrapper on the first attempt", async () => {
+    const onCaptureRetry = vi.fn();
+    const engine = createMockEngine(async () =>
+      wrapWithEmptyThinking(JSON.stringify(q4CaptureLayer)),
+    );
+    const adapter = createWebGpuModelAdapter({ engine, onCaptureRetry });
+    const captureLayer = await adapter.generateCaptureLayer(CAPTURE_INPUT);
+
+    expect(captureLayer.stated_decision).toBe(q4CaptureLayer.stated_decision);
+    expect(onCaptureRetry).not.toHaveBeenCalled();
+    expect(engine.chat.completions.create).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not strip non-empty thinking wrappers and still retries capture parsing", async () => {
+    const onCaptureRetry = vi.fn();
+    const engine = createMockEngine(async (_request, attempt) => {
+      if (attempt === 1) {
+        return wrapWithNonEmptyThinking(JSON.stringify(q4CaptureLayer));
+      }
+
+      return JSON.stringify(q4CaptureLayer);
+    });
+    const adapter = createWebGpuModelAdapter({ engine, onCaptureRetry });
+
+    await adapter.generateCaptureLayer(CAPTURE_INPUT);
+
+    expect(onCaptureRetry).toHaveBeenCalledTimes(1);
+    expect(engine.chat.completions.create).toHaveBeenCalledTimes(2);
+  });
+
+  it("perserves wrapped raw output in capture diagnostic artifacts", async () => {
+    const previousDiagnostics = process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV];
+    process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV] = "true";
+
+    const persistSpy = vi
+      .spyOn(browserGenerationLocalCapture, "persistBrowserGenerationDiagnosticArtifact")
+      .mockResolvedValue("capture-artifact.json");
+
+    try {
+      const wrapped = wrapWithEmptyThinking(JSON.stringify(q4CaptureLayer));
+      const engine = createMockEngine(async () => wrapped);
+      const adapter = createWebGpuModelAdapter({ engine });
+
+      await adapter.generateCaptureLayer(CAPTURE_INPUT);
+
+      expect(persistSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          artifact: expect.objectContaining({
+            rawOutput: wrapped,
+          }),
+        }),
+      );
+    } finally {
+      persistSpy.mockRestore();
+      if (previousDiagnostics === undefined) {
+        delete process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV];
+      } else {
+        process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV] = previousDiagnostics;
+      }
+    }
   });
 
   it("parses valid constrained Decision Brief envelope with existing parser", async () => {
@@ -670,6 +783,125 @@ describe("createWebGpuModelAdapter markdown_only experiment", () => {
         placeholderLeakageDetected: true,
       }),
     );
+    expect(engine.chat.completions.create).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("createWebGpuModelAdapter split-stage vertical slice", () => {
+  const previousSplitStage = process.env.VITE_WEBGPU_SPLIT_STAGE;
+  const previousModel = process.env.VITE_WEBGPU_MODEL_ID;
+
+  afterEach(() => {
+    if (previousSplitStage === undefined) delete process.env.VITE_WEBGPU_SPLIT_STAGE;
+    else process.env.VITE_WEBGPU_SPLIT_STAGE = previousSplitStage;
+    if (previousModel === undefined) delete process.env.VITE_WEBGPU_MODEL_ID;
+    else process.env.VITE_WEBGPU_MODEL_ID = previousModel;
+  });
+
+  it("builds a complete artifact with deterministic recommendation, next steps, and trace", async () => {
+    process.env.VITE_WEBGPU_SPLIT_STAGE = "true";
+    process.env.VITE_WEBGPU_MODEL_ID = "Qwen3.5-4B-q4f16_1-MLC";
+    const engine = createMockEngine(async (request) => {
+      expect(request.extra_body).toEqual({
+        enable_thinking: false,
+        enable_latency_breakdown: true,
+      });
+      const schema = JSON.parse(
+        (request.response_format as { schema: string }).schema,
+      );
+      expect(schema.required).toEqual([
+        "summary",
+        "decisionContext",
+        "optionsConsidered",
+        "recommendation",
+        "risksAndConstraints",
+        "openQuestions",
+        "suggestedNextSteps",
+        "confidence",
+      ]);
+      return JSON.stringify(buildStageASectionEnvelope());
+    });
+
+    const result = await createWebGpuModelAdapter({ engine }).generateDecisionBrief(
+      BRIEF_INPUT,
+    );
+
+    expect(result.markdown).toContain(
+      q4CaptureLayer.recommendation_candidate,
+    );
+    for (const step of q4CaptureLayer.suggested_next_steps) {
+      expect(result.markdown).toContain(`- ${step}`);
+    }
+    expect(result.decisionTrace.entries).toHaveLength(
+      q4CaptureLayer.suggested_next_steps.length + 1,
+    );
+    expect(engine.chat.completions.create).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries only model-owned failing section bodies once", async () => {
+    process.env.VITE_WEBGPU_SPLIT_STAGE = "true";
+    process.env.VITE_WEBGPU_MODEL_ID = "Qwen3.5-4B-q4f16_1-MLC";
+    const first = buildStageASectionEnvelope();
+    first.summary = Array.from({ length: 65 }, (_, index) => `summary${index + 1}`).join(
+      " ",
+    );
+    const onBriefRetry = vi.fn();
+    const engine = createMockEngine(async (request, attempt) => {
+      if (attempt === 1) return JSON.stringify(first);
+      const schema = JSON.parse(
+        (request.response_format as { schema: string }).schema,
+      );
+      expect(schema.required).toEqual(["summary"]);
+      expect(Object.keys(schema.properties)).toEqual(["summary"]);
+      return JSON.stringify({
+        summary: buildStageASectionEnvelope().summary,
+      });
+    });
+
+    const result = await createWebGpuModelAdapter({
+      engine,
+      onBriefRetry,
+    }).generateDecisionBrief(BRIEF_INPUT);
+
+    expect(result.markdown).toContain(buildStageASectionEnvelope().summary);
+    expect(onBriefRetry).toHaveBeenCalledTimes(1);
+    expect(engine.chat.completions.create).toHaveBeenCalledTimes(2);
+  });
+
+  it("accepts targeted optionsConsidered correction with newline-separated Markdown items", async () => {
+    process.env.VITE_WEBGPU_SPLIT_STAGE = "true";
+    process.env.VITE_WEBGPU_MODEL_ID = "Qwen3.5-4B-q4f16_1-MLC";
+    const longOptionSentence = `- ${Array.from({ length: 40 }, (_, index) => `option${index}`).join(" ")}`;
+    const correctedOptions = [
+      "- Delay the move to March 22 to reduce rent overlap.",
+      "- Move March 14 to reduce visa and painter timing risk.",
+      "- Hire movers for heavy items and pack boxes internally.",
+      "- Ask family to care for the dog during the move.",
+    ].join("\n");
+    const first = buildStageASectionEnvelope();
+    first.optionsConsidered = longOptionSentence;
+    const onBriefRetry = vi.fn();
+    const engine = createMockEngine(async (request, attempt) => {
+      if (attempt === 1) return JSON.stringify(first);
+      const schema = JSON.parse(
+        (request.response_format as { schema: string }).schema,
+      );
+      expect(schema.required).toEqual(["optionsConsidered"]);
+      expect(Object.keys(schema.properties)).toEqual(["optionsConsidered"]);
+      expect(request.messages?.[0]?.content).toContain(
+        "Do not combine multiple items with semicolons.",
+      );
+      return JSON.stringify({ optionsConsidered: correctedOptions });
+    });
+
+    const result = await createWebGpuModelAdapter({
+      engine,
+      onBriefRetry,
+    }).generateDecisionBrief(BRIEF_INPUT);
+
+    expect(result.markdown).toContain("Delay the move to March 22 to reduce rent overlap.");
+    expect(result.markdown).toContain("Ask family to care for the dog during the move.");
+    expect(onBriefRetry).toHaveBeenCalledTimes(1);
     expect(engine.chat.completions.create).toHaveBeenCalledTimes(2);
   });
 });

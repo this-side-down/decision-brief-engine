@@ -58,6 +58,9 @@ describe("browserGenerationDiagnostics", () => {
     expect(diagnostics.configuredMaxTokens).toBe(1200);
     expect(diagnostics.generationStage).toBe("brief");
     expect(diagnostics.attemptNumber).toBe(1);
+    expect(diagnostics.endToEndLatencySeconds).toBe(1.2);
+    expect(diagnostics.prefillTokensPerSecond).toBe(100);
+    expect(diagnostics.decodeTokensPerSecond).toBe(50);
   });
 
   it("preserves missing provider usage fields as null", () => {
@@ -107,6 +110,10 @@ describe("browserGenerationDiagnostics", () => {
       webLlmVersion: "0.2.84",
       generationStage: "brief",
       attemptNumber: 1,
+      generationDurationMs: null,
+      endToEndLatencySeconds: null,
+      prefillTokensPerSecond: null,
+      decodeTokensPerSecond: null,
     });
 
     expect(summary).toContain("prompt_tokens=unavailable");

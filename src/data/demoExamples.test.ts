@@ -6,30 +6,50 @@ import {
   getDemoExample,
   parseDemoExampleId,
 } from "./demoExamples";
-import { EXAMPLE_FIXTURES } from "./exampleFixtures";
+import {
+  EXAMPLE_FIXTURES,
+  MOCK_CAPTURE_LAYERS_BY_EXAMPLE_ID,
+  MOCK_DECISION_BRIEFS_BY_EXAMPLE_ID,
+} from "./exampleFixtures";
 
 describe("demoExamples", () => {
-  it("exposes durable public demo examples including the long-form product fixture", () => {
-    expect(DEMO_EXAMPLES).toHaveLength(4);
+  it("exposes only browser-compatible public demo examples in the gallery", () => {
+    expect(DEMO_EXAMPLES.map((example) => example.id).sort()).toEqual([
+      "household-move-planning",
+      "local-inference-setup-flow",
+      "q4-workforce-allocation",
+    ]);
     expect(DEMO_EXAMPLES.map((example) => example.title).sort()).toEqual([
       "Household Move Planning",
       "Local Inference Setup Flow",
-      "Platform Re-Architecture Review",
       "Q4 Workforce Allocation",
     ]);
-    expect(DEMO_EXAMPLES.map((example) => example.briefTypeId).sort()).toEqual([
-      "execution",
-      "product",
-      "product",
-      "strategy",
+    expect(
+      DEMO_EXAMPLES.some(
+        (example) => example.id === "platform-rearchitecture-review",
+      ),
+    ).toBe(false);
+  });
+
+  it("preserves platform-rearchitecture-review for long-input and evaluation paths", () => {
+    expect(EXAMPLE_FIXTURES.map((fixture) => fixture.metadata.id).sort()).toEqual([
+      "household-move-planning",
+      "local-inference-setup-flow",
+      "platform-rearchitecture-review",
+      "q4-workforce-allocation",
     ]);
+    const example = getDemoExample("platform-rearchitecture-review");
+    expect(example?.title).toBe("Platform Re-Architecture Review");
+    expect(example?.rawNotes.trim().length).toBeGreaterThan(100);
+    expect(MOCK_CAPTURE_LAYERS_BY_EXAMPLE_ID["platform-rearchitecture-review"]).toBeDefined();
+    expect(MOCK_DECISION_BRIEFS_BY_EXAMPLE_ID["platform-rearchitecture-review"]).toBeDefined();
   });
 
   it("defaults to the Strategy hero example", () => {
     expect(DEFAULT_DEMO_EXAMPLE_ID).toBe("q4-workforce-allocation");
   });
 
-  it("loads non-empty raw notes for each example", () => {
+  it("loads non-empty raw notes for each public gallery example", () => {
     for (const example of DEMO_EXAMPLES) {
       expect(example.rawNotes.trim().length).toBeGreaterThan(100);
       expect(example.sourceLabel).toBe(demoExampleSourceLabel(example.id));

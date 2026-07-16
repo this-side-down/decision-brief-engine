@@ -3,6 +3,7 @@ import type {
   ChatCompletionFinishReason,
 } from "@mlc-ai/web-llm";
 import { WEB_LLM_PACKAGE_VERSION } from "./webGpuGenerationSchemas";
+import type { WebGpuCandidateRecord } from "./webGpuCandidates";
 
 export const BROWSER_GENERATION_DIAGNOSTICS_ENV =
   "VITE_BROWSER_GENERATION_DIAGNOSTICS";
@@ -26,7 +27,28 @@ export type StructuredCompletionDiagnostics = {
   webLlmVersion: string;
   generationStage: BrowserGenerationStage;
   attemptNumber: number;
+  generationDurationMs: number | null;
+  endToEndLatencySeconds: number | null;
+  prefillTokensPerSecond: number | null;
+  decodeTokensPerSecond: number | null;
 };
+
+export type BrowserModelLoadDiagnostics = {
+  modelId: string;
+  webLlmVersion: string;
+  modelWeights: string | null;
+  modelLibrary: string | null;
+  approximateDownloadBytes: number | null;
+  estimatedVramMb: number | null;
+  wasCached: boolean;
+  loadDurationMs: number;
+  outcome: "loaded" | "cancelled" | "timed_out" | "failed";
+  failureMessage: string | null;
+};
+
+export type BrowserInferenceDiagnosticEvent =
+  | { kind: "model_load"; detail: BrowserModelLoadDiagnostics }
+  | { kind: "completion"; detail: StructuredCompletionDiagnostics };
 
 export type StructuredCompletionRequestOptions = {
   max_tokens?: number | null;
@@ -59,6 +81,49 @@ function readNumericUsageField(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+function buildCandidateLoadFields(candidate: WebGpuCandidateRecord | null) {
+  return {
+    modelWeights: candidate?.modelWeights ?? null,
+    modelLibrary: candidate?.modelLibrary ?? null,
+    approximateDownloadBytes: candidate?.approximateDownloadBytes ?? null,
+    estimatedVramMb: candidate?.estimatedVramMb ?? null,
+  };
+}
+
+export function buildBrowserModelLoadDiagnostics(options: {
+  modelId: string;
+  candidate: WebGpuCandidateRecord | null;
+  wasCached: boolean;
+  loadDurationMs: number;
+  outcome: BrowserModelLoadDiagnostics["outcome"];
+  failureMessage?: string | null;
+}): BrowserModelLoadDiagnostics {
+  return {
+    modelId: options.modelId,
+    webLlmVersion: WEB_LLM_PACKAGE_VERSION,
+    ...buildCandidateLoadFields(options.candidate),
+    wasCached: options.wasCached,
+    loadDurationMs: options.loadDurationMs,
+    outcome: options.outcome,
+    failureMessage: options.failureMessage ?? null,
+  };
+}
+
+/** Exposes opt-in diagnostics without retaining prompts or hidden reasoning. */
+export function publishBrowserInferenceDiagnostic(
+  event: BrowserInferenceDiagnosticEvent,
+): void {
+  if (!isBrowserGenerationDiagnosticsEnabled()) return;
+
+  const target = globalThis as typeof globalThis & {
+    __DECISION_BRIEF_ENGINE_WEBGPU_DIAGNOSTICS__?: BrowserInferenceDiagnosticEvent[];
+  };
+  const events = target.__DECISION_BRIEF_ENGINE_WEBGPU_DIAGNOSTICS__ ?? [];
+  events.push(event);
+  target.__DECISION_BRIEF_ENGINE_WEBGPU_DIAGNOSTICS__ = events;
+  console.info("[Decision Brief Engine WebGPU diagnostic]", event);
+}
+
 function readFinishReason(value: unknown): ChatCompletionFinishReason | null {
   if (
     value === "stop" ||
@@ -83,6 +148,7 @@ export function extractStructuredCompletionDiagnostics(options: {
   modelId: string;
   webLlmVersion?: string;
   requestOptions?: StructuredCompletionRequestOptions;
+  generationDurationMs?: number | null;
 }): StructuredCompletionDiagnostics {
   const usage = options.response.usage;
   const configuredMaxTokens =
@@ -90,6 +156,7 @@ export function extractStructuredCompletionDiagnostics(options: {
     options.requestOptions.max_tokens === null
       ? null
       : options.requestOptions.max_tokens;
+  const usageExtra = usage?.extra;
 
   return {
     promptTokens: readNumericUsageField(usage?.prompt_tokens),
@@ -101,6 +168,14 @@ export function extractStructuredCompletionDiagnostics(options: {
     webLlmVersion: options.webLlmVersion ?? WEB_LLM_PACKAGE_VERSION,
     generationStage: options.generationStage,
     attemptNumber: options.attemptNumber,
+    generationDurationMs: options.generationDurationMs ?? null,
+    endToEndLatencySeconds: readNumericUsageField(usageExtra?.e2e_latency_s),
+    prefillTokensPerSecond: readNumericUsageField(
+      usageExtra?.prefill_tokens_per_s,
+    ),
+    decodeTokensPerSecond: readNumericUsageField(
+      usageExtra?.decode_tokens_per_s,
+    ),
   };
 }
 
@@ -150,5 +225,7 @@ export function formatStructuredCompletionDiagnosticsSummary(
     `total_tokens=${totalTokens}`,
     `finish_reason=${finishReason}`,
     `max_tokens=${configuredMaxTokens}`,
+    `duration_ms=${diagnostics.generationDurationMs ?? "unavailable"}`,
+    `decode_tokens_per_s=${diagnostics.decodeTokensPerSecond ?? "unavailable"}`,
   ].join("; ");
 }

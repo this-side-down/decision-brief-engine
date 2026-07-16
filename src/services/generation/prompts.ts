@@ -297,6 +297,36 @@ export type StageACorrectionPromptField = {
   findings: string[];
 };
 
+const TARGETED_CORRECTION_LIST_SECTIONS = new Set([
+  "Options Considered",
+  "Risks and Constraints",
+  "Open Questions",
+  "Suggested Next Steps",
+]);
+
+function buildTargetedListSectionGuidance(section: string): string[] {
+  const itemLabel =
+    section === "Options Considered"
+      ? "option"
+      : section === "Risks and Constraints"
+        ? "risk or constraint"
+        : section === "Open Questions"
+          ? "question"
+          : "step";
+
+  return [
+    `Safer rewrite target: rewrite this ${section} body as a Markdown list with one concise ${itemLabel} per line.`,
+    `- Each logical ${itemLabel} must be a separate Markdown list item.`,
+    '- Every item must begin with "- ".',
+    "- Every item must be separated by a newline.",
+    "- Do not combine multiple items with semicolons.",
+    "- Do not combine multiple items into one sentence.",
+    "- Each list item must contain no more than 30 whitespace-delimited words.",
+    "- Preserve supported meaning, conditions, tradeoffs, and qualifications.",
+    "- Return the field as one JSON string containing escaped newline separators as required by JSON.",
+  ];
+}
+
 export function buildDecisionBriefTargetedCorrectionPrompt(
   fields: readonly StageACorrectionPromptField[],
 ): string {
@@ -319,11 +349,13 @@ export function buildDecisionBriefTargetedCorrectionPrompt(
             "Safer rewrite target: rewrite this Summary to no more than 50 whitespace-delimited words. Count the words before returning.",
           ]
         : []),
-      ...(item.findings.some((finding) => finding.includes("sentence-length"))
-        ? [
-            "Safer rewrite target: rewrite every prose sentence in this field to no more than 30 whitespace-delimited words. Count each sentence before returning.",
-          ]
-        : []),
+      ...(TARGETED_CORRECTION_LIST_SECTIONS.has(item.section)
+        ? buildTargetedListSectionGuidance(item.section)
+        : item.findings.some((finding) => finding.includes("sentence-length"))
+          ? [
+              "Safer rewrite target: rewrite every prose sentence in this field to no more than 30 whitespace-delimited words. Count each sentence before returning.",
+            ]
+          : []),
       "",
     ]),
     NO_REASONING_INSTRUCTION,

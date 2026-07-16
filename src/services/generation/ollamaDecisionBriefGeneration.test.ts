@@ -266,7 +266,7 @@ describe("generateOllamaDecisionBrief (split-stage, #154)", () => {
   });
 
   it("supplies only complete writing-failing section bodies for bounded retry", async () => {
-    const longSummary = Array.from({ length: 61 }, (_, index) => `summary${index + 1}`).join(" ");
+    const longSummary = Array.from({ length: 65 }, (_, index) => `summary${index + 1}`).join(" ");
     const firstMarkdown = buildValidMarkdown().replace(
       "Engineering must staff the hospital project before the fixed Q4 deadline.",
       longSummary,

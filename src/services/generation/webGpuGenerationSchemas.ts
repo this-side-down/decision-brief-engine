@@ -6,6 +6,7 @@ import {
   DECISION_BRIEF_RESULT_SCHEMA_JSON,
 } from "./decisionBriefResultSchema";
 import { CAPTURE_LAYER_FIELDS } from "./types";
+import { WEB_LLM_INSTALLED_VERSION } from "./webGpuCandidates";
 
 export {
   DECISION_BRIEF_RESULT_JSON_SCHEMA,
@@ -33,7 +34,7 @@ export const WEBGPU_DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_VERSION =
   "decision-brief-markdown-only-v1";
 
 /** Installed @mlc-ai/web-llm version used for evaluation comparison. */
-export const WEB_LLM_PACKAGE_VERSION = "0.2.84";
+export const WEB_LLM_PACKAGE_VERSION = WEB_LLM_INSTALLED_VERSION;
 
 const CONFIDENCE_ENUM = ["High", "Medium", "Low"] as const;
 

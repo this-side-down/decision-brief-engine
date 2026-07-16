@@ -1,4 +1,4 @@
-import { WEBGPU_MODEL_DOWNLOAD_SIZE_COPY } from "../../services/generation/webGpuConfig";
+import { getWebGpuModelDownloadSizeCopy } from "../../services/generation/webGpuConfig";
 
 type DownloadDisclosureDialogProps = {
   isOpen: boolean;
@@ -14,6 +14,8 @@ export function DownloadDisclosureDialog({
   if (!isOpen) {
     return null;
   }
+
+  const downloadSizeCopy = getWebGpuModelDownloadSizeCopy();
 
   return (
     <div
@@ -31,7 +33,7 @@ export function DownloadDisclosureDialog({
         </h2>
         <div className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
           <p>
-            This mode downloads about <strong>{WEBGPU_MODEL_DOWNLOAD_SIZE_COPY}</strong>{" "}
+            This experimental mode downloads about <strong>{downloadSizeCopy}</strong>{" "}
             of model data the first time you use it on this device and browser.
           </p>
           <p>
