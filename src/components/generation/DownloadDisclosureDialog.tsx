@@ -28,37 +28,31 @@ function ApplicationMetadata() {
   }
 
   return createPortal(
-    <div className="order-first flex items-center gap-2 whitespace-nowrap text-[10px] text-neutral-500">
-      <span>
-        © 2026{" "}
-        <a
-          aria-label="Visit this-side-down"
-          className="rounded text-neutral-300 underline-offset-2 transition hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-          href={WEBSITE_URL}
-          rel="noreferrer"
-          target="_blank"
-        >
-          this-side-down
-        </a>
-      </span>
-      <span className="hidden xl:inline" aria-hidden="true">
-        ·
-      </span>
+    <div className="order-first flex items-center gap-2 whitespace-nowrap text-xs text-neutral-400">
+      <span>© 2026</span>
+      <a
+        aria-label="Visit this-side-down"
+        className="rounded text-neutral-300 underline-offset-2 transition hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+        href={WEBSITE_URL}
+        rel="noreferrer"
+        target="_blank"
+      >
+        this-side-down
+      </a>
+      <span aria-hidden="true">·</span>
       <a
         aria-label="View Decision Brief Engine on GitHub"
-        className="hidden rounded text-neutral-300 underline-offset-2 transition hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 xl:inline"
+        className="rounded text-neutral-300 underline-offset-2 transition hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
         href={REPOSITORY_URL}
         rel="noreferrer"
         target="_blank"
       >
         GitHub
       </a>
-      <span className="hidden xl:inline" aria-hidden="true">
-        ·
-      </span>
+      <span aria-hidden="true">·</span>
       <a
         aria-label="View the Decision Brief Engine MIT license"
-        className="hidden rounded text-neutral-300 underline-offset-2 transition hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 xl:inline"
+        className="rounded text-neutral-300 underline-offset-2 transition hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
         href={LICENSE_URL}
         rel="noreferrer"
         target="_blank"
