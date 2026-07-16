@@ -744,7 +744,9 @@ describe("createWebGpuModelAdapter split-stage vertical slice", () => {
     process.env.VITE_WEBGPU_SPLIT_STAGE = "true";
     process.env.VITE_WEBGPU_MODEL_ID = "Qwen3.5-4B-q4f16_1-MLC";
     const first = buildStageASectionEnvelope();
-    first.summary = "A concise summary should be provided here.";
+    first.summary = Array.from({ length: 65 }, (_, index) => `summary${index + 1}`).join(
+      " ",
+    );
     const onBriefRetry = vi.fn();
     const engine = createMockEngine(async (request, attempt) => {
       if (attempt === 1) return JSON.stringify(first);
