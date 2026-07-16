@@ -6,15 +6,25 @@ Instead of simply summarizing text, it captures underlying intent, decisions, ri
 
 ## Status
 
-**Current release:** v0.2.1 — Decision Brief Workspace and Writing Quality Polish  
+**Current release:** v0.3.0 — Long-Form Decision Capture  
 **Public demo:** https://decision-brief-engine.vercel.app/  
-**Release notes:** https://github.com/this-side-down/decision-brief-engine/releases/tag/v0.2.1
+**Release notes:** https://github.com/this-side-down/decision-brief-engine/releases/tag/v0.3.0
 
-The hosted demo runs in Mock mode by default for reliability. Local Ollama is the strongest real-generation path for local evaluation. Browser WebGPU remains gated while quality improves.
+The hosted demo runs in Mock mode by default for reliability. Local Ollama with `qwen3:4b` is the supported real-generation path. Browser WebGPU remains experimental and gated while stronger model candidates are evaluated.
 
-v0.2.1 polishes the Decision Brief workspace with a brief-first generated layout, rendered Preview and explicit Edit Markdown mode, contained Preview scrolling, scrollable expanded Traceable Basis, nested disclosure chevrons, and clearer singleton basis fields. Writing quality improves through decision-grade fixtures, deterministic checks, and aligned recommendation wording across Capture Layer, Decision Brief, and Decision Trace.
+v0.3.0 adds hierarchical processing for realistic long meeting and interview material, source-coverage protection, grounded suggested next steps, canonical Decision Brief generation, deterministic source-bound Decision Trace construction, and typed bounded correction behavior.
+
+A measured limitation remains: Local generation can return a typed quality failure when its single bounded correction cannot recover a source-grounded Capture Layer next step. The application rejects that output before Decision Brief generation rather than silently accepting or fabricating an artifact.
 
 v0.1.0 is the first portfolio-ready public demo milestone: example gallery, export polish, Local Ollama health check, and generation telemetry. See [Public demo milestone](docs/product/public-demo-milestone.md) for the full write-up.
+
+## v0.3 Long-Form Decision Capture
+
+v0.3 processes long decision material through hierarchical Capture, deterministic merge behavior, and source-coverage checks before producing a canonical Decision Brief and traceable Decision Trace.
+
+The long-form path preserves beginning, middle, and end signals, rejects unsupported next steps before brief generation, and uses a single bounded targeted correction for failing model-owned brief sections. Passing sections remain unchanged, while Recommendation and Suggested Next Steps remain source-bound.
+
+See [CHANGELOG.md](CHANGELOG.md) for the full release summary.
 
 ## v0.2 Decision Trace
 
@@ -77,7 +87,7 @@ See [Local Ollama setup and health check](docs/ai/ollama-local-setup.md) for Mac
 
 The public demo defaults to **Mock demo**. Browser WebGPU inference is experimental and hidden unless `VITE_ENABLE_WEBGPU_INFERENCE=true` is set at build time. When enabled, users can opt into **Live in browser** for local WebGPU inference with a one-time model download. **Local Ollama** remains the local/dev path when `VITE_GENERATION_MODE=ollama` is set.
 
-See `docs/product/live-browser-inference-ux.md` for mode behavior, disclosure copy, and fallback states.
+See `docs/product/live-browser-inference-ux.md` for mode behavior, disclosure copy, and fallback states. Stronger browser model candidates are being evaluated under #149.
 
 ## Data handling (v0)
 
