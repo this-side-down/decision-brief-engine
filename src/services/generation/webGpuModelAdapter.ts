@@ -84,6 +84,28 @@ import { parseDecisionBriefSections } from "../../evaluation/decisionBriefWritin
 const JSON_RETRY_SUFFIX =
   "\n\nReturn ONLY valid JSON. No markdown fences, no commentary, no reasoning.";
 
+const THINK_TAG = "think";
+const LEADING_EMPTY_THINKING_WRAPPER = new RegExp(
+  `^<${THINK_TAG}>([\\s\\S]*?)<\\/${THINK_TAG}>`,
+);
+
+/**
+ * Derives parser input from normalized raw WebGPU structured completion text.
+ * Strips one leading empty thinking wrapper only; non-empty thinking is preserved.
+ */
+export function normalizeWebGpuStructuredParserInput(rawText: string): string {
+  const match = rawText.match(LEADING_EMPTY_THINKING_WRAPPER);
+  if (!match) {
+    return rawText;
+  }
+
+  if (match[1].trim().length > 0) {
+    return rawText;
+  }
+
+  return rawText.slice(match[0].length).trimStart();
+}
+
 const SECTION_BODY_FIELDS = [
   ["summary", "Summary"],
   ["decisionContext", "Decision Context"],
@@ -364,18 +386,19 @@ async function completeStructuredPrompt(
     publishBrowserInferenceDiagnostic({ kind: "completion", detail: diagnostics });
 
     const content = response.choices[0]?.message?.content;
-    const normalizedContent = typeof content === "string" ? content.trim() : "";
+    const rawOutput = typeof content === "string" ? content.trim() : "";
+    const parserInput = normalizeWebGpuStructuredParserInput(rawOutput);
 
     await maybePersistRawOutput({
       captureContext: callbacks.captureContext,
       generationStage: options.generationStage,
       attemptNumber: options.attemptNumber,
       diagnostics,
-      rawOutput: normalizedContent,
+      rawOutput,
     });
 
     return {
-      content: normalizedContent,
+      content: parserInput,
       diagnostics,
     };
   } catch (error) {

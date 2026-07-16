@@ -28,7 +28,7 @@ import {
   WEBGPU_CAPTURE_LAYER_SCHEMA_VERSION,
 } from "./webGpuGenerationSchemas";
 import { WEBGPU_DECISION_BRIEF_PROMPT_MODE_ENV } from "./webGpuDecisionBriefExperiment";
-import { getWebGpuEvalContext, createWebGpuModelAdapter } from "./webGpuModelAdapter";
+import { getWebGpuEvalContext, createWebGpuModelAdapter, normalizeWebGpuStructuredParserInput } from "./webGpuModelAdapter";
 import { BROWSER_GENERATION_DIAGNOSTICS_ENV } from "./browserGenerationDiagnostics";
 import * as browserGenerationLocalCapture from "./browserGenerationLocalCapture";
 import { parseDecisionBriefSections } from "../../evaluation/decisionBriefWritingChecks";
@@ -121,6 +121,42 @@ function buildStageASectionEnvelope(markdown = Q4_BRIEF_MARKDOWN) {
     confidence: sections.get("Confidence") ?? "",
   };
 }
+
+const THINK_OPEN = "<" + "think" + ">";
+const THINK_CLOSE = "</" + "think" + ">";
+
+function wrapWithEmptyThinking(content: string): string {
+  return `${THINK_OPEN}\n${THINK_CLOSE}\n${content}`;
+}
+
+function wrapWithNonEmptyThinking(content: string, thinking = "internal reasoning"): string {
+  return `${THINK_OPEN}${thinking}${THINK_CLOSE}${content}`;
+}
+
+describe("normalizeWebGpuStructuredParserInput", () => {
+  it("leaves plain JSON unchanged", () => {
+    const json = JSON.stringify({ stated_decision: "Proceed" });
+    expect(normalizeWebGpuStructuredParserInput(json)).toBe(json);
+  });
+
+  it("removes one leading empty whitespace-only thinking wrapper", () => {
+    const json = JSON.stringify({ stated_decision: "Proceed" });
+    const wrapped = wrapWithEmptyThinking(json);
+    expect(normalizeWebGpuStructuredParserInput(wrapped)).toBe(json);
+  });
+
+  it("does not strip a non-empty thinking wrapper", () => {
+    const json = JSON.stringify({ stated_decision: "Proceed" });
+    const wrapped = wrapWithNonEmptyThinking(json);
+    expect(normalizeWebGpuStructuredParserInput(wrapped)).toBe(wrapped);
+  });
+
+  it("does not strip text before a thinking wrapper", () => {
+    const json = JSON.stringify({ stated_decision: "Proceed" });
+    const prefixed = `prefix${wrapWithEmptyThinking(json)}`;
+    expect(normalizeWebGpuStructuredParserInput(prefixed)).toBe(prefixed);
+  });
+});
 
 describe("createWebGpuModelAdapter", () => {
   it("requests schema-constrained Capture Layer output", async () => {
@@ -310,6 +346,68 @@ describe("createWebGpuModelAdapter", () => {
     const captureLayer = await adapter.generateCaptureLayer(CAPTURE_INPUT);
 
     expect(parseCaptureLayerJson(JSON.stringify(captureLayer))).toEqual(captureLayer);
+  });
+
+  it("parses Capture Layer JSON prefixed by an empty thinking wrapper on the first attempt", async () => {
+    const onCaptureRetry = vi.fn();
+    const engine = createMockEngine(async () =>
+      wrapWithEmptyThinking(JSON.stringify(q4CaptureLayer)),
+    );
+    const adapter = createWebGpuModelAdapter({ engine, onCaptureRetry });
+    const captureLayer = await adapter.generateCaptureLayer(CAPTURE_INPUT);
+
+    expect(captureLayer.stated_decision).toBe(q4CaptureLayer.stated_decision);
+    expect(onCaptureRetry).not.toHaveBeenCalled();
+    expect(engine.chat.completions.create).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not strip non-empty thinking wrappers and still retries capture parsing", async () => {
+    const onCaptureRetry = vi.fn();
+    const engine = createMockEngine(async (_request, attempt) => {
+      if (attempt === 1) {
+        return wrapWithNonEmptyThinking(JSON.stringify(q4CaptureLayer));
+      }
+
+      return JSON.stringify(q4CaptureLayer);
+    });
+    const adapter = createWebGpuModelAdapter({ engine, onCaptureRetry });
+
+    await adapter.generateCaptureLayer(CAPTURE_INPUT);
+
+    expect(onCaptureRetry).toHaveBeenCalledTimes(1);
+    expect(engine.chat.completions.create).toHaveBeenCalledTimes(2);
+  });
+
+  it("perserves wrapped raw output in capture diagnostic artifacts", async () => {
+    const previousDiagnostics = process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV];
+    process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV] = "true";
+
+    const persistSpy = vi
+      .spyOn(browserGenerationLocalCapture, "persistBrowserGenerationDiagnosticArtifact")
+      .mockResolvedValue("capture-artifact.json");
+
+    try {
+      const wrapped = wrapWithEmptyThinking(JSON.stringify(q4CaptureLayer));
+      const engine = createMockEngine(async () => wrapped);
+      const adapter = createWebGpuModelAdapter({ engine });
+
+      await adapter.generateCaptureLayer(CAPTURE_INPUT);
+
+      expect(persistSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          artifact: expect.objectContaining({
+            rawOutput: wrapped,
+          }),
+        }),
+      );
+    } finally {
+      persistSpy.mockRestore();
+      if (previousDiagnostics === undefined) {
+        delete process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV];
+      } else {
+        process.env[BROWSER_GENERATION_DIAGNOSTICS_ENV] = previousDiagnostics;
+      }
+    }
   });
 
   it("parses valid constrained Decision Brief envelope with existing parser", async () => {
