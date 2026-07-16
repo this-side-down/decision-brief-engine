@@ -3,5 +3,5 @@ export function getAppVersion(): string {
 }
 
 export function formatAppVersionLabel(version = getAppVersion()): string {
-  return `v${version} demo`;
+  return `v${version}`;
 }
