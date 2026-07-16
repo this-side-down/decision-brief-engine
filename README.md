@@ -6,13 +6,15 @@ Instead of simply summarizing text, it captures underlying intent, decisions, ri
 
 ## Status
 
-**Current release:** v0.3.0 — Long-Form Decision Capture  
+**Current release:** v0.3.2 — Experimental Browser Inference Metadata Correction  
 **Public demo:** https://decision-brief-engine.vercel.app/  
-**Release notes:** https://github.com/this-side-down/decision-brief-engine/releases/tag/v0.3.0
+**Release notes:** https://github.com/this-side-down/decision-brief-engine/releases/tag/v0.3.2
 
-The hosted demo runs in Mock mode by default for reliability. Local Ollama with `qwen3:4b` is the supported real-generation path. Browser WebGPU remains experimental and gated while stronger model candidates are evaluated.
+The hosted demo runs in Mock mode by default for reliability. Local Ollama with `qwen3:4b` remains the supported real-generation path for long inputs. Experimental browser inference can be enabled explicitly for short-to-medium notes using WebGPU and WebLLM with `Qwen3.5-4B-q4f16_1-MLC`.
 
-v0.3.0 adds hierarchical processing for realistic long meeting and interview material, source-coverage protection, grounded suggested next steps, canonical Decision Brief generation, deterministic source-bound Decision Trace construction, and typed bounded correction behavior.
+v0.3.2 corrects the repository and in-app version metadata omitted from the v0.3.1 publication. The browser-inference capability itself was delivered in v0.3.1: gated opt-in generation, three browser-compatible examples, strict structured-output validation, one bounded targeted correction, and local diagnostics.
+
+v0.3.0 added hierarchical processing for realistic long meeting and interview material, source-coverage protection, grounded suggested next steps, canonical Decision Brief generation, deterministic source-bound Decision Trace construction, and typed bounded correction behavior.
 
 A measured limitation remains: Local generation can return a typed quality failure when its single bounded correction cannot recover a source-grounded Capture Layer next step. The application rejects that output before Decision Brief generation rather than silently accepting or fabricating an artifact.
 
@@ -85,9 +87,11 @@ See [Local Ollama setup and health check](docs/ai/ollama-local-setup.md) for Mac
 
 ## Browser inference (experimental, gated)
 
-The public demo defaults to **Mock demo**. Browser WebGPU inference is experimental and hidden unless `VITE_ENABLE_WEBGPU_INFERENCE=true` is set at build time. When enabled, users can opt into **Live in browser** for local WebGPU inference with a one-time model download. **Local Ollama** remains the local/dev path when `VITE_GENERATION_MODE=ollama` is set.
+The public demo defaults to **Mock demo**. Browser WebGPU inference is experimental and hidden unless `VITE_ENABLE_WEBGPU_INFERENCE=true` is set at build time. When enabled, users can opt into **Live in browser** for local WebGPU inference with a one-time model download of about 2.2 GiB.
 
-See `docs/product/live-browser-inference-ux.md` for mode behavior, disclosure copy, and fallback states. Stronger browser model candidates are being evaluated under #149.
+The selected browser model is `Qwen3.5-4B-q4f16_1-MLC` through `@mlc-ai/web-llm` 0.2.84. Browser inference currently supports short-to-medium notes and the three browser-compatible examples: Household Move Planning, Q4 Workforce Allocation, and Local Inference Setup Flow. Long-form browser support is tracked in #166. **Local Ollama** remains the local/dev path when `VITE_GENERATION_MODE=ollama` is set.
+
+See `docs/product/live-browser-inference-ux.md` for mode behavior, disclosure copy, and fallback states, and `docs/ai/browser-generation-diagnostics.md` for the measured v0.3.1 browser procedure and limitations.
 
 ## Data handling (v0)
 
@@ -129,6 +133,7 @@ This is implementation guidance for the current v0 state, not a legal privacy po
 - [Browser model / prompt variant eval](docs/ai/browser-model-prompt-variant-eval.md)
 - [Browser model quality gate evaluation](docs/ai/browser-model-quality-gate.md)
 - [Browser inference adapter feasibility](docs/ai/browser-inference-adapter-feasibility.md)
+- [Browser generation diagnostics](docs/ai/browser-generation-diagnostics.md)
 - [Local Ollama setup and health check](docs/ai/ollama-local-setup.md)
 - [Qwen3/Ollama JSON-mode quirk](docs/ai/ollama-qwen3-json-quirk.md)
 - [Implementation build plan](docs/implementation/build-plan.md)

@@ -8,8 +8,48 @@ This project uses pre-1.0 versioning (`v0.x.y`) for capability milestones rather
 
 ### Planned
 
-- Re-enter browser inference evaluation with stronger WebGPU model candidates under #149.
+- Add long-input browser inference under #166.
 - Improve bounded Capture quality retry effectiveness under #162.
+- Add user-visible cancellation during browser generation.
+
+## v0.3.2 — Experimental Browser Inference Metadata Correction
+
+**2026-07-16**
+
+v0.3.2 corrects the release metadata omitted from v0.3.1 while preserving the browser-inference implementation delivered in that release.
+
+### Fixed
+
+- Updated `package.json` so the built application reports v0.3.2 instead of v0.3.0.
+- Updated the README current-release status, release link, browser model, measured input scope, and runtime posture.
+- Added durable changelog coverage for the v0.3.1 browser-inference capability and the v0.3.2 metadata correction.
+
+### Browser capability delivered in v0.3.1
+
+- Gated, opt-in browser inference using `@mlc-ai/web-llm` 0.2.84 and `Qwen3.5-4B-q4f16_1-MLC`.
+- Split-stage Capture Layer and Decision Brief generation with strict structured parsing.
+- One bounded targeted correction for failing model-owned brief sections.
+- Deterministic Recommendation, Suggested Next Steps, and Decision Trace assembly.
+- Local model-load and completion diagnostics without exposing hidden reasoning.
+- Three browser-compatible public examples: Household Move Planning, Q4 Workforce Allocation, and Local Inference Setup Flow.
+- Long-input fixture and Mock/Ollama evaluation coverage preserved while Platform Re-Architecture Review is excluded from the browser-compatible gallery.
+
+### Validation evidence
+
+- 616 automated tests passed across 60 files.
+- TypeScript typecheck and production build passed.
+- Mock pipeline evaluation passed all 10 cases.
+- Preferred browser model completed all three supported public examples in Chrome on an RTX 3080 Ti.
+- First model load completed in about 92 seconds; cached load completed in about 12 seconds.
+
+### Runtime posture
+
+- Mock remains the public default.
+- Browser inference remains experimental and explicitly opt-in.
+- Browser inference supports short-to-medium notes only.
+- Local Ollama remains the supported real-generation path for long inputs.
+- Browser long-input support is tracked in #166.
+- User-visible cancellation during generation is not included.
 
 ## v0.3.0 — Long-Form Decision Capture
 
@@ -152,7 +192,7 @@ Decision Brief Engine v0.1.0 establishes the first coherent public demo mileston
 - Mock demo remains the public default.
 - Local Ollama is the strongest real-generation path for local evaluation.
 - Browser WebGPU remains gated pending quality improvements.
-- Hosted inference remains out of scope.
+- Hosted inference remains deferred.
 
 ### Product transparency
 
