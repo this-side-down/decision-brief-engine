@@ -2,6 +2,18 @@
 
 Local-only evidence capture for Live in browser Decision Brief quality investigations. This slice is **diagnostics only** — it does not change generation behavior, prompts, schemas, token budgets, retries, validators, or rollout posture.
 
+## Browser input scope (v0.3.1)
+
+Experimental browser inference currently supports **short-to-medium notes only**. Long-form browser inference is out of scope for v0.3.1.
+
+The Example Scenario dropdown exposes only browser-compatible gallery examples:
+
+- Household Move Planning
+- Q4 Workforce Allocation
+- Local Inference Setup Flow
+
+**Platform Re-Architecture Review** remains preserved under `fixtures/examples/platform-rearchitecture-review/` for Mock, Local Ollama, pipeline evaluation, and long-input tests, but it is **not** exposed in the public browser-compatible gallery because its input exceeds the current browser input budget. Future browser long-input support is tracked in [#166](https://github.com/this-side-down/decision-brief-engine/issues/166).
+
 ## Enable raw-output capture
 
 1. Copy or extend `.env.local`:

@@ -63,7 +63,13 @@ function toDemoExample(fixture: (typeof EXAMPLE_FIXTURES)[number]): DemoExample 
   };
 }
 
-export const DEMO_EXAMPLES: DemoExample[] = EXAMPLE_FIXTURES.map(toDemoExample);
+const BROWSER_GALLERY_EXCLUDED_IDS = new Set<DemoExampleId>([
+  "platform-rearchitecture-review",
+]);
+
+export const DEMO_EXAMPLES: DemoExample[] = EXAMPLE_FIXTURES.filter(
+  (fixture) => !BROWSER_GALLERY_EXCLUDED_IDS.has(fixture.metadata.id),
+).map(toDemoExample);
 
 export const DEFAULT_DEMO_EXAMPLE_ID: DemoExampleId = "q4-workforce-allocation";
 
