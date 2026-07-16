@@ -31,6 +31,7 @@ import { WEBGPU_DECISION_BRIEF_PROMPT_MODE_ENV } from "./webGpuDecisionBriefExpe
 import { getWebGpuEvalContext, createWebGpuModelAdapter } from "./webGpuModelAdapter";
 import { BROWSER_GENERATION_DIAGNOSTICS_ENV } from "./browserGenerationDiagnostics";
 import * as browserGenerationLocalCapture from "./browserGenerationLocalCapture";
+import { parseDecisionBriefSections } from "../../evaluation/decisionBriefWritingChecks";
 
 type MockCreateHandler = (
   request: ChatCompletionRequest,
@@ -106,6 +107,20 @@ const VALID_BRIEF_ENVELOPE = {
   markdown: Q4_BRIEF_MARKDOWN,
   decisionTrace: q4DecisionTrace,
 };
+
+function buildStageASectionEnvelope(markdown = Q4_BRIEF_MARKDOWN) {
+  const sections = parseDecisionBriefSections(markdown);
+  return {
+    summary: sections.get("Summary") ?? "",
+    decisionContext: sections.get("Decision Context") ?? "",
+    optionsConsidered: sections.get("Options Considered") ?? "",
+    recommendation: sections.get("Recommendation") ?? "",
+    risksAndConstraints: sections.get("Risks and Constraints") ?? "",
+    openQuestions: sections.get("Open Questions") ?? "",
+    suggestedNextSteps: sections.get("Suggested Next Steps") ?? "",
+    confidence: sections.get("Confidence") ?? "",
+  };
+}
 
 describe("createWebGpuModelAdapter", () => {
   it("requests schema-constrained Capture Layer output", async () => {
@@ -670,6 +685,86 @@ describe("createWebGpuModelAdapter markdown_only experiment", () => {
         placeholderLeakageDetected: true,
       }),
     );
+    expect(engine.chat.completions.create).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("createWebGpuModelAdapter split-stage vertical slice", () => {
+  const previousSplitStage = process.env.VITE_WEBGPU_SPLIT_STAGE;
+  const previousModel = process.env.VITE_WEBGPU_MODEL_ID;
+
+  afterEach(() => {
+    if (previousSplitStage === undefined) delete process.env.VITE_WEBGPU_SPLIT_STAGE;
+    else process.env.VITE_WEBGPU_SPLIT_STAGE = previousSplitStage;
+    if (previousModel === undefined) delete process.env.VITE_WEBGPU_MODEL_ID;
+    else process.env.VITE_WEBGPU_MODEL_ID = previousModel;
+  });
+
+  it("builds a complete artifact with deterministic recommendation, next steps, and trace", async () => {
+    process.env.VITE_WEBGPU_SPLIT_STAGE = "true";
+    process.env.VITE_WEBGPU_MODEL_ID = "Qwen3.5-4B-q4f16_1-MLC";
+    const engine = createMockEngine(async (request) => {
+      expect(request.extra_body).toEqual({
+        enable_thinking: false,
+        enable_latency_breakdown: true,
+      });
+      const schema = JSON.parse(
+        (request.response_format as { schema: string }).schema,
+      );
+      expect(schema.required).toEqual([
+        "summary",
+        "decisionContext",
+        "optionsConsidered",
+        "recommendation",
+        "risksAndConstraints",
+        "openQuestions",
+        "suggestedNextSteps",
+        "confidence",
+      ]);
+      return JSON.stringify(buildStageASectionEnvelope());
+    });
+
+    const result = await createWebGpuModelAdapter({ engine }).generateDecisionBrief(
+      BRIEF_INPUT,
+    );
+
+    expect(result.markdown).toContain(
+      q4CaptureLayer.recommendation_candidate,
+    );
+    for (const step of q4CaptureLayer.suggested_next_steps) {
+      expect(result.markdown).toContain(`- ${step}`);
+    }
+    expect(result.decisionTrace.entries).toHaveLength(
+      q4CaptureLayer.suggested_next_steps.length + 1,
+    );
+    expect(engine.chat.completions.create).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries only model-owned failing section bodies once", async () => {
+    process.env.VITE_WEBGPU_SPLIT_STAGE = "true";
+    process.env.VITE_WEBGPU_MODEL_ID = "Qwen3.5-4B-q4f16_1-MLC";
+    const first = buildStageASectionEnvelope();
+    first.summary = "A concise summary should be provided here.";
+    const onBriefRetry = vi.fn();
+    const engine = createMockEngine(async (request, attempt) => {
+      if (attempt === 1) return JSON.stringify(first);
+      const schema = JSON.parse(
+        (request.response_format as { schema: string }).schema,
+      );
+      expect(schema.required).toEqual(["summary"]);
+      expect(Object.keys(schema.properties)).toEqual(["summary"]);
+      return JSON.stringify({
+        summary: buildStageASectionEnvelope().summary,
+      });
+    });
+
+    const result = await createWebGpuModelAdapter({
+      engine,
+      onBriefRetry,
+    }).generateDecisionBrief(BRIEF_INPUT);
+
+    expect(result.markdown).toContain(buildStageASectionEnvelope().summary);
+    expect(onBriefRetry).toHaveBeenCalledTimes(1);
     expect(engine.chat.completions.create).toHaveBeenCalledTimes(2);
   });
 });

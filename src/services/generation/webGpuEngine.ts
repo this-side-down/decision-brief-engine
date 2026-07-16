@@ -6,6 +6,11 @@ import {
   ModelLoadCancelledError,
   ModelLoadTimeoutError,
 } from "./webGpuErrors";
+import {
+  buildBrowserModelLoadDiagnostics,
+  publishBrowserInferenceDiagnostic,
+} from "./browserGenerationDiagnostics";
+import { getWebGpuCandidateRecord } from "./webGpuCandidates";
 
 export type WebGpuLoadProgress = {
   progress: number;
@@ -101,6 +106,7 @@ async function loadWebGpuEngineInternal(
   timeoutMs: number,
   options: LoadEngineOptions,
 ): Promise<MLCEngineInterface> {
+  const loadStartedAt = Date.now();
   if (options.signal?.aborted) {
     throw new ModelLoadCancelledError();
   }
@@ -112,6 +118,8 @@ async function loadWebGpuEngineInternal(
   await abortInFlightLoadEngine(previousEngine);
 
   const webllm = await importWebLlm();
+  const wasCached = await webllm.hasModelInCache(modelId);
+  const candidate = getWebGpuCandidateRecord(modelId);
   const engine = new webllm.MLCEngine({
     initProgressCallback: (report: InitProgressReport) => {
       if (isLoadStale(loadGeneration) || options.signal?.aborted) {
@@ -162,8 +170,39 @@ async function loadWebGpuEngineInternal(
     cachedEngine = engine;
     cachedModelId = modelId;
     activeLoadEngine = null;
+    publishBrowserInferenceDiagnostic({
+      kind: "model_load",
+      detail: buildBrowserModelLoadDiagnostics({
+        modelId,
+        candidate,
+        wasCached,
+        loadDurationMs: Date.now() - loadStartedAt,
+        outcome: "loaded",
+      }),
+    });
     return engine;
   } catch (error) {
+    const outcome =
+      error instanceof ModelLoadTimeoutError
+        ? "timed_out"
+        : isLoadStale(loadGeneration) ||
+            options.signal?.aborted ||
+            error instanceof ModelLoadCancelledError ||
+            (error instanceof DOMException && error.name === "AbortError")
+          ? "cancelled"
+          : "failed";
+    publishBrowserInferenceDiagnostic({
+      kind: "model_load",
+      detail: buildBrowserModelLoadDiagnostics({
+        modelId,
+        candidate,
+        wasCached,
+        loadDurationMs: Date.now() - loadStartedAt,
+        outcome,
+        failureMessage: error instanceof Error ? error.message : String(error),
+      }),
+    });
+
     if (error instanceof ModelLoadTimeoutError) {
       throw error;
     }

@@ -1,3 +1,8 @@
+import {
+  formatApproximateModelDownloadSize,
+  getWebGpuCandidateRecord,
+} from "./webGpuCandidates";
+
 export const DEFAULT_WEBGPU_MODEL_ID =
   "Qwen2.5-1.5B-Instruct-q4f16_1-MLC";
 
@@ -8,7 +13,10 @@ export type WebGpuConfig = {
   timeoutMs: number;
 };
 
-type WebGpuEnvName = "VITE_WEBGPU_MODEL_ID" | "VITE_WEBGPU_TIMEOUT_MS";
+type WebGpuEnvName =
+  | "VITE_WEBGPU_MODEL_ID"
+  | "VITE_WEBGPU_TIMEOUT_MS"
+  | "VITE_WEBGPU_SPLIT_STAGE";
 
 function readNodeEnv(name: WebGpuEnvName): string | undefined {
   const nodeProcess = (
@@ -36,4 +44,15 @@ export function getWebGpuConfig(): WebGpuConfig {
   const timeoutMs = Number(readEnv("VITE_WEBGPU_TIMEOUT_MS") ?? "120000");
 
   return { modelId, timeoutMs };
+}
+
+export function getWebGpuModelDownloadSizeCopy(): string {
+  const candidate = getWebGpuCandidateRecord(getWebGpuConfig().modelId);
+  return candidate
+    ? formatApproximateModelDownloadSize(candidate.approximateDownloadBytes)
+    : WEBGPU_MODEL_DOWNLOAD_SIZE_COPY;
+}
+
+export function isWebGpuSplitStageEnabled(): boolean {
+  return readEnv("VITE_WEBGPU_SPLIT_STAGE") === "true";
 }

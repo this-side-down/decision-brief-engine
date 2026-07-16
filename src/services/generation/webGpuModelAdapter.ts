@@ -9,7 +9,12 @@ import type {
 import { parseCaptureLayerJson } from "./parseCaptureLayer";
 import { parseDecisionBriefMarkdownOnlyJson } from "./parseDecisionBriefMarkdownOnly";
 import { parseDecisionBriefResultJson } from "./parseDecisionBriefResult";
-import { buildCaptureLayerPrompt, buildDecisionBriefPrompt } from "./prompts";
+import {
+  buildCaptureLayerPrompt,
+  buildDecisionBriefPrompt,
+  buildDecisionBriefSectionScaffoldPrompt,
+  buildDecisionBriefTargetedCorrectionPrompt,
+} from "./prompts";
 import {
   assertGenerationNotCancelled,
   cancelWebGpuGeneration,
@@ -19,7 +24,7 @@ import {
   GenerationQualityError,
   InputTooLargeError,
 } from "./webGpuErrors";
-import { getWebGpuConfig } from "./webGpuConfig";
+import { getWebGpuConfig, isWebGpuSplitStageEnabled } from "./webGpuConfig";
 import {
   evaluateWebGpuCaptureInputBudget,
   formatWebGpuInputBudgetDiagnostic,
@@ -34,6 +39,7 @@ import {
   WEBGPU_DECISION_BRIEF_MARKDOWN_ONLY_SCHEMA_VERSION,
   WEBGPU_DECISION_BRIEF_RESULT_SCHEMA_VERSION,
   WEB_LLM_PACKAGE_VERSION,
+  buildWebGpuJsonResponseFormat,
 } from "./webGpuGenerationSchemas";
 import {
   resolveWebGpuDecisionBriefPromptMode,
@@ -54,14 +60,49 @@ import {
   type BrowserGenerationStage,
   type StructuredCompletionDiagnostics,
   extractStructuredCompletionDiagnostics,
+  publishBrowserInferenceDiagnostic,
 } from "./browserGenerationDiagnostics";
 import {
   buildBrowserGenerationDiagnosticFilename,
   persistBrowserGenerationDiagnosticArtifact,
 } from "./browserGenerationLocalCapture";
+import { getWebGpuCandidateRecord } from "./webGpuCandidates";
+import { buildSourceBoundDecisionTrace } from "./buildSourceBoundDecisionTrace";
+import {
+  OLLAMA_STAGE_A_SECTIONS_JSON_SCHEMA,
+  buildOllamaStageACorrectionSchema,
+  type OllamaStageASectionField,
+} from "./decisionBriefResultSchema";
+import {
+  assembleDecisionBriefSectionBodies,
+  parseDecisionBriefSectionsJson,
+  parseStageACorrectionFieldsJson,
+  type StageASectionField,
+} from "./parseDecisionBriefSections";
+import { parseDecisionBriefSections } from "../../evaluation/decisionBriefWritingChecks";
 
 const JSON_RETRY_SUFFIX =
   "\n\nReturn ONLY valid JSON. No markdown fences, no commentary, no reasoning.";
+
+const SECTION_BODY_FIELDS = [
+  ["summary", "Summary"],
+  ["decisionContext", "Decision Context"],
+  ["optionsConsidered", "Options Considered"],
+  ["recommendation", "Recommendation"],
+  ["risksAndConstraints", "Risks and Constraints"],
+  ["openQuestions", "Open Questions"],
+  ["suggestedNextSteps", "Suggested Next Steps"],
+  ["confidence", "Confidence"],
+] as const;
+
+const MODEL_OWNED_SECTION_TO_FIELD = new Map<string, OllamaStageASectionField>([
+  ["Summary", "summary"],
+  ["Decision Context", "decisionContext"],
+  ["Options Considered", "optionsConsidered"],
+  ["Risks and Constraints", "risksAndConstraints"],
+  ["Open Questions", "openQuestions"],
+  ["Confidence", "confidence"],
+]);
 
 export type WebGpuFirstAttemptResult = {
   parsePass: boolean;
@@ -291,12 +332,22 @@ async function completeStructuredPrompt(
 ): Promise<StructuredCompletionResult> {
   assertGenerationNotCancelled(options.signal);
   const { modelId } = getWebGpuConfig();
+  const candidate = getWebGpuCandidateRecord(modelId);
+  const generationStartedAt = Date.now();
 
   try {
     const response = await engine.chat.completions.create({
       messages: [{ role: "user", content: options.prompt }],
       stream: false,
       response_format: options.responseFormat,
+      ...(candidate?.disableThinking
+        ? {
+            extra_body: {
+              enable_thinking: false,
+              enable_latency_breakdown: true,
+            },
+          }
+        : {}),
     });
 
     assertGenerationNotCancelled(options.signal);
@@ -307,8 +358,10 @@ async function completeStructuredPrompt(
       attemptNumber: options.attemptNumber,
       modelId,
       requestOptions: {},
+      generationDurationMs: Date.now() - generationStartedAt,
     });
     callbacks.onCompletionDiagnostics?.(diagnostics);
+    publishBrowserInferenceDiagnostic({ kind: "completion", detail: diagnostics });
 
     const content = response.choices[0]?.message?.content;
     const normalizedContent = typeof content === "string" ? content.trim() : "";
@@ -351,6 +404,212 @@ function throwBriefRetryFailure(
     failureCategories,
     semanticFindings ?? undefined,
   );
+}
+
+function extractSectionBodyRecord(markdown: string): Record<string, string> {
+  const sections = parseDecisionBriefSections(markdown);
+  return Object.fromEntries(
+    SECTION_BODY_FIELDS.map(([field, heading]) => [
+      field,
+      sections.get(heading) ?? "",
+    ]),
+  );
+}
+
+function selectTargetedCorrectionFields(
+  acceptance: ReturnType<typeof evaluateDecisionBriefMarkdownOnlyAcceptance>,
+  bodies: Record<string, string>,
+): OllamaStageASectionField[] {
+  const selected = new Set<OllamaStageASectionField>();
+  const failingSections = [
+    ...acceptance.detailedFindings.missingRequiredSections,
+    ...acceptance.detailedFindings.emptyRequiredSections,
+    ...acceptance.detailedFindings.writingHardFailures.map((finding) => {
+      if (finding.section) return finding.section;
+      const excerpt = finding.excerpt?.toLowerCase();
+      if (!excerpt) return "";
+      return (
+        SECTION_BODY_FIELDS.find(([field]) =>
+          bodies[field]?.toLowerCase().includes(excerpt),
+        )?.[1] ?? ""
+      );
+    }),
+  ];
+
+  for (const section of failingSections) {
+    const field = MODEL_OWNED_SECTION_TO_FIELD.get(section);
+    if (field) selected.add(field);
+  }
+  return [...selected];
+}
+
+function buildTargetedCorrectionFields(
+  fields: readonly OllamaStageASectionField[],
+  bodies: Record<string, string>,
+  acceptance: ReturnType<typeof evaluateDecisionBriefMarkdownOnlyAcceptance>,
+) {
+  return fields.map((field) => {
+    const section =
+      SECTION_BODY_FIELDS.find(([candidate]) => candidate === field)?.[1] ??
+      field;
+    const findings = acceptance.detailedFindings.writingHardFailures
+      .filter(
+        (finding) =>
+          finding.section === section ||
+          (!finding.section &&
+            Boolean(finding.excerpt) &&
+            bodies[field]
+              ?.toLowerCase()
+              .includes(finding.excerpt!.toLowerCase())),
+      )
+      .map(
+        (finding) =>
+          `Writing rule ${finding.ruleId} in ${section}: ${finding.message}`,
+      );
+    if (acceptance.detailedFindings.missingRequiredSections.includes(section)) {
+      findings.push(`Missing required section: ${section}`);
+    }
+    if (acceptance.detailedFindings.emptyRequiredSections.includes(section)) {
+      findings.push(`Empty required section: ${section}`);
+    }
+    return { field, section, body: bodies[field] ?? "", findings };
+  });
+}
+
+async function generateWebGpuSplitStageDecisionBrief(
+  engine: MLCEngineInterface,
+  input: GenerateDecisionBriefInput,
+  options: {
+    signal?: AbortSignal;
+    captureContext?: WebGpuGenerationCaptureContext;
+    onBriefRetry?: () => void;
+    onBriefFirstAttempt?: (result: WebGpuFirstAttemptResult) => void;
+    onCompletionDiagnostics?: (
+      diagnostics: StructuredCompletionDiagnostics,
+    ) => void;
+  },
+): Promise<DecisionBriefResult> {
+  const completionCallbacks = { ...options };
+  const firstCompletion = await completeStructuredPrompt(
+    engine,
+    {
+      prompt: buildDecisionBriefSectionScaffoldPrompt(input),
+      responseFormat: buildWebGpuJsonResponseFormat(
+        JSON.stringify(OLLAMA_STAGE_A_SECTIONS_JSON_SCHEMA),
+      ),
+      signal: options.signal,
+      generationStage: "brief",
+      attemptNumber: 1,
+    },
+    completionCallbacks,
+  );
+
+  let markdown: string;
+  try {
+    markdown = parseDecisionBriefSectionsJson(firstCompletion.content, {
+      captureLayer: input.captureLayer,
+    });
+  } catch {
+    recordBriefFirstAttemptOutcome(options.onBriefFirstAttempt, {
+      parsePass: false,
+      semanticQualityPass: null,
+      retryReasonCategories: ["parse_schema"],
+      completionDiagnostics: firstCompletion.diagnostics,
+      semanticFindings: null,
+      briefPromptMode: "markdown_only",
+    });
+    throwBriefRetryFailure(["parse_schema"]);
+  }
+
+  const firstResult: DecisionBriefResult = {
+    markdown,
+    decisionTrace: { entries: [], created_at: "" },
+  };
+  const firstAcceptance = evaluateDecisionBriefMarkdownOnlyAcceptance({
+    result: firstResult,
+    captureLayer: input.captureLayer,
+  });
+
+  recordBriefFirstAttemptOutcome(options.onBriefFirstAttempt, {
+    parsePass: true,
+    semanticQualityPass: firstAcceptance.accepted,
+    placeholderLeakageDetected:
+      firstAcceptance.failureCategories.includes("placeholder_leakage"),
+    retryReasonCategories: [...firstAcceptance.failureCategories],
+    completionDiagnostics: firstCompletion.diagnostics,
+    semanticFindings: firstAcceptance.detailedFindings,
+    briefPromptMode: "markdown_only",
+  });
+
+  if (!firstAcceptance.accepted) {
+    const rejectedBodies = extractSectionBodyRecord(markdown);
+    const correctionFields = selectTargetedCorrectionFields(
+      firstAcceptance,
+      rejectedBodies,
+    );
+    if (correctionFields.length === 0) {
+      throwBriefRetryFailure(
+        firstAcceptance.failureCategories,
+        firstAcceptance.detailedFindings,
+      );
+    }
+
+    options.onBriefRetry?.();
+    const retryCompletion = await completeStructuredPrompt(
+      engine,
+      {
+        prompt: buildDecisionBriefTargetedCorrectionPrompt(
+          buildTargetedCorrectionFields(
+            correctionFields,
+            rejectedBodies,
+            firstAcceptance,
+          ),
+        ),
+        responseFormat: buildWebGpuJsonResponseFormat(
+          JSON.stringify(buildOllamaStageACorrectionSchema(correctionFields)),
+        ),
+        signal: options.signal,
+        generationStage: "brief_retry",
+        attemptNumber: 2,
+      },
+      completionCallbacks,
+    );
+
+    try {
+      markdown = assembleDecisionBriefSectionBodies(
+        {
+          ...(rejectedBodies as Record<StageASectionField, string>),
+          ...parseStageACorrectionFieldsJson(
+            retryCompletion.content,
+            correctionFields,
+          ),
+        },
+        { captureLayer: input.captureLayer },
+      );
+    } catch {
+      throwBriefRetryFailure(["parse_schema"]);
+    }
+
+    const retryResult: DecisionBriefResult = {
+      markdown,
+      decisionTrace: { entries: [], created_at: "" },
+    };
+    const retryAcceptance = evaluateDecisionBriefMarkdownOnlyAcceptance({
+      result: retryResult,
+      captureLayer: input.captureLayer,
+    });
+    if (!retryAcceptance.accepted) {
+      throwBriefRetryFailure(
+        retryAcceptance.failureCategories,
+        retryAcceptance.detailedFindings,
+      );
+    }
+  }
+
+  return {
+    markdown,
+    decisionTrace: buildSourceBoundDecisionTrace(input.captureLayer),
+  };
 }
 
 async function generateDecisionBriefWithQualityGate(
@@ -557,6 +816,16 @@ export function createWebGpuModelAdapter({
       input: GenerateDecisionBriefInput,
       _options?: GenerateDecisionBriefOptions,
     ): Promise<DecisionBriefResult> {
+      if (isWebGpuSplitStageEnabled()) {
+        return generateWebGpuSplitStageDecisionBrief(engine, input, {
+          signal,
+          captureContext,
+          onBriefRetry,
+          onBriefFirstAttempt,
+          onCompletionDiagnostics,
+        });
+      }
+
       return generateDecisionBriefWithQualityGate(engine, input, {
         signal,
         captureContext,
