@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { getWebGpuModelDownloadSizeCopy } from "../../services/generation/webGpuConfig";
 
+const WEBSITE_URL = "https://this-side-down.com";
 const REPOSITORY_URL = "https://github.com/this-side-down/decision-brief-engine";
 const LICENSE_URL = `${REPOSITORY_URL}/blob/main/LICENSE`;
 
@@ -27,24 +28,37 @@ function ApplicationMetadata() {
   }
 
   return createPortal(
-    <div className="order-first hidden items-center gap-2 whitespace-nowrap text-[10px] text-neutral-500 lg:flex">
-      <span className="hidden xl:inline">© 2026 this-side-down</span>
+    <div className="order-first flex items-center gap-2 whitespace-nowrap text-[10px] text-neutral-500">
+      <span>
+        © 2026{" "}
+        <a
+          aria-label="Visit this-side-down"
+          className="rounded text-neutral-300 underline-offset-2 transition hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+          href={WEBSITE_URL}
+          rel="noreferrer"
+          target="_blank"
+        >
+          this-side-down
+        </a>
+      </span>
       <span className="hidden xl:inline" aria-hidden="true">
         ·
       </span>
       <a
         aria-label="View Decision Brief Engine on GitHub"
-        className="rounded text-neutral-300 underline-offset-2 transition hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+        className="hidden rounded text-neutral-300 underline-offset-2 transition hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 xl:inline"
         href={REPOSITORY_URL}
         rel="noreferrer"
         target="_blank"
       >
         GitHub
       </a>
-      <span aria-hidden="true">·</span>
+      <span className="hidden xl:inline" aria-hidden="true">
+        ·
+      </span>
       <a
         aria-label="View the Decision Brief Engine MIT license"
-        className="rounded text-neutral-300 underline-offset-2 transition hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+        className="hidden rounded text-neutral-300 underline-offset-2 transition hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 xl:inline"
         href={LICENSE_URL}
         rel="noreferrer"
         target="_blank"
