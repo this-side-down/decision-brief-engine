@@ -1,6 +1,9 @@
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { getWebGpuModelDownloadSizeCopy } from "../../services/generation/webGpuConfig";
 
 const REPOSITORY_URL = "https://github.com/this-side-down/decision-brief-engine";
+const LICENSE_URL = `${REPOSITORY_URL}/blob/main/LICENSE`;
 
 type DownloadDisclosureDialogProps = {
   isOpen: boolean;
@@ -8,21 +11,48 @@ type DownloadDisclosureDialogProps = {
   onCancel: () => void;
 };
 
-function ApplicationFooter() {
-  return (
-    <footer className="flex shrink-0 flex-wrap items-center justify-end gap-x-2 gap-y-0.5 bg-slate-50 px-5 pb-2 pt-0 text-[10px] text-slate-400">
-      <span>© 2026 Youssef Benchouaf</span>
-      <span aria-hidden="true">·</span>
+function ApplicationMetadata() {
+  const [headerTarget, setHeaderTarget] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    setHeaderTarget(
+      document.querySelector<HTMLElement>(
+        "main > section > header > div:last-child",
+      ),
+    );
+  }, []);
+
+  if (!headerTarget) {
+    return null;
+  }
+
+  return createPortal(
+    <div className="order-first hidden items-center gap-2 whitespace-nowrap text-[10px] text-neutral-500 lg:flex">
+      <span className="hidden xl:inline">© 2026 this-side-down</span>
+      <span className="hidden xl:inline" aria-hidden="true">
+        ·
+      </span>
       <a
         aria-label="View Decision Brief Engine on GitHub"
-        className="rounded text-slate-500 underline-offset-2 transition hover:text-slate-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/10"
+        className="rounded text-neutral-300 underline-offset-2 transition hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
         href={REPOSITORY_URL}
         rel="noreferrer"
         target="_blank"
       >
         GitHub
       </a>
-    </footer>
+      <span aria-hidden="true">·</span>
+      <a
+        aria-label="View the Decision Brief Engine MIT license"
+        className="rounded text-neutral-300 underline-offset-2 transition hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+        href={LICENSE_URL}
+        rel="noreferrer"
+        target="_blank"
+      >
+        MIT
+      </a>
+    </div>,
+    headerTarget,
   );
 }
 
@@ -35,7 +65,7 @@ export function DownloadDisclosureDialog({
 
   return (
     <>
-      <ApplicationFooter />
+      <ApplicationMetadata />
       {isOpen ? (
         <div
           aria-labelledby="download-disclosure-title"
