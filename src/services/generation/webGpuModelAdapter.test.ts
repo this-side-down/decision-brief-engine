@@ -867,6 +867,43 @@ describe("createWebGpuModelAdapter split-stage vertical slice", () => {
     expect(onBriefRetry).toHaveBeenCalledTimes(1);
     expect(engine.chat.completions.create).toHaveBeenCalledTimes(2);
   });
+
+  it("accepts targeted optionsConsidered correction with newline-separated Markdown items", async () => {
+    process.env.VITE_WEBGPU_SPLIT_STAGE = "true";
+    process.env.VITE_WEBGPU_MODEL_ID = "Qwen3.5-4B-q4f16_1-MLC";
+    const longOptionSentence = `- ${Array.from({ length: 40 }, (_, index) => `option${index}`).join(" ")}`;
+    const correctedOptions = [
+      "- Delay the move to March 22 to reduce rent overlap.",
+      "- Move March 14 to reduce visa and painter timing risk.",
+      "- Hire movers for heavy items and pack boxes internally.",
+      "- Ask family to care for the dog during the move.",
+    ].join("\n");
+    const first = buildStageASectionEnvelope();
+    first.optionsConsidered = longOptionSentence;
+    const onBriefRetry = vi.fn();
+    const engine = createMockEngine(async (request, attempt) => {
+      if (attempt === 1) return JSON.stringify(first);
+      const schema = JSON.parse(
+        (request.response_format as { schema: string }).schema,
+      );
+      expect(schema.required).toEqual(["optionsConsidered"]);
+      expect(Object.keys(schema.properties)).toEqual(["optionsConsidered"]);
+      expect(request.messages?.[0]?.content).toContain(
+        "Do not combine multiple items with semicolons.",
+      );
+      return JSON.stringify({ optionsConsidered: correctedOptions });
+    });
+
+    const result = await createWebGpuModelAdapter({
+      engine,
+      onBriefRetry,
+    }).generateDecisionBrief(BRIEF_INPUT);
+
+    expect(result.markdown).toContain("Delay the move to March 22 to reduce rent overlap.");
+    expect(result.markdown).toContain("Ask family to care for the dog during the move.");
+    expect(onBriefRetry).toHaveBeenCalledTimes(1);
+    expect(engine.chat.completions.create).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe("non-WebGPU adapters remain unchanged", () => {

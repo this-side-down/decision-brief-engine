@@ -5,7 +5,9 @@ import { CAPTURE_LAYER_FIELDS, DECISION_BRIEF_MARKDOWN_STRUCTURE } from "./types
 import {
   buildCaptureLayerPrompt,
   buildDecisionBriefSectionScaffoldPrompt,
+  buildDecisionBriefTargetedCorrectionPrompt,
   resolveCapturePromptVariant,
+  type StageACorrectionPromptField,
 } from "./prompts";
 
 const baseInput = {
@@ -82,5 +84,170 @@ describe("buildCaptureLayerPrompt", () => {
       "stated_decision may be \"\" when the notes do not contain an explicit decision",
     );
     expect(prompt).toContain("Decide whether to pilot specialty trades before Q4.");
+  });
+});
+
+function targetedCorrectionField(
+  overrides: Partial<StageACorrectionPromptField> & Pick<StageACorrectionPromptField, "field" | "section">,
+): StageACorrectionPromptField {
+  return {
+    body: "failing body",
+    findings: [
+      "Writing rule sentence-length in Options Considered: Sentence exceeds 35 words (40).",
+    ],
+    ...overrides,
+  };
+}
+
+const LIST_GUIDANCE_MARKERS = [
+  'Every item must begin with "- ".',
+  "Every item must be separated by a newline.",
+  "Do not combine multiple items with semicolons.",
+  "Do not combine multiple items into one sentence.",
+  "Each list item must contain no more than 30 whitespace-delimited words.",
+  "Return the field as one JSON string containing escaped newline separators as required by JSON.",
+] as const;
+
+describe("buildDecisionBriefTargetedCorrectionPrompt", () => {
+  it("requires optionsConsidered corrections as one Markdown item per line", () => {
+    const prompt = buildDecisionBriefTargetedCorrectionPrompt([
+      targetedCorrectionField({
+        field: "optionsConsidered",
+        section: "Options Considered",
+      }),
+    ]);
+
+    expect(prompt).toContain(
+      "rewrite this Options Considered body as a Markdown list with one concise option per line.",
+    );
+    for (const marker of LIST_GUIDANCE_MARKERS) {
+      expect(prompt).toContain(marker);
+    }
+  });
+
+  it("requires risksAndConstraints corrections as one Markdown item per line", () => {
+    const prompt = buildDecisionBriefTargetedCorrectionPrompt([
+      targetedCorrectionField({
+        field: "risksAndConstraints",
+        section: "Risks and Constraints",
+        findings: [
+          "Writing rule sentence-length in Risks and Constraints: Sentence exceeds 35 words (40).",
+        ],
+      }),
+    ]);
+
+    expect(prompt).toContain(
+      "rewrite this Risks and Constraints body as a Markdown list with one concise risk or constraint per line.",
+    );
+    for (const marker of LIST_GUIDANCE_MARKERS) {
+      expect(prompt).toContain(marker);
+    }
+  });
+
+  it("requires openQuestions corrections as one Markdown item per line", () => {
+    const prompt = buildDecisionBriefTargetedCorrectionPrompt([
+      targetedCorrectionField({
+        field: "openQuestions",
+        section: "Open Questions",
+        findings: [
+          "Writing rule sentence-length in Open Questions: Sentence exceeds 35 words (40).",
+        ],
+      }),
+    ]);
+
+    expect(prompt).toContain(
+      "rewrite this Open Questions body as a Markdown list with one concise question per line.",
+    );
+    for (const marker of LIST_GUIDANCE_MARKERS) {
+      expect(prompt).toContain(marker);
+    }
+  });
+
+  it("requires suggestedNextSteps corrections as one Markdown item per line", () => {
+    const prompt = buildDecisionBriefTargetedCorrectionPrompt([
+      targetedCorrectionField({
+        field: "suggestedNextSteps",
+        section: "Suggested Next Steps",
+        findings: [
+          "Writing rule sentence-length in Suggested Next Steps: Sentence exceeds 35 words (40).",
+        ],
+      }),
+    ]);
+
+    expect(prompt).toContain(
+      "rewrite this Suggested Next Steps body as a Markdown list with one concise step per line.",
+    );
+    for (const marker of LIST_GUIDANCE_MARKERS) {
+      expect(prompt).toContain(marker);
+    }
+  });
+
+  it("keeps Summary guidance without list-specific instructions", () => {
+    const prompt = buildDecisionBriefTargetedCorrectionPrompt([
+      targetedCorrectionField({
+        field: "summary",
+        section: "Summary",
+        findings: [
+          "Writing rule summary-length in Summary: Summary exceeds 60 words (65).",
+        ],
+      }),
+    ]);
+
+    expect(prompt).toContain(
+      "rewrite this Summary to no more than 50 whitespace-delimited words",
+    );
+    expect(prompt).not.toContain("Do not combine multiple items with semicolons.");
+    expect(prompt).not.toContain('Every item must begin with "- ".');
+  });
+
+  it("keeps prose sentence guidance for Decision Context without list instructions", () => {
+    const prompt = buildDecisionBriefTargetedCorrectionPrompt([
+      targetedCorrectionField({
+        field: "decisionContext",
+        section: "Decision Context",
+        findings: [
+          "Writing rule sentence-length in Decision Context: Sentence exceeds 35 words (40).",
+        ],
+      }),
+    ]);
+
+    expect(prompt).toContain(
+      "rewrite every prose sentence in this field to no more than 30 whitespace-delimited words",
+    );
+    expect(prompt).not.toContain("Do not combine multiple items with semicolons.");
+    expect(prompt).not.toContain('Every item must begin with "- ".');
+  });
+
+  it("explicitly prohibits semicolon-chained list items", () => {
+    const prompt = buildDecisionBriefTargetedCorrectionPrompt([
+      targetedCorrectionField({
+        field: "optionsConsidered",
+        section: "Options Considered",
+      }),
+    ]);
+
+    expect(prompt).toContain("Do not combine multiple items with semicolons.");
+  });
+
+  it("preserves exact targeted field selection and JSON contract", () => {
+    const prompt = buildDecisionBriefTargetedCorrectionPrompt([
+      targetedCorrectionField({
+        field: "optionsConsidered",
+        section: "Options Considered",
+      }),
+      targetedCorrectionField({
+        field: "openQuestions",
+        section: "Open Questions",
+        findings: [
+          "Writing rule sentence-length in Open Questions: Sentence exceeds 35 words (40).",
+        ],
+      }),
+    ]);
+
+    expect(prompt).toContain(
+      "Return valid JSON with exactly these fields and no others: optionsConsidered, openQuestions.",
+    );
+    expect(prompt).toContain("Field: optionsConsidered");
+    expect(prompt).toContain("Field: openQuestions");
   });
 });
