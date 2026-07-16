@@ -13,33 +13,36 @@ type DownloadDisclosureDialogProps = {
 };
 
 function ApplicationMetadata() {
-  const [headerTarget, setHeaderTarget] = useState<HTMLElement | null>(null);
+  const [versionTarget, setVersionTarget] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
-    setHeaderTarget(
+    setVersionTarget(
       document.querySelector<HTMLElement>(
-        "main > section > header > div:last-child",
+        "main > section > header > div:last-child > span:first-child",
       ),
     );
   }, []);
 
-  if (!headerTarget) {
+  if (!versionTarget) {
     return null;
   }
 
   return createPortal(
-    <div className="order-first flex items-center gap-2 whitespace-nowrap text-xs text-neutral-400">
-      <span>© 2026</span>
-      <a
-        aria-label="Visit this-side-down"
-        className="rounded text-neutral-300 underline-offset-2 transition hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-        href={WEBSITE_URL}
-        rel="noreferrer"
-        target="_blank"
-      >
-        this-side-down
-      </a>
-      <span aria-hidden="true">·</span>
+    <span className="whitespace-nowrap">
+      <span aria-hidden="true"> · </span>
+      <span>
+        © 2026{" "}
+        <a
+          aria-label="Visit this-side-down"
+          className="rounded text-neutral-300 underline-offset-2 transition hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+          href={WEBSITE_URL}
+          rel="noreferrer"
+          target="_blank"
+        >
+          this-side-down
+        </a>
+      </span>
+      <span aria-hidden="true"> · </span>
       <a
         aria-label="View Decision Brief Engine on GitHub"
         className="rounded text-neutral-300 underline-offset-2 transition hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
@@ -49,7 +52,7 @@ function ApplicationMetadata() {
       >
         GitHub
       </a>
-      <span aria-hidden="true">·</span>
+      <span aria-hidden="true"> · </span>
       <a
         aria-label="View the Decision Brief Engine MIT license"
         className="rounded text-neutral-300 underline-offset-2 transition hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
@@ -59,8 +62,8 @@ function ApplicationMetadata() {
       >
         MIT
       </a>
-    </div>,
-    headerTarget,
+    </span>,
+    versionTarget,
   );
 }
 
