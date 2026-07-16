@@ -33,15 +33,10 @@ export function getGenerationMode(): GenerationMode {
   return resolveEffectiveMode();
 }
 
-export function getGenerationModeLabel(mode: GenerationMode = getGenerationMode()): string {
-  switch (mode) {
-    case "ollama":
-      return "Local Ollama";
-    case "webgpu":
-      return "Live in browser";
-    default:
-      return "Mock demo";
-  }
+export function getGenerationModeLabel(
+  _mode: GenerationMode = getGenerationMode(),
+): string {
+  return "";
 }
 
 export function getGenerationModeBadge(mode: GenerationMode = getGenerationMode()): string {
