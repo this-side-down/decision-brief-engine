@@ -1178,9 +1178,9 @@ export function App() {
         <footer className="sticky bottom-0 z-20 flex shrink-0 items-center justify-between border-t border-slate-300 bg-[#F4F1EA] px-5 py-3 shadow-[0_-8px_20px_rgba(19,19,18,0.05)]">
           <div className="flex gap-3">
             <button
-              className={`rounded border px-4 py-2 text-sm font-semibold transition ${
+              className={`rounded border px-4 py-2 text-sm font-semibold transition-colors ${
                 canGenerateCaptureLayer
-                  ? "border-neutral-950 bg-neutral-950 text-white"
+                  ? "border-neutral-950 bg-neutral-950 text-white hover:border-neutral-800 hover:bg-neutral-800"
                   : "border-slate-200 bg-slate-100 text-slate-400"
               }`}
               disabled={!canGenerateCaptureLayer || isGeneratingCaptureLayer}
@@ -1217,9 +1217,9 @@ export function App() {
               </button>
             ) : null}
             <button
-              className={`rounded border px-4 py-2 text-sm font-semibold ${
+              className={`rounded border px-4 py-2 text-sm font-semibold transition-colors ${
                 canGenerateDecisionBrief
-                  ? "border-slate-300 bg-white text-slate-700"
+                  ? "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900"
                   : "border-slate-200 bg-slate-100 text-slate-400"
               }`}
               disabled={!canGenerateDecisionBrief || isGeneratingDecisionBrief}
@@ -1242,8 +1242,8 @@ export function App() {
           </div>
           <div className="flex gap-3">
             <button
-              className={`rounded px-4 py-2 text-sm font-semibold ${
-                hasMarkdown ? "text-slate-900" : "text-slate-500"
+              className={`rounded px-4 py-2 text-sm font-semibold transition-colors ${
+                hasMarkdown ? "text-slate-900 hover:bg-slate-50 hover:text-[#6659aa]" : "text-slate-500"
               }`}
               disabled={!hasMarkdown}
               onClick={handleCopyMarkdown}
@@ -1257,8 +1257,8 @@ export function App() {
               Copy Markdown
             </button>
             <button
-              className={`rounded px-4 py-2 text-sm font-semibold ${
-                hasMarkdown ? "text-slate-900" : "text-slate-500"
+              className={`rounded px-4 py-2 text-sm font-semibold transition-colors ${
+                hasMarkdown ? "text-slate-900 hover:bg-slate-50 hover:text-[#6659aa]" : "text-slate-500"
               }`}
               disabled={!hasMarkdown}
               onClick={handleDownloadMarkdown}

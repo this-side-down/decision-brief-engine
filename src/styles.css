@@ -87,10 +87,6 @@ textarea {
   border-left-width: 2px;
 }
 
-button:not(:disabled):hover {
-  transform: translateY(-1px);
-}
-
 button:focus-visible,
 summary:focus-visible,
 select:focus-visible,
