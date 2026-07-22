@@ -1,4 +1,4 @@
-# Local inference setup — rough product notes
+# Local inference setup: rough product notes
 
 people keep trying to run local inference because it's the strongest real-generation path we have, but setup is fragile. support thread this week: endpoint wrong, model not pulled, health check passed but generation failed with a useless error. another case had the local runtime running but the app was pointed at the wrong port.
 

@@ -48,6 +48,10 @@ select {
   -webkit-tap-highlight-color: transparent;
 }
 
+input[type="radio"] {
+  accent-color: var(--dbe-tech);
+}
+
 button,
 summary,
 select,
