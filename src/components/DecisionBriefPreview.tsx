@@ -61,13 +61,13 @@ const previewComponents: Components = {
     }
 
     return (
-      <code className="rounded bg-slate-100 px-1 py-0.5 font-mono text-[0.8125rem] text-slate-800">
+      <code className="dbe-code-surface rounded border px-1 py-0.5 font-mono text-[0.8125rem]">
         {children}
       </code>
     );
   },
   pre: ({ children }) => (
-    <pre className="mb-4 overflow-x-auto rounded border border-slate-200 bg-slate-50 p-3 last:mb-0">
+    <pre className="dbe-code-surface mb-4 overflow-x-auto rounded border p-3 last:mb-0">
       {children}
     </pre>
   ),

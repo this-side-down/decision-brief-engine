@@ -124,7 +124,7 @@ export function useGenerationMode(options: UseGenerationModeOptions = {}) {
     if (ollamaLocked || effectiveMode !== "webgpu") {
       if (effectiveMode === "mock") {
         setInferenceUiState("mock_default");
-        setStatusMessage("Using Mock demo. Sample output only—no model download.");
+        setStatusMessage("Using Mock demo. Sample output only. No model download.");
       }
       return;
     }

@@ -113,6 +113,21 @@ function StatusBadge({ label }: { label: string }) {
   );
 }
 
+function ProductMark() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="h-7 w-7 shrink-0"
+      viewBox="0 0 32 32"
+    >
+      <rect fill="#F4F1EA" height="32" width="32" />
+      <path d="M8 6h12l4 4v16H8V6Z" fill="none" stroke="#131312" strokeWidth="2" />
+      <path d="M20 6v5h5" fill="none" stroke="#131312" strokeWidth="2" />
+      <path d="M12 16h8M12 20h6" stroke="#7A6CC4" strokeWidth="2" />
+    </svg>
+  );
+}
+
 function EmptyPanel({ label }: { label: string }) {
   return (
     <div className="flex min-h-48 flex-1 items-center justify-center border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-400">
@@ -878,16 +893,19 @@ export function App() {
   }
 
   return (
-    <main className="h-screen overflow-hidden bg-neutral-950 p-4 text-slate-900">
-      <section className="mx-auto flex h-full max-w-7xl flex-col overflow-hidden border border-slate-200 bg-white shadow-2xl">
-        <header className="flex shrink-0 items-center justify-between bg-neutral-950 px-5 py-4 text-white">
-          <div className="flex items-baseline gap-4">
-            <h1 className="text-lg font-semibold tracking-tight">
-              Decision Brief Engine
-            </h1>
-            <p className="text-xs text-neutral-400">
-              Raw notes → structured decisions
-            </p>
+    <main className="h-screen overflow-hidden bg-neutral-950 p-3 text-slate-900 sm:p-4">
+      <section className="mx-auto flex h-full max-w-7xl flex-col overflow-hidden border border-slate-300 bg-white shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
+        <header className="flex shrink-0 items-center justify-between bg-neutral-950 px-5 py-3.5 text-white">
+          <div className="flex items-center gap-3">
+            <ProductMark />
+            <div className="flex items-baseline gap-4">
+              <h1 className="text-lg font-semibold tracking-[-0.02em]">
+                Decision Brief Engine
+              </h1>
+              <p className="text-xs text-neutral-400">
+                Raw notes to structured decisions
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-[10px] text-neutral-500">
@@ -1086,8 +1104,8 @@ export function App() {
                   <StatusBadge label={captureLayerStatus} />
                 </div>
                 <p className="mt-2 text-xs text-slate-500">
-                  Structured capture artifact: preserves facts, inference, and
-                  ambiguity before the final brief—not a summary shortcut.
+                  Structured capture artifact. It preserves facts, inference,
+                  and ambiguity before the final brief. It is not a summary shortcut.
                 </p>
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto">
@@ -1155,7 +1173,7 @@ export function App() {
           </div>
         )}
 
-        <footer className="sticky bottom-0 z-20 flex shrink-0 items-center justify-between border-t border-slate-200 bg-white px-5 py-3 shadow-[0_-8px_20px_rgba(15,23,42,0.06)]">
+        <footer className="sticky bottom-0 z-20 flex shrink-0 items-center justify-between border-t border-slate-300 bg-[#F4F1EA] px-5 py-3 shadow-[0_-8px_20px_rgba(19,19,18,0.05)]">
           <div className="flex gap-3">
             <button
               className={`rounded border px-4 py-2 text-sm font-semibold transition ${
