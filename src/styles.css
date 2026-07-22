@@ -67,6 +67,22 @@ textarea {
   color: #312b40;
 }
 
+.dbe-technical-field {
+  background: #f6f3fb;
+  border-color: #d8cfec;
+  color: #312b40;
+}
+
+.dbe-technical-field:focus {
+  border-color: var(--dbe-tech);
+  box-shadow: 0 0 0 2px rgb(122 108 196 / 12%);
+}
+
+.dbe-structured-surface {
+  border-left-color: var(--dbe-tech);
+  border-left-width: 2px;
+}
+
 button:not(:disabled):hover {
   transform: translateY(-1px);
 }

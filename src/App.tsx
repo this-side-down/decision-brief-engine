@@ -146,7 +146,7 @@ function DecisionBriefEditor({
   return (
     <textarea
       aria-label="Editable Decision Brief Markdown"
-      className="min-h-0 w-full flex-1 resize-none border border-slate-200 bg-slate-50 p-4 font-mono text-sm leading-6 text-slate-800 outline-none transition focus:border-neutral-950 focus:ring-2 focus:ring-neutral-950/10"
+      className="dbe-technical-field min-h-0 w-full flex-1 resize-none border p-4 font-mono text-sm leading-6 outline-none transition"
       onChange={(event) => onChange(event.target.value)}
       value={markdown}
     />
@@ -160,9 +160,11 @@ function DecisionBriefViewModeControl({
   mode: DecisionBriefViewMode;
   onModeChange: (mode: DecisionBriefViewMode) => void;
 }) {
-  function buttonClassName(selected: boolean) {
+  function buttonClassName(selected: boolean, technical = false) {
     return selected
-      ? "bg-white text-slate-900 shadow-sm"
+      ? technical
+        ? "border-[#D8CFEC] bg-[#F1EDF9] text-[#554A8A] shadow-sm"
+        : "border-transparent bg-white text-slate-900 shadow-sm"
       : "text-slate-500 hover:text-slate-700";
   }
 
@@ -174,7 +176,7 @@ function DecisionBriefViewModeControl({
     >
       <button
         aria-pressed={mode === "preview"}
-        className={`rounded px-2.5 py-1 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/10 ${buttonClassName(mode === "preview")}`}
+        className={`rounded border border-transparent px-2.5 py-1 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/10 ${buttonClassName(mode === "preview")}`}
         onClick={() => onModeChange("preview")}
         type="button"
       >
@@ -182,7 +184,7 @@ function DecisionBriefViewModeControl({
       </button>
       <button
         aria-pressed={mode === "markdown"}
-        className={`rounded px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/10 ${buttonClassName(mode === "markdown")}`}
+        className={`rounded border border-transparent px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/10 ${buttonClassName(mode === "markdown", true)}`}
         onClick={() => onModeChange("markdown")}
         type="button"
       >

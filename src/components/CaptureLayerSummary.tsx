@@ -47,7 +47,7 @@ function ListSection({ items, label }: { items: string[]; label: string }) {
  */
 function CaptureLayerFields({ captureLayer }: { captureLayer: CaptureLayer }) {
   return (
-    <div className="min-w-0 space-y-3 border border-slate-200 bg-slate-50 p-4">
+    <div className="dbe-structured-surface min-w-0 space-y-3 border border-slate-200 bg-slate-50 p-4">
       <div className="flex min-w-0 items-center justify-between gap-3 rounded border border-slate-200 bg-white p-3 text-xs text-slate-600">
         <span className="shrink-0 font-bold uppercase tracking-wide text-slate-500">
           Confidence
