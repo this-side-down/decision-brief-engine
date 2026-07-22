@@ -184,10 +184,10 @@ export function DecisionTraceBasis({
   const summary = formatTraceableBasisSummary(groups);
 
   return (
-    <details className="group mt-3 min-w-0 shrink-0 rounded border border-slate-200 bg-slate-50 p-3">
+    <details className="dbe-structured-surface group mt-3 min-w-0 shrink-0 rounded border border-slate-200 bg-slate-50 p-3">
       <summary className="flex min-w-0 cursor-pointer list-none items-center gap-2 rounded transition-colors hover:bg-slate-50 group-open:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/10 [&::-webkit-details-marker]:hidden">
         <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
-          <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+          <span className="text-[11px] font-bold uppercase tracking-wide text-[#6B5EAA]">
             Traceable basis
           </span>
           <span className="shrink-0 text-[10px] font-medium text-slate-400 group-open:text-slate-500">
