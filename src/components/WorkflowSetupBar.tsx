@@ -70,7 +70,7 @@ export function WorkflowSetupBar({
   return (
     <div
       aria-label="Workflow setup"
-      className="shrink-0 border-b border-slate-200 bg-slate-50 px-5 py-3"
+      className="shrink-0 border-b border-slate-200 bg-slate-50 px-4 py-3 sm:px-5"
     >
       <p className="text-xs text-slate-600">{setupCopy}</p>
 

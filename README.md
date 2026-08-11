@@ -20,6 +20,12 @@ A measured limitation remains: Local generation can return a typed quality failu
 
 v0.1.0 is the first portfolio-ready public demo milestone: example gallery, export polish, Local Ollama health check, and generation telemetry. See [Public demo milestone](docs/product/public-demo-milestone.md) for the full write-up.
 
+## Built as public proof of work
+
+DBE is both a useful browser tool and an inspectable example of human-directed, AI-assisted product development. The shipped UI uses React 19, TypeScript 6, Vite 8, and Tailwind 4; product and inference contracts remain explicit; changes move through public issues, deterministic checks, pull requests, human merge, and the existing release process.
+
+“Modern” does not mean framework churn. New dependencies and frameworks must earn a place through product value, accessibility, local-only compatibility, maintainability, and a credible exit path. See [AI-native development](docs/project/ai-native-development.md) for the authority, privacy, and repository-quality contract.
+
 ## v0.3 Long-Form Decision Capture
 
 v0.3 processes long decision material through hierarchical Capture, deterministic merge behavior, and source-coverage checks before producing a canonical Decision Brief and traceable Decision Trace.
@@ -141,6 +147,7 @@ This is implementation guidance for the current v0 state, not a legal privacy po
 - [ADR 0002: FOSS-only MVP runtime stack](docs/decisions/0002-foss-only-mvp-stack.md)
 - [ADR 0004: inference path decision brief](docs/decisions/0004-inference-path-decision-brief.md)
 - [Release and versioning policy](docs/project/release-process.md)
+- [AI-native development](docs/project/ai-native-development.md)
 - [Changelog](CHANGELOG.md)
 - [Repository maintenance](docs/repo-maintenance.md)
 
@@ -149,6 +156,7 @@ This is implementation guidance for the current v0 state, not a legal privacy po
 ```sh
 npm install
 npm run dev
+npm run check
 npm run typecheck
 npm test
 npm run build
