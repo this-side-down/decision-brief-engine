@@ -66,8 +66,7 @@ Do not tag for:
 1. Confirm the milestone work is merged to `main`.
 2. Update `CHANGELOG.md` with the release date and final notes.
 3. Run validation:
-   - `npm run typecheck`
-   - `npm run build`
+   - `npm run check`
    - For inference-mode changes, run manual smoke checks for mock default, optional WebGPU flag, and Ollama locked mode; record browser model results in `fixtures/evaluation/` when relevant.
 4. Create an annotated Git tag matching the version, for example `v0.1.0`.
 5. Create a GitHub Release from that tag.

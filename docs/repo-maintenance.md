@@ -6,10 +6,11 @@ GitHub Actions runs on pull requests and pushes to `main`.
 
 The required CI check is `CI / typecheck-and-build`, or `typecheck-and-build` if GitHub displays the shorter name.
 
-CI runs typecheck and build only:
+CI runs the canonical deterministic check:
 
-- `npm run typecheck`
-- `npm run build`
+- `npm run check` (tests, typecheck, and production build)
+
+The job ID and required-check name remain `typecheck-and-build` so the existing branch ruleset and deployment flow do not need to change.
 
 This repo intentionally does not include deployment automation beyond the existing Vercel integration.
 
@@ -65,7 +66,7 @@ Settings -> General -> Pull Requests:
 - Allow rebase merging: off
 - Automatically delete head branches: on
 - Always suggest updating pull request branches: on, if available
-- Allow auto-merge: optional
+- Allow auto-merge: optional for human maintainers; agents must not enable auto-merge or merge a pull request
 
 Settings -> Actions -> General:
 

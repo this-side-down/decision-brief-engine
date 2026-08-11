@@ -109,7 +109,7 @@ export function DecisionBriefPreview({ markdown }: { markdown: string }) {
   return (
     <article
       aria-label="Rendered Decision Brief preview"
-      className="min-h-0 min-w-0 w-full flex-1 overflow-y-auto overflow-x-hidden overscroll-contain border border-slate-200 bg-white p-4 [overflow-wrap:anywhere]"
+      className="min-h-[28rem] min-w-0 w-full flex-1 overflow-y-auto overflow-x-hidden overscroll-contain border border-slate-200 bg-white p-4 [overflow-wrap:anywhere] lg:min-h-0"
     >
       <ReactMarkdown components={previewComponents} remarkPlugins={[remarkGfm]}>
         {markdown}

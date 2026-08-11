@@ -1,6 +1,4 @@
 import { spawnSync } from "node:child_process";
-import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { EXAMPLE_FIXTURES } from "../../data/exampleFixtures";
 import type { CaptureLayer } from "../../types/captureLayer";
@@ -29,14 +27,11 @@ import { PIPELINE_RESULT_FORMAT_VERSION } from "./constants";
 const repoRoot = process.cwd();
 
 function spawnEvalPipelineCli(cliArgs: string[]) {
-  const require = createRequire(import.meta.url);
-  const tsxPackageJson = require.resolve("tsx/package.json");
-  const tsxCli = join(dirname(tsxPackageJson), "dist/cli.mjs");
-
   return spawnSync(
     process.execPath,
     [
-      tsxCli,
+      "--import",
+      "tsx",
       "--import",
       "./scripts/register-fixture-raw-hooks.mts",
       "./scripts/eval-pipeline.ts",
