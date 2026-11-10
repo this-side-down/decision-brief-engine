@@ -10,6 +10,8 @@ Instead of simply summarizing text, it captures underlying intent, decisions, ri
 **Public demo:** https://dbe.this-side-down.com/  
 **Release notes:** https://github.com/this-side-down/decision-brief-engine/releases/tag/v0.3.2
 
+**Next release:** [v0.3.3 — Responsive Workspace and Build Transparency](CHANGELOG.md#v033--responsive-workspace-and-build-transparency)
+
 The hosted demo runs in Mock mode by default for reliability. Local Ollama with `qwen3:4b` remains the supported real-generation path for long inputs. Experimental browser inference can be enabled explicitly for short-to-medium notes using WebGPU and WebLLM with `Qwen3.5-4B-q4f16_1-MLC`.
 
 v0.3.2 corrects the repository and in-app version metadata omitted from the v0.3.1 publication. The browser-inference capability itself was delivered in v0.3.1: gated opt-in generation, three browser-compatible examples, strict structured-output validation, one bounded targeted correction, and local diagnostics.
