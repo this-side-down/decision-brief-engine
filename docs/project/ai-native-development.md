@@ -25,6 +25,8 @@ AI-assisted changes receive the same review and quality bar as any other change.
 
 See [the DBE typecheck experiment (#190)](https://github.com/this-side-down/decision-brief-engine/issues/190) for the evidence behind the advisory pre-push check and why CI validates the current merge inputs.
 
+Maintainers can run [Wolfi compatibility](../../.github/workflows/wolfi-check.yml) from the GitHub Actions tab after lockfile, Node, or build-tool changes. It runs `npm ci` and `npm run check` in a pinned Chainguard Wolfi image and records the selected revision, image digest, and runtime versions. The existing required PR check remains the merge gate.
+
 ## Public repository standard
 
 - Keep abstractions proportional to repeated product needs.
