@@ -1,5 +1,11 @@
 # Agent instructions
 
+## Pre-push typecheck
+
+For TypeScript changes, use the Node version configured in [CI](.github/workflows/ci.yml). Run `npm ci` in a fresh checkout, then run `npm run typecheck` before handing off the change. If the check cannot start, report the missing prerequisite before editing source. For a source failure, capture the first actionable diagnostic and rerun the check after the repair.
+
+Record the tested revision or patch, exit code, and a sanitized diagnostic in the handoff. Treat the local result as advisory. A base change can invalidate an earlier pass, so use the required PR check on the current merge inputs. See [the DBE experiment](https://github.com/this-side-down/decision-brief-engine/issues/190).
+
 ## Windows Git sandbox permission failures
 
 On Windows, a `Permission denied` error while Git attempts to write under `.git` may be caused by the Codex sandbox.
