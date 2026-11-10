@@ -15,10 +15,10 @@ describe("ProductHeader", () => {
 
     expect(markup).toContain("How this build works");
     expect(markup).toContain("No model call is made.");
-    expect(markup).toContain("does not automatically persist decision content");
+    expect(markup).toContain("keeps decision content in session memory by default");
     expect(markup).toContain("generation mode is stored locally");
     expect(markup).toContain("WebGPU model files may be cached");
-    expect(markup).toContain("Hidden model reasoning is neither shown nor stored");
+    expect(markup).toContain("save raw WebGPU model output to disk");
     expect(markup).toContain("AI-native workflow");
     expect(markup).toContain("MIT license");
     expect(markup).toContain("this-side-down");

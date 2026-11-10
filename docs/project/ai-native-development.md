@@ -37,11 +37,13 @@ See [the DBE typecheck experiment (#190)](https://github.com/this-side-down/deci
 
 ## AI transparency boundary
 
-DBE exposes inspectable product artifacts: the Capture Layer, Decision Trace, validation findings, bounded correction outcomes, and privacy-safe diagnostics. It does not expose or store raw model thinking, hidden reasoning, scratchpads, or chain-of-thought.
+DBE's product views show the Capture Layer, Decision Trace, validation findings, bounded correction outcomes, and diagnostic metadata.
 
 The public Mock demo is deterministic and makes no model call. Local Ollama and gated browser inference remain explicit runtime choices with documented boundaries.
 
-Decision content is not automatically persisted by DBE. The browser stores the selected generation-mode preference, and the opt-in WebGPU runtime may cache downloaded model files in browser-managed storage; neither is server-side decision storage.
+By default, DBE keeps decision content in session memory. The browser stores the selected generation-mode preference and may cache downloaded WebGPU model files.
+
+Developers can enable [local WebGPU diagnostics](../ai/browser-generation-diagnostics.md) on their local Vite server to save raw model output to disk. This capture is off by default.
 
 ## Framework posture
 

@@ -26,11 +26,19 @@ function BuildDetails({ runtimeDescription }: { runtimeDescription: string }) {
       <summary className="cursor-pointer list-none rounded border border-neutral-800 px-2.5 py-1 text-[11px] font-semibold text-neutral-300 transition hover:border-neutral-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 [&::-webkit-details-marker]:hidden">
         Build details
       </summary>
-      <div className="absolute right-4 top-full z-50 mt-2 w-[min(28rem,calc(100%_-_2rem))] sm:right-5 lg:right-0 lg:w-[28rem] border border-slate-300 bg-[#F4F1EA] p-4 text-slate-800 shadow-[0_18px_48px_rgba(0,0,0,0.32)]">
+      <div
+        aria-labelledby="build-details-heading"
+        className="absolute right-4 top-full z-50 mt-2 w-[min(28rem,calc(100%_-_2rem))] sm:right-5 lg:right-0 lg:max-h-[calc(100dvh_-_8rem)] lg:w-[28rem] lg:overflow-y-auto border border-slate-300 bg-[#F4F1EA] p-4 text-slate-800 shadow-[0_18px_48px_rgba(0,0,0,0.32)]"
+        role="region"
+        tabIndex={0}
+      >
         <p className="text-[11px] font-bold uppercase tracking-wide text-[#6B5EAA]">
           Inspectable by design
         </p>
-        <h2 className="mt-1 text-base font-semibold tracking-tight text-slate-900">
+        <h2
+          id="build-details-heading"
+          className="mt-1 text-base font-semibold tracking-tight text-slate-900"
+        >
           How this build works
         </h2>
         <dl className="mt-4 space-y-3 text-xs leading-5">
@@ -45,11 +53,13 @@ function BuildDetails({ runtimeDescription }: { runtimeDescription: string }) {
               Data boundary
             </dt>
             <dd className="mt-1 text-slate-700">
-              DBE does not automatically persist decision content; it remains
-              in session memory unless you download the Markdown. The selected
-              generation mode is stored locally, and opt-in WebGPU model files
-              may be cached by the browser. There is no hosted app backend,
-              account, hosted analytics, or server-side decision storage.
+              DBE keeps decision content in session memory by default. Export
+              Markdown to save a copy. The selected generation mode is stored
+              locally, and opt-in WebGPU model files may be cached by the browser.
+              Developers can opt in to diagnostics on a local Vite server that
+              save raw WebGPU model output to disk. There is no hosted app
+              backend, account, hosted analytics, or server-side decision
+              storage.
             </dd>
           </div>
           <div>
@@ -58,8 +68,7 @@ function BuildDetails({ runtimeDescription }: { runtimeDescription: string }) {
             </dt>
             <dd className="mt-1 text-slate-700">
               Source notes become a visible Capture Layer, a source-bound
-              Decision Trace, and editable Markdown. Hidden model reasoning is
-              neither shown nor stored.
+              Decision Trace, and editable Markdown.
             </dd>
           </div>
           <div>
