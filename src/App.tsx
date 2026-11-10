@@ -5,6 +5,7 @@ import { CaptureLayerSummary } from "./components/CaptureLayerSummary";
 import { DecisionBriefPreview } from "./components/DecisionBriefPreview";
 import { DecisionTraceBasis } from "./components/DecisionTraceBasis";
 import { DisclosureChevron } from "./components/DisclosureChevron";
+import { ProductHeader } from "./components/ProductHeader";
 import { BrowserInferenceStatus } from "./components/generation/BrowserInferenceStatus";
 import { RawInputLengthFeedback } from "./components/generation/RawInputLengthFeedback";
 import { DownloadDisclosureDialog } from "./components/generation/DownloadDisclosureDialog";
@@ -110,21 +111,6 @@ function StatusBadge({ label }: { label: string }) {
     <span className="rounded bg-slate-100 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
       {label}
     </span>
-  );
-}
-
-function ProductMark() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="h-7 w-7 shrink-0"
-      viewBox="0 0 32 32"
-    >
-      <rect fill="#F4F1EA" height="32" width="32" />
-      <path d="M8 6h12l4 4v16H8V6Z" fill="none" stroke="#131312" strokeWidth="2" />
-      <path d="M20 6v5h5" fill="none" stroke="#131312" strokeWidth="2" />
-      <path d="M12 16h8M12 20h6" stroke="#7A6CC4" strokeWidth="2" />
-    </svg>
   );
 }
 
@@ -895,30 +881,14 @@ export function App() {
   }
 
   return (
-    <main className="h-screen overflow-hidden bg-neutral-950 p-3 text-slate-900 sm:p-4">
-      <section className="mx-auto flex h-full max-w-7xl flex-col overflow-hidden border border-slate-300 bg-white shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
-        <header className="flex shrink-0 items-center justify-between bg-neutral-950 px-5 py-3.5 text-white">
-          <div className="flex items-center gap-3">
-            <ProductMark />
-            <div className="flex items-baseline gap-4">
-              <h1 className="text-lg font-semibold tracking-[-0.02em]">
-                Decision Brief Engine
-              </h1>
-              <p className="text-xs text-neutral-400">
-                Raw notes to structured decisions
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] text-neutral-500">
-              {formatAppVersionLabel()}
-            </span>
-            <span className="text-xs text-neutral-400">{modeLabel}</span>
-            <span className="rounded-full bg-neutral-800 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-neutral-200">
-              {modeBadge}
-            </span>
-          </div>
-        </header>
+    <main className="min-h-dvh bg-neutral-950 text-slate-900 lg:h-screen lg:overflow-hidden lg:p-4">
+      <section className="mx-auto flex min-h-dvh max-w-7xl flex-col overflow-visible border-slate-300 bg-white shadow-[0_24px_80px_rgba(0,0,0,0.28)] lg:h-full lg:min-h-0 lg:overflow-hidden lg:border">
+        <ProductHeader
+          modeBadge={modeBadge}
+          modeLabel={modeLabel}
+          runtimeDescription={modeDescription}
+          versionLabel={formatAppVersionLabel()}
+        />
 
         <WorkflowSetupBar
           canSelectBrowserInference={canSelectBrowserInference}
@@ -944,10 +914,10 @@ export function App() {
         />
 
         {decisionBrief ? (
-          <div className="grid min-h-0 flex-1 grid-cols-[minmax(14rem,1fr)_minmax(24rem,2.75fr)] divide-x divide-slate-200 overflow-hidden xl:grid-cols-[minmax(16rem,1fr)_minmax(28rem,3.25fr)]">
+          <div className="grid min-h-0 flex-1 grid-cols-1 divide-y divide-slate-200 lg:grid-cols-[minmax(14rem,1fr)_minmax(24rem,2.75fr)] lg:divide-x lg:divide-y-0 lg:overflow-hidden xl:grid-cols-[minmax(16rem,1fr)_minmax(28rem,3.25fr)]">
             <section
               aria-label="Supporting artifacts"
-              className="flex min-h-0 min-w-0 flex-col gap-4 overflow-y-auto p-5"
+              className="flex min-w-0 flex-col gap-4 p-4 lg:min-h-0 lg:overflow-y-auto lg:p-5"
             >
               <details className="group min-w-0">
                 <summary className="flex min-w-0 cursor-pointer list-none items-center gap-2 rounded border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 transition-colors hover:bg-slate-50 group-open:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950/10 [&::-webkit-details-marker]:hidden">
@@ -1005,7 +975,7 @@ export function App() {
 
             <section
               aria-labelledby="decision-brief-heading"
-              className="flex min-h-0 min-w-0 flex-col overflow-hidden p-5"
+              className="flex min-h-[40rem] min-w-0 flex-col overflow-hidden p-4 lg:min-h-0 lg:p-5"
             >
               <div className="mb-4 shrink-0 space-y-2">
                 <div className="flex items-center justify-between gap-3">
@@ -1050,10 +1020,10 @@ export function App() {
             </section>
           </div>
         ) : (
-          <div className="grid min-h-0 flex-1 grid-cols-[minmax(12rem,1fr)_minmax(12rem,0.95fr)_minmax(18rem,2fr)] divide-x divide-slate-200 overflow-hidden xl:grid-cols-[minmax(16rem,1fr)_minmax(16rem,0.95fr)_minmax(24rem,2fr)]">
+          <div className="grid min-h-0 flex-1 grid-cols-1 divide-y divide-slate-200 lg:grid-cols-[minmax(12rem,1fr)_minmax(12rem,0.95fr)_minmax(18rem,2fr)] lg:divide-x lg:divide-y-0 lg:overflow-hidden xl:grid-cols-[minmax(16rem,1fr)_minmax(16rem,0.95fr)_minmax(24rem,2fr)]">
             <section
               aria-labelledby="input-workspace-heading"
-              className="flex min-h-0 min-w-0 flex-col overflow-hidden p-5"
+              className="flex min-h-[28rem] min-w-0 flex-col overflow-hidden p-4 lg:min-h-0 lg:p-5"
             >
               <div className="mb-3 shrink-0">
                 <h2
@@ -1093,7 +1063,7 @@ export function App() {
 
             <section
               aria-labelledby="capture-layer-heading"
-              className="flex min-h-0 min-w-0 flex-col overflow-hidden p-5"
+              className="flex min-h-[24rem] min-w-0 flex-col overflow-hidden p-4 lg:min-h-0 lg:p-5"
             >
               <div className="mb-4 shrink-0">
                 <div className="flex items-center justify-between">
@@ -1141,7 +1111,7 @@ export function App() {
 
             <section
               aria-labelledby="decision-brief-heading"
-              className="flex min-h-0 min-w-0 flex-col overflow-hidden p-5"
+              className="flex min-h-[24rem] min-w-0 flex-col overflow-hidden p-4 lg:min-h-0 lg:p-5"
             >
               <div className="mb-4 flex shrink-0 items-center justify-between">
                 <h2
@@ -1175,8 +1145,8 @@ export function App() {
           </div>
         )}
 
-        <footer className="sticky bottom-0 z-20 flex shrink-0 items-center justify-between border-t border-slate-300 bg-[#F4F1EA] px-5 py-3 shadow-[0_-8px_20px_rgba(19,19,18,0.05)]">
-          <div className="flex gap-3">
+        <footer className="sticky bottom-0 z-20 flex shrink-0 flex-col items-stretch gap-2 border-t border-slate-300 bg-[#F4F1EA] px-3 py-3 shadow-[0_-8px_20px_rgba(19,19,18,0.05)] sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <button
               className={`rounded border px-4 py-2 text-sm font-semibold transition-colors ${
                 canGenerateCaptureLayer
@@ -1240,7 +1210,7 @@ export function App() {
                 : "Generate Decision Brief"}
             </button>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap justify-end gap-2 sm:gap-3">
             <button
               className={`rounded px-4 py-2 text-sm font-semibold transition-colors ${
                 hasMarkdown ? "text-slate-900 hover:bg-slate-50 hover:text-[#6659aa]" : "text-slate-500"

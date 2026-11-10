@@ -6,6 +6,20 @@ This project uses pre-1.0 versioning (`v0.x.y`) for capability milestones rather
 
 ## [Unreleased]
 
+### Added
+
+- In-product build details for runtime, session data handling, the inspectable decision pipeline, source, architecture, AI-native workflow, and MIT license.
+- A durable human-directed, AI-assisted development contract for public repository work.
+- One canonical `npm run check` command for deterministic tests, typecheck, and production build.
+
+### Changed
+
+- Made the workflow usable at narrow viewports while preserving the desktop brief-first layout.
+- Removed the remote Google Fonts request; the application shell now uses the local system font stack.
+- Moved public project metadata into the product header instead of injecting it from the model-download dialog through a DOM portal.
+- Extended the existing required CI check to run all deterministic tests before typecheck and build.
+- Made the pipeline CLI execution test use Node's module registration path instead of the `tsx` IPC CLI.
+
 ### Planned
 
 - Add long-input browser inference under #166.

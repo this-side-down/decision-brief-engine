@@ -196,7 +196,7 @@ export function DecisionTraceBasis({
         </div>
         <DisclosureChevron />
       </summary>
-      <div className="mt-3 min-h-0 max-h-[min(40vh,24rem)] overflow-y-auto overflow-x-hidden overscroll-contain">
+      <div className="mt-3 min-h-0 overflow-x-hidden lg:max-h-[min(40vh,24rem)] lg:overflow-y-auto lg:overscroll-contain">
         <div className="min-w-0 space-y-3">
           <TraceEntryGroup entries={groups.recommendations} title="Recommendations" />
           <TraceEntryGroup entries={groups.nextSteps} title="Next steps" />
