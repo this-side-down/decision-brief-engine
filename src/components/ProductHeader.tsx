@@ -22,11 +22,11 @@ function ProductMark() {
 
 function BuildDetails({ runtimeDescription }: { runtimeDescription: string }) {
   return (
-    <details className="group relative">
+    <details className="group lg:relative">
       <summary className="cursor-pointer list-none rounded border border-neutral-800 px-2.5 py-1 text-[11px] font-semibold text-neutral-300 transition hover:border-neutral-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 [&::-webkit-details-marker]:hidden">
         Build details
       </summary>
-      <div className="absolute right-0 top-full z-50 mt-2 w-[min(28rem,calc(100vw-1.5rem))] border border-slate-300 bg-[#F4F1EA] p-4 text-slate-800 shadow-[0_18px_48px_rgba(0,0,0,0.32)]">
+      <div className="absolute right-4 top-full z-50 mt-2 w-[min(28rem,calc(100%_-_2rem))] sm:right-5 lg:right-0 lg:w-[28rem] border border-slate-300 bg-[#F4F1EA] p-4 text-slate-800 shadow-[0_18px_48px_rgba(0,0,0,0.32)]">
         <p className="text-[11px] font-bold uppercase tracking-wide text-[#6B5EAA]">
           Inspectable by design
         </p>
@@ -164,7 +164,7 @@ export function ProductHeader({
   runtimeDescription: string;
 }) {
   return (
-    <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 bg-neutral-950 px-4 py-3.5 text-white sm:px-5">
+    <header className="relative flex shrink-0 flex-wrap items-center justify-between gap-3 bg-neutral-950 px-4 py-3.5 text-white sm:px-5">
       <div className="flex min-w-0 items-center gap-3">
         <ProductMark />
         <div className="flex min-w-0 items-baseline gap-4">
