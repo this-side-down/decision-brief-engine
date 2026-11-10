@@ -23,6 +23,8 @@ Tool assignments can change. The authority model does not.
 
 AI-assisted changes receive the same review and quality bar as any other change. Generated code is not accepted because it was generated, and human-written code is not exempt from evidence.
 
+See [the DBE typecheck experiment (#190)](https://github.com/this-side-down/decision-brief-engine/issues/190) for the evidence behind the advisory pre-push check and why CI validates the current merge inputs.
+
 ## Public repository standard
 
 - Keep abstractions proportional to repeated product needs.
