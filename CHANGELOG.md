@@ -23,6 +23,7 @@ v0.3.3 makes the public Mock workflow easier to use on narrow screens and explai
 - In-app Build details for runtime, data handling, the decision pipeline, source, architecture, and the development workflow.
 - A public development guide and advisory pre-push typecheck guidance based on the DBE typecheck experiment.
 - `npm run check` to run tests, TypeScript typecheck, and the production build locally and in the existing required CI job.
+- A manual, advisory GitHub Actions workflow for checking DBE in a pinned Chainguard Wolfi image (#195).
 
 ### Changed
 
@@ -34,6 +35,7 @@ v0.3.3 makes the public Mock workflow easier to use on narrow screens and explai
 
 - The [post-merge CI run](https://github.com/this-side-down/decision-brief-engine/actions/runs/42887443758) for #185 passed 619 tests across 61 files, TypeScript typecheck, and the production build.
 - Browser checks covered the public Mock workflow on mobile and desktop, including keyboard and pointer scrolling in Build details on short desktop windows.
+- The first hosted Wolfi run on `main` at `d519ec7` passed `npm ci` and `npm run check` (619 tests, typecheck, and production build) with Node 26.13.0 and npm 12.2.2. npm blocked the `esbuild@0.28.1` postinstall under its default policy. [GitHub Actions run](https://github.com/this-side-down/decision-brief-engine/actions/runs/42930706520)
 
 ### Runtime posture
 
