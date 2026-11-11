@@ -7,6 +7,7 @@ export type PipelineCliOptions = {
   all: boolean;
   outputPath: string | null;
   json: boolean;
+  failOnQuality: boolean;
   model: string | null;
   artifactsDir: string | null;
   help: boolean;
@@ -29,6 +30,7 @@ export function parsePipelineCliArgs(argv: string[]): PipelineCliOptions {
     all: true,
     outputPath: null,
     json: false,
+    failOnQuality: false,
     model: null,
     artifactsDir: null,
     help: false,
@@ -44,6 +46,11 @@ export function parsePipelineCliArgs(argv: string[]): PipelineCliOptions {
 
     if (arg === "--json") {
       options.json = true;
+      continue;
+    }
+
+    if (arg === "--fail-on-quality") {
+      options.failOnQuality = true;
       continue;
     }
 
@@ -122,6 +129,7 @@ Options:
   --all                       Run all nine cases (default)
   --output=<path>             Write run summary JSON
   --json                      Print machine-readable JSON to stdout
+  --fail-on-quality           Exit 3 if any selected case has a product-quality failure
   --model=<ollama-model>      Override Ollama model for this run
   --artifacts=<dir>           Write per-case raw Capture Layer / brief / trace files
   -h, --help                  Show help

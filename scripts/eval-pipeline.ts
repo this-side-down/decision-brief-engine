@@ -87,12 +87,16 @@ Use --mode=mock or --mode=ollama for automated runs.
     console.error(
       "Infrastructure failure detected (distinct from product-quality gate failures).",
     );
-    process.exit(2);
+    process.exitCode = 2;
+    return;
   }
 
-  // Harness executed successfully. Product-quality failures are recorded in
-  // the result records and do not use the infrastructure exit code.
-  process.exit(0);
+  if (
+    options.failOnQuality &&
+    summary.results.some((result) => result.failureKind === "product_quality")
+  ) {
+    process.exitCode = 3;
+  }
 }
 
 main().catch((error) => {
