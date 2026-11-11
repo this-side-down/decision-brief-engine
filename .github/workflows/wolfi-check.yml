@@ -1,0 +1,43 @@
+name: Wolfi compatibility
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wolfi-compatibility:
+    name: Advisory Wolfi compatibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      WOLFI_IMAGE: cgr.dev/chainguard/node@sha256:86e22ff4e0044fb38147b3366d864ec508a6dd0b72312d2ffe24abe27f50335c
+    steps:
+      - name: Checkout selected revision
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install and check in Wolfi
+        shell: bash
+        run: |
+          set -euo pipefail
+          revision=$(git rev-parse HEAD)
+          test "$revision" = "$GITHUB_SHA"
+          printf 'Revision: %s\nImage: %s\n' "$revision" "$WOLFI_IMAGE"
+          git archive --format=tar "$revision" |
+            docker run --rm -i --pull=always --platform linux/amd64 \
+              --env CI=true --env NO_COLOR=1 \
+              --env npm_config_cache=/tmp/dbe-wolfi-npm-cache \
+              --entrypoint /bin/sh "$WOLFI_IMAGE" -ec '
+                work=$(mktemp -d /tmp/dbe-wolfi-check.XXXXXX)
+                tar -xf - -C "$work"
+                cd "$work"
+                cat /etc/os-release
+                printf "Architecture: "; uname -m
+                printf "Node: "; node --version
+                printf "npm: "; npm --version
+                printf "Lockfile SHA-256: "; sha256sum package-lock.json
+                npm ci
+                npm run check
+              '
