@@ -6,15 +6,13 @@ Instead of simply summarizing text, it captures underlying intent, decisions, ri
 
 ## Status
 
-**Current release:** v0.3.2 — Experimental Browser Inference Metadata Correction  
+**Current release:** v0.3.3 — Responsive Workspace and Build Transparency\
 **Public demo:** https://dbe.this-side-down.com/  
-**Release notes:** https://github.com/this-side-down/decision-brief-engine/releases/tag/v0.3.2
-
-**Next release:** [v0.3.3 — Responsive Workspace and Build Transparency](CHANGELOG.md#v033--responsive-workspace-and-build-transparency)
+**Release notes:** https://github.com/this-side-down/decision-brief-engine/releases/tag/v0.3.3
 
 The hosted demo runs in Mock mode by default for reliability. Local Ollama with `qwen3:4b` remains the supported real-generation path for long inputs. Experimental browser inference can be enabled explicitly for short-to-medium notes using WebGPU and WebLLM with `Qwen3.5-4B-q4f16_1-MLC`.
 
-v0.3.2 corrects the repository and in-app version metadata omitted from the v0.3.1 publication. The browser-inference capability itself was delivered in v0.3.1: gated opt-in generation, three browser-compatible examples, strict structured-output validation, one bounded targeted correction, and local diagnostics.
+v0.3.3 adds a responsive workspace, in-app Build details for runtime and data handling, and a documented human-directed, AI-assisted development workflow. The required CI check runs tests, typecheck, and build. A manual advisory workflow validates DBE in a pinned Chainguard Wolfi image.
 
 v0.3.0 added hierarchical processing for realistic long meeting and interview material, source-coverage protection, grounded suggested next steps, canonical Decision Brief generation, deterministic source-bound Decision Trace construction, and typed bounded correction behavior.
 

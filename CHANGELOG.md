@@ -14,7 +14,7 @@ This project uses pre-1.0 versioning (`v0.x.y`) for capability milestones rather
 
 ## v0.3.3 — Responsive Workspace and Build Transparency
 
-**Release date pending**
+**2026-11-10**
 
 v0.3.3 makes the public Mock workflow easier to use on narrow screens and explains how DBE handles data and validates changes.
 
