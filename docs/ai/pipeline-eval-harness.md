@@ -35,13 +35,22 @@ npm run eval:pipeline -- --mode=webgpu
 
 Optional flags: `--all`, `--fixture=<id>` (repeatable), `--output=<path>`, `--json`, `--model=<ollama-model>`, `--artifacts=<dir>`.
 
+For pre-push agent feedback, run one gallery fixture in Mock mode with `--fail-on-quality`:
+
+```sh
+npm run --silent eval:pipeline -- --mode=mock --fixture=platform-rearchitecture-review --json --fail-on-quality
+```
+
+Read the fixture's `failureKind` and gate findings from stdout even when the command exits `3`.
+
 ### Exit codes
 
 | Code | Meaning |
 | --- | --- |
-| `0` | Harness finished. Product-quality gate failures are recorded in the result JSON (`failureKind: "product_quality"`). |
+| `0` | Harness finished. Without `--fail-on-quality`, completed product-quality failures are reported in JSON with this exit code. |
 | `1` | CLI usage / argument error (`failureKind: "harness_execution"`). |
 | `2` | Infrastructure or execution failure (for example Ollama unreachable, WebGPU mode requested, case load failure). Distinct from product-quality failures. |
+| `3` | With `--fail-on-quality`, at least one selected case has `failureKind: "product_quality"`. Execution or infrastructure failure takes precedence. |
 
 ## Cases (ten; never silently skipped)
 

@@ -475,7 +475,45 @@ describe("Decision Trace and writing failure classification", () => {
   });
 });
 
-describe("CLI harness execution errors", () => {
+describe("CLI exit codes", () => {
+  it("exits 0 for a passing gallery case with --fail-on-quality", () => {
+    const result = spawnEvalPipelineCli([
+      "--mode=mock",
+      "--fixture=platform-rearchitecture-review",
+      "--json",
+      "--fail-on-quality",
+    ]);
+
+    expect(result.status).toBe(0);
+    expect(JSON.parse(result.stdout).results).toMatchObject([
+      { fixtureId: "platform-rearchitecture-review", failureKind: "none" },
+    ]);
+  });
+
+  it.each([
+    { flags: ["--fail-on-quality"], exitCode: 3 },
+    { flags: [], exitCode: 0 },
+  ])("reports quality failure in JSON with exit $exitCode", ({ flags, exitCode }) => {
+    const result = spawnEvalPipelineCli([
+      "--mode=mock",
+      "--fixture=product-prioritization",
+      "--json",
+      ...flags,
+    ]);
+
+    expect(result.status).toBe(exitCode);
+    expect(JSON.parse(result.stdout).results).toMatchObject([
+      { fixtureId: "product-prioritization", failureKind: "product_quality" },
+    ]);
+  });
+
+  it("keeps exit 2 for unavailable execution with --fail-on-quality", () => {
+    const result = spawnEvalPipelineCli(["--mode=webgpu", "--fail-on-quality"]);
+
+    expect(result.status).toBe(2);
+    expect(result.stdout).toContain("not automated in Node");
+  });
+
   it("exits nonzero for unknown CLI arguments (distinct from product-quality)", () => {
     const result = spawnEvalPipelineCli(["--definitely-not-a-flag"]);
 
