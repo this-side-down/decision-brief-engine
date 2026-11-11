@@ -6,25 +6,43 @@ This project uses pre-1.0 versioning (`v0.x.y`) for capability milestones rather
 
 ## [Unreleased]
 
-### Added
-
-- In-product build details for runtime, session data handling, the inspectable decision pipeline, source, architecture, AI-native workflow, and MIT license.
-- A durable human-directed, AI-assisted development contract for public repository work.
-- One canonical `npm run check` command for deterministic tests, typecheck, and production build.
-
-### Changed
-
-- Made the workflow usable at narrow viewports while preserving the desktop brief-first layout.
-- Removed the remote Google Fonts request; the application shell now uses the local system font stack.
-- Moved public project metadata into the product header instead of injecting it from the model-download dialog through a DOM portal.
-- Extended the existing required CI check to run all deterministic tests before typecheck and build.
-- Made the pipeline CLI execution test use Node's module registration path instead of the `tsx` IPC CLI.
-
 ### Planned
 
 - Add long-input browser inference under #166.
 - Improve bounded Capture quality retry effectiveness under #162.
 - Add user-visible cancellation during browser generation.
+
+## v0.3.3 — Responsive Workspace and Build Transparency
+
+**2026-11-10**
+
+v0.3.3 makes the public Mock workflow easier to use on narrow screens and explains how DBE handles data and validates changes.
+
+### Added
+
+- In-app Build details for runtime, data handling, the decision pipeline, source, architecture, and the development workflow.
+- A public development guide and advisory pre-push typecheck guidance based on the DBE typecheck experiment.
+- `npm run check` to run tests, TypeScript typecheck, and the production build locally and in the existing required CI job.
+- A manual, advisory GitHub Actions workflow for checking DBE in a pinned Chainguard Wolfi image (#195).
+
+### Changed
+
+- Stacked the workspace on narrow screens while preserving the brief-first desktop layout.
+- Switched to system fonts and refined the public demo domain, link previews, favicon, and button states.
+- Updated dependency resolutions in the lockfile to address the audit findings tracked in #192.
+
+### Validation evidence
+
+- The [post-merge CI run](https://github.com/this-side-down/decision-brief-engine/actions/runs/42887443758) for #185 passed 619 tests across 61 files, TypeScript typecheck, and the production build.
+- Browser checks covered the public Mock workflow on mobile and desktop, including keyboard and pointer scrolling in Build details on short desktop windows.
+- The first hosted Wolfi run on `main` at `d519ec7` passed `npm ci` and `npm run check` (619 tests, typecheck, and production build) with Node 26.13.0 and npm 12.2.2. npm blocked the `esbuild@0.28.1` postinstall under its default policy. [GitHub Actions run](https://github.com/this-side-down/decision-brief-engine/actions/runs/42930706520)
+
+### Runtime posture
+
+- Mock remains the public default.
+- Local Ollama remains the supported real-generation path for long inputs.
+- Browser WebGPU inference remains experimental and opt-in for short-to-medium notes.
+- Hosted inference remains deferred.
 
 ## v0.3.2 — Experimental Browser Inference Metadata Correction
 
