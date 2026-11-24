@@ -1,0 +1,18 @@
+version: 1
+environment:
+  packages: [nodejs-22, npm]
+checks:
+  dbe-check:
+    advisory: true
+    trigger: [presubmit, postsubmit]
+    timeout: 10m
+    resources: medium-amd64
+    network:
+      egress: [registry.npmjs.org]
+    steps:
+      - name: install
+        cmd: npm ci
+      - name: evaluate
+        cmd: npm run --silent eval:pipeline -- --mode=mock --fixture=platform-rearchitecture-review --json --fail-on-quality
+      - name: check
+        cmd: npm run check

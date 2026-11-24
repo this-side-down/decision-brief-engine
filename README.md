@@ -34,7 +34,23 @@ The evaluator returns exit `3` for a product-quality failure and keeps its JSON 
 
 The manual [Wolfi compatibility workflow](.github/workflows/wolfi-check.yml) runs `npm ci` and `npm run check` in a pinned Chainguard Wolfi image. It is advisory and separate from the required Node 22 check. See [AI-native development](docs/project/ai-native-development.md) for the review, privacy, and tool-authority boundaries.
 
-GitLab CI/CD portability work is tracked in [#184](https://github.com/this-side-down/decision-brief-engine/issues/184); GitHub remains the public source and Vercel deployment source.
+### Chainguard Checks and Workspaces
+
+The optional [Chainguard check](.chainguard/ci.yaml) runs dependency installation, the strict Mock evaluator, and the full project check on pull requests and commits to main. It is advisory; GitHub Actions remains the required merge gate.
+
+The [Workspace environment](.chainguard/develop.yaml) provides Node 22, npm, and Claude Code. With `chainctl` installed and Workspaces enabled for your account, open a session from a clean checkout, then run the same declared check:
+
+```sh
+chainctl develop
+# In the Workspace:
+run-ci dbe-check
+```
+
+`run-ci` checks the working tree, including uncommitted edits. Hosted Checks independently validates the pull request merged into its base. The Workspace uses normal internet access and adds Claude Code; the hosted check restricts network access to the npm registry.
+
+These optional developer tools require Chainguard access and available allowance. Claude sign-in is needed only to use the coding agent. DBE and the Mock demo do not require either service.
+
+A separate GitLab CI/CD portability experiment is tracked in [#184](https://github.com/this-side-down/decision-brief-engine/issues/184); GitHub remains the public source and Vercel deployment source.
 
 ## v0.3 Long-Form Decision Capture
 
