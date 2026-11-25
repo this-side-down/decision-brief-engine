@@ -22,7 +22,7 @@ v0.1.0 is the first public demo milestone: example gallery, export polish, Local
 
 ## Engineering quality
 
-DBE uses React 19, TypeScript 6, Vite 8, and Tailwind 4. The required [CI check](.github/workflows/ci.yml) runs `npm ci` and `npm run check` on Node 22: tests, TypeScript typecheck, and the production build.
+DBE uses React 19, TypeScript 6, Vite 8, and Tailwind 4. The required [GitHub CI check](.github/workflows/ci.yml) runs `npm ci` and `npm run check` on Node 22: tests, TypeScript typecheck, and the production build.
 
 For additional pre-push feedback, contributors and coding agents can check one gallery fixture:
 
@@ -36,7 +36,7 @@ The manual [Wolfi compatibility workflow](.github/workflows/wolfi-check.yml) run
 
 ### Chainguard Checks and Workspaces
 
-The optional [Chainguard check](.chainguard/ci.yaml) runs dependency installation, the strict Mock evaluator, and the full project check on pull requests and commits to main. It is advisory; GitHub Actions remains the required merge gate.
+The optional [Chainguard check](.chainguard/ci.yaml) runs dependency installation, the strict Mock evaluator, and the full project check on GitHub pull requests and commits to main. It is advisory; GitHub Actions remains the required merge gate for public pull requests.
 
 The [Workspace environment](.chainguard/develop.yaml) provides Node 22, npm, and Claude Code. With `chainctl` installed and Workspaces enabled for your account, open a session from a clean checkout, then run the same declared check:
 
@@ -50,7 +50,13 @@ run-ci dbe-check
 
 These optional developer tools require Chainguard access and available allowance. Claude sign-in is needed only to use the coding agent. DBE and the Mock demo do not require either service.
 
-A separate GitLab CI/CD portability experiment is tracked in [#184](https://github.com/this-side-down/decision-brief-engine/issues/184); GitHub remains the public source and Vercel deployment source.
+### Production delivery
+
+Maintainers use private GitLab for primary development and release validation. This GitHub repository retains the public source history, issues, releases, and reviewed updates. The public demo is hosted on Vercel.
+
+Releases require successful GitLab main CI and a staged Vercel production build from the same revision. GitLab runs `npm ci`, the strict Mock evaluator, and `npm run check`; Vercel uses Node 22, `npm ci`, and `npm run build`. A maintainer verifies the staged app before promoting that deployment. Automatic production-domain assignment stays off, and the previous production deployment is retained for rollback.
+
+See [production delivery](docs/project/ai-native-development.md#production-delivery) for the CI, promotion, and rollback boundaries, and [#184](https://github.com/this-side-down/decision-brief-engine/issues/184) for the delivery work.
 
 ## v0.3 Long-Form Decision Capture
 
