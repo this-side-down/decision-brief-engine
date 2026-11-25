@@ -1,8 +1,8 @@
 # Decision Brief Engine
 
-Decision Brief Engine is an AI-native product experiment for turning messy notes into structured decision briefs.
+Decision Brief Engine turns messy notes into structured decision briefs with a visible Capture Layer and a source-bound Decision Trace.
 
-Instead of simply summarizing text, it captures underlying intent, decisions, risks, constraints, and unresolved questions before generating executive-ready output. The **Capture Layer** is the user-facing “show your work” artifact for understanding, and the **Decision Trace** makes the final recommendation and next steps auditable back to that captured intent, evidence, assumptions, risks, constraints, and alternatives. Raw model thinking, hidden reasoning, and chain-of-thought are not exposed.
+The **Capture Layer** records decisions, risks, constraints, and unresolved questions. The **Decision Trace** links recommendations and next steps to captured evidence, assumptions, alternatives, and missing context. The final brief exports as Markdown. Raw model thinking and chain-of-thought are not exposed.
 
 ## Status
 
@@ -18,13 +18,39 @@ v0.3.0 added hierarchical processing for realistic long meeting and interview ma
 
 A measured limitation remains: Local generation can return a typed quality failure when its single bounded correction cannot recover a source-grounded Capture Layer next step. The application rejects that output before Decision Brief generation rather than silently accepting or fabricating an artifact.
 
-v0.1.0 is the first portfolio-ready public demo milestone: example gallery, export polish, Local Ollama health check, and generation telemetry. See [Public demo milestone](docs/product/public-demo-milestone.md) for the full write-up.
+v0.1.0 is the first public demo milestone: example gallery, export polish, Local Ollama health check, and generation telemetry. See [Public demo milestone](docs/product/public-demo-milestone.md) for the full write-up.
 
-## Built as public proof of work
+## Engineering quality
 
-DBE is both a useful browser tool and an inspectable example of human-directed, AI-assisted product development. The shipped UI uses React 19, TypeScript 6, Vite 8, and Tailwind 4; product and inference contracts remain explicit; changes move through public issues, deterministic checks, pull requests, human merge, and the existing release process.
+DBE uses React 19, TypeScript 6, Vite 8, and Tailwind 4. The required [CI check](.github/workflows/ci.yml) runs `npm ci` and `npm run check` on Node 22: tests, TypeScript typecheck, and the production build.
 
-“Modern” does not mean framework churn. New dependencies and frameworks must earn a place through product value, accessibility, local-only compatibility, maintainability, and a credible exit path. See [AI-native development](docs/project/ai-native-development.md) for the authority, privacy, and repository-quality contract.
+For additional pre-push feedback, contributors and coding agents can check one gallery fixture:
+
+```sh
+npm run --silent eval:pipeline -- --mode=mock --fixture=platform-rearchitecture-review --json --fail-on-quality
+```
+
+The evaluator returns exit `3` for a product-quality failure and keeps its JSON output parseable. Without `--fail-on-quality`, completed quality failures are report-only. See the [pipeline evaluation guide](docs/ai/pipeline-eval-harness.md) for diagnostics and exit codes. Local feedback is advisory; the required PR check remains the merge gate.
+
+The manual [Wolfi compatibility workflow](.github/workflows/wolfi-check.yml) runs `npm ci` and `npm run check` in a pinned Chainguard Wolfi image. It is advisory and separate from the required Node 22 check. See [AI-native development](docs/project/ai-native-development.md) for the review, privacy, and tool-authority boundaries.
+
+### Chainguard Checks and Workspaces
+
+The optional [Chainguard check](.chainguard/ci.yaml) runs dependency installation, the strict Mock evaluator, and the full project check on pull requests and commits to main. It is advisory; GitHub Actions remains the required merge gate.
+
+The [Workspace environment](.chainguard/develop.yaml) provides Node 22, npm, and Claude Code. With `chainctl` installed and Workspaces enabled for your account, open a session from a clean checkout, then run the same declared check:
+
+```sh
+chainctl develop
+# In the Workspace:
+run-ci dbe-check
+```
+
+`run-ci` checks the working tree, including uncommitted edits. Hosted Checks independently validates the pull request merged into its base. The Workspace uses normal internet access and adds Claude Code; the hosted check restricts network access to the npm registry.
+
+These optional developer tools require Chainguard access and available allowance. Claude sign-in is needed only to use the coding agent. DBE and the Mock demo do not require either service.
+
+A separate GitLab CI/CD portability experiment is tracked in [#184](https://github.com/this-side-down/decision-brief-engine/issues/184); GitHub remains the public source and Vercel deployment source.
 
 ## v0.3 Long-Form Decision Capture
 
@@ -44,16 +70,6 @@ See:
 
 - [v0.2 Decision Trace direction](docs/product/v0.2-decision-trace-direction.md)
 - [ADR: Traceable recommendation rationale](docs/architecture/adr-traceable-recommendation-rationale.md)
-
-## Why
-
-Most AI note takers answer:
-
-"What was said?"
-
-Decision Brief Engine answers:
-
-"What matters?"
 
 ## MVP workflow
 
@@ -153,16 +169,20 @@ This is implementation guidance for the current v0 state, not a legal privacy po
 
 ## Development
 
+Use Node 22, matching CI. From a fresh checkout:
+
 ```sh
-npm install
+npm ci
 npm run dev
-npm run check
-npm run typecheck
-npm test
-npm run build
-npm run preview
-npm run health:ollama
 ```
+
+The default Mock workflow needs no model runtime or model-provider account. Before submitting a change, run:
+
+```sh
+npm run check
+```
+
+For focused checks, use `npm run typecheck` or `npm test`. `npm run build` creates the production bundle, and `npm run preview` serves it locally. Optional local inference setup is documented above.
 
 ### Capture Layer evaluation (#72)
 
@@ -174,6 +194,14 @@ npm run eval:capture -- --mode=webgpu
 
 See [Capture Layer evaluation harness](docs/ai/capture-layer-eval-harness.md). WebGPU remains a documented manual browser procedure. Prompt variant comparison: [browser-model-prompt-variant-eval.md](docs/ai/browser-model-prompt-variant-eval.md).
 
+## Contributing
+
+Use [issues](https://github.com/this-side-down/decision-brief-engine/issues) for bug reports and proposed changes. Keep pull requests focused, describe the behavior changed, and include validation results. Use synthetic or explicitly public fixtures and follow the [development and privacy guidance](docs/project/ai-native-development.md).
+
 ## Product Lab
 
 This project is part of an ongoing exploration into AI-native product systems, decision support, and intent-centric workflows.
+
+## License
+
+Licensed under the [MIT License](LICENSE).
